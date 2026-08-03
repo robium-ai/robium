@@ -115,19 +115,6 @@ change shape. robium is built to notice:
   authoring time, and each claim states how it was verified. Prior skill
   versions stay browsable under [`archive/`](./archive).
 
-## Reference apps
-
-Reference applications exercise the catalog against real robotics workflows.
-They live in [robium-ai/robium-apps](https://github.com/robium-ai/robium-apps)
-(start at its REGISTRY.md); demos and recorded results are available at
-[robium.ai](https://robium.ai).
-
-- **nav-trial** — TurtleBot 3 navigating in Gazebo with Nav2, headless in Docker.
-- **manip-trial** — LeRobot manipulation: train, evaluate, and demo a policy on a GPU-less laptop.
-- **vla-trial** — language-conditioned VLA arm: instruction → SmolVLA → SO-101 in MuJoCo.
-- **go2-locomotion** — Unitree Go2 quadruped learning to walk via RL (Isaac Lab) on a cloud GPU.
-- **tb4-teleop** — drive a real TurtleBot 4 from the browser (hardware-in-the-loop).
-
 ## Contributing
 
 The contribution unit is small on purpose: **one skill, no build system**.
