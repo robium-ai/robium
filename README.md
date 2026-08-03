@@ -20,12 +20,6 @@ agent with the robotics skills it needs.
 
 </div>
 
-Ask a coding agent to build a warehouse robot and it may guess at ROS 2,
-invent Gazebo syntax, or pick the wrong simulator.
-
-robium gives it versioned robotics skills for choosing the stack, building the
-system, and testing the result.
-
 ## Install
 
 **Quick** — clone the repository and install the skills for every supported
