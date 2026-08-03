@@ -6,7 +6,7 @@
           https://github.com/ros2/ros2_documentation/blob/rolling/source/How-To-Guides/Migrating-from-ROS1/Migrating-Python-Package-Example.rst
           (<export><build_type>ament_python</build_type></export>).
           Fetched via ctx7 on 2026-07-10; docs.ros.org was blocked by an
-          anti-bot page for direct fetch — re-verify there when reachable.
+          anti-bot page for direct fetch; re-verify there when reachable.
 
   <name> must match setup.py's package_name and the resource/ marker file
   name in this same directory. See ../../SKILL.md's Customization section.
@@ -18,7 +18,7 @@
   <description>
     Minimal ament_python example package for the robium ros2 skill: one
     parameterized publisher node and one launch file. Illustrative shape
-    only — re-verify against current ros2_documentation before using in a
+    only; re-verify against current ros2_documentation before using in a
     real project.
   </description>
   <maintainer email="robium@example.invalid">robium</maintainer>

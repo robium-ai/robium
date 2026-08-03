@@ -8,7 +8,7 @@
 # huggingface.co on 2026-07-10, not assumed from memory.
 #
 # Pairs with examples/train-act-command.md, which trains an ACT policy
-# against this same dataset (lerobot/pusht) — the feature names printed
+# against this same dataset (lerobot/pusht); the feature names printed
 # below (observation.image, observation.state, action) are exactly what
 # that training command's policy adapts to automatically.
 #
@@ -31,7 +31,7 @@ def main() -> None:
     print(f"fps: {dataset.fps}")
     print(f"features: {sorted(dataset.features.keys())}")
 
-    # Random access by frame index — returns a dict of PyTorch tensors.
+    # Random access by frame index: returns a dict of PyTorch tensors.
     sample = dataset[0]
     print(f"observation.state shape: {tuple(sample['observation.state'].shape)}")
     print(f"observation.image shape: {tuple(sample['observation.image'].shape)}")

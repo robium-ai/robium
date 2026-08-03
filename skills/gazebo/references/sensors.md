@@ -2,7 +2,7 @@
 
 SDF sensor tags for IMU, contact, lidar, and camera, the system plugins each
 depends on, and the shared `<noise>` element. All tags below were verified
-on 2026-07-10 by direct `curl` of the raw source files cited per section —
+on 2026-07-10 by direct `curl` of the raw source files cited per section;
 re-verify before trusting a specific default in a real project.
 
 ## Shared pattern
@@ -10,10 +10,10 @@ re-verify before trusting a specific default in a real project.
 Every sensor is a `<sensor name="..." type="...">` element inside a
 `<link>`, with common tags `<always_on>` (update per `<update_rate>` if
 true), `<update_rate>` (Hz), `<visualize>` (show in the GUI), and `<topic>`
-(the gz topic data is published on — set explicitly for a flat, predictable
+(the gz topic data is published on; set explicitly for a flat, predictable
 name rather than relying on the model-scoped default). Source: Gazebo's
 Sensors tutorial (`harmonic/sensors.md`, `gazebosim/docs` repo, fetched
-directly on 2026-07-10 — the tutorial that ships with the Harmonic release
+directly on 2026-07-10; the tutorial that ships with the Harmonic release
 this skill's nav-facing examples target).
 
 ## IMU
@@ -35,7 +35,7 @@ Outputs `orientation` (quaternion), `angular_velocity`, and
 </sensor>
 ```
 
-No GPU/render engine dependency — IMU is computed directly from the physics
+No GPU/render engine dependency; IMU is computed directly from the physics
 engine's link state.
 
 ## Contact
@@ -56,13 +56,13 @@ another:
 Commonly paired with `gz-sim-touchplugin-system` (fires when a named
 `<target>` model touches the sensor's owner, publishing to
 `<namespace>/touched`) and `gz-sim-triggered-publisher-system` (publishes a
-configured message when an input topic matches a pattern — e.g. stop the
+configured message when an input topic matches a pattern, e.g. stop the
 robot on contact). No GPU dependency.
 
 ## Lidar
 
 Use the current preferred type/tag `type="gpu_lidar"` with a `<lidar>`
-element — `type="ray"`/`type="gpu_ray"` with a `<ray>` element are legacy
+element; `type="ray"`/`type="gpu_ray"` with a `<ray>` element are legacy
 aliases, structurally identical but flagged for eventual deprecation in the
 SDF spec (source: `sdformat`'s `sensor.sdf` schema file, fetched directly
 on 2026-07-10: "It is preferred to use ... 'lidar', 'gpu_lidar' ... since
@@ -116,7 +116,7 @@ count and interpolation; `<range>` bounds each ray's min/max distance and
 linear resolution. Source: Gazebo's Sensors tutorial for the `<lidar>`
 child tags, `sdformat`'s `lidar.sdf` schema file for the authoritative
 element list including `<noise>` (both fetched directly on 2026-07-10; the
-tutorial itself still shows the legacy `<ray>` tag — this reference
+tutorial itself still shows the legacy `<ray>` tag; this reference
 recommends `<lidar>` per the schema's own deprecation note above).
 
 ## Camera
@@ -146,7 +146,7 @@ Also requires `gz-sim-sensors-system` (GPU-rendered):
 Source: `gz-sim`'s `examples/worlds/camera_sensor.sdf`, fetched directly via
 raw GitHub on 2026-07-10. Camera images bridge to ROS through `ros_gz_image`
 (unidirectional, `image_transport`-based) or `ros_gz_bridge`'s
-`sensor_msgs/msg/Image` mapping — see `references/ros2-bridge.md`. The
+`sensor_msgs/msg/Image` mapping; see `references/ros2-bridge.md`. The
 bridge's `override_frame_id` parameter is the documented way to point a
 bridged `Image`/`CameraInfo` message's `frame_id` at a proper z-forward
 optical frame (REP-103), since Gazebo's own camera frame convention differs
@@ -168,13 +168,13 @@ the lidar-specific block shown above:
 `type="gaussian_quantized"` additionally rounds outputs to a `<precision>`
 step. A sensor left at the tutorial/example defaults (frequently zero
 noise) will not expose the same failure modes a downstream consumer will hit
-against the real sensor — set noise from the real sensor's datasheet, per
+against the real sensor; set noise from the real sensor's datasheet, per
 this skill's sensor-correctness key directive.
 
 ## GPU dependency and headless rendering
 
 IMU and contact sensors have no render-engine dependency. Camera and
 `gpu_lidar` sensors do, via `gz-sim-sensors-system`'s render engine (OGRE2
-by default) — see this skill's Platform gotchas for headless-rendering and
+by default); see this skill's Platform gotchas for headless-rendering and
 GPU-vs-software-rendering guidance when running these sensor types without
 a display or GPU.

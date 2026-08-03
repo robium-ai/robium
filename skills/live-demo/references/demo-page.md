@@ -1,6 +1,6 @@
 # The mission-control demo page
 
-Anatomy and session flow of `/demos/<app>` — as shipped on
+Anatomy and session flow of `/demos/<app>`, as shipped on
 robium.ai/demos/nav-trial (2026-07-13).
 
 ## Anatomy (top → bottom)
@@ -9,11 +9,11 @@ robium.ai/demos/nav-trial (2026-07-13).
    ready · rtf <x> → ended/busy`) · **Start instance** (primary) ·
    **Stop instance** (disabled until started) · **Open in Foxglove →**
    (disabled until `ready:true`; `target="_blank"`).
-2. **Lede paragraph:** one honest sentence per fact — what boots, how
-   long it takes, that closing the tab stops the instance — plus the
+2. **Lede paragraph:** one honest sentence per fact (what boots, how
+   long it takes, that closing the tab stops the instance), plus the
    fleet line (static "budget: N concurrent instances" before a session,
    live "running: n of N" during one).
-3. **The terminal — the page's majority element** (~50 vh): a header
+3. **The terminal, the page's majority element** (~50 vh): a header
    status line (`uptime · nodes · session ends in mm:ss`) over a
    scrolling log fed by the gateway's `log[]` (real stack output, not
    theater). Before Start it shows a usage legend; boot phases and
@@ -22,7 +22,7 @@ robium.ai/demos/nav-trial (2026-07-13).
    "Layout → Import" instruction (needed for the app.foxglove.dev
    flow; a self-hosted viewer with a baked layout deletes this block).
 5. **Reproduction story:** the brief that produced the app (verbatim),
-   link to the source repo, and a "Get the plugin" CTA — the demo's job
+   link to the source repo, and a "Get the plugin" CTA; the demo's job
    is selling the workflow, not just the robot.
 
 ## Session JS flow (the whole contract)
@@ -42,10 +42,10 @@ Tab close:    pagehide → navigator.sendBeacon(/shutdown?session)
 ```
 
 All demo-host fetches carry `credentials:'include'` (same-site affinity
-cookie — see cloud-run-tuning.md). No polling before Start (cost).
+cookie; see cloud-run-tuning.md). No polling before Start (cost).
 
 **The stale-host trap.** As soon as Start picks the backend host at runtime
-(an orchestrator hands back a per-instance host/port — see
+(an orchestrator hands back a per-instance host/port; see
 `orchestrator-pattern.md`), a `setInterval` poll created before that point
 closes over the *old* host and cheerfully polls the wrong backend forever.
 It fails in a maddening way: parts of the page that re-render (a log
@@ -57,7 +57,7 @@ Applies to any UI whose backend address can change mid-session.
 ## Placement on the site
 
 - The homepage apps/proof card for the app carries the primary
-  **"Try the live demo →"** button to `/demos/<app>/` (trailing slash —
+  **"Try the live demo →"** button to `/demos/<app>/` (trailing slash:
   behind Cloud Run, nginx needs `absolute_redirect off;` or slash-less
   URLs redirect to an unreachable internal port).
 - The demo page is part of the site's smoke test: assert the Start
@@ -66,7 +66,7 @@ Applies to any UI whose backend address can change mid-session.
 
 ## Copy honesty checklist
 
-- Cold boot: "30–90 s; unlucky boots self-restart once — the terminal
+- Cold boot: "30–90 s; unlucky boots self-restart once; the terminal
   narrates" (matches the watchdog reality).
 - Session cap and busy state: say the cap (e.g. 30 min) and the budget;
   on 503 tell them to retry in a few minutes.

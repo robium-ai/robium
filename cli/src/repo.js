@@ -32,7 +32,7 @@ export async function findEnclosingRepo(startDir) {
   }
 }
 
-const NO_GIT = `✗ git not found — robium setup clones the robium repo (the source of all skills).
+const NO_GIT = `✗ git not found. robium setup clones the robium repo (the source of all skills).
 
   Install git and re-run:  npx robium-ai setup
 
@@ -89,18 +89,18 @@ export async function resolveRepo({
   if (await isRobiumRepo(target)) {
     const dirty = await exec('git', ['-C', target, 'status', '--porcelain']);
     if (dirty.ok && dirty.stdout.trim()) {
-      log(`! ${target} has local changes — skipped git pull (update it manually).`);
+      log(`! ${target} has local changes; skipped git pull (update it manually).`);
     } else {
       const pull = await exec('git', ['-C', target, 'pull', '--ff-only'], { timeout: 60_000 });
       log(pull.ok
         ? `✓ Repo up to date: ${target}`
-        : `! Could not fast-forward ${target} — continuing with the current checkout.`);
+        : `! Could not fast-forward ${target}; continuing with the current checkout.`);
     }
     return target;
   }
 
   if (await isDir(target)) {
-    error(`✗ ${target} exists but is not a robium checkout — pick another location with --dir <path>.`);
+    error(`✗ ${target} exists but is not a robium checkout; pick another location with --dir <path>.`);
     return null;
   }
 

@@ -8,7 +8,7 @@
 written.
 
 **Source:** the command shape below is assembled from two directly-fetched
-upstream sources on 2026-07-10 — huggingface/lerobot's README ("Training a
+upstream sources on 2026-07-10: huggingface/lerobot's README ("Training a
 policy is as simple as running a script configuration", `lerobot-train
 --policy.type=act --dataset.repo_id=...`) and its `docs/source/cheat-sheet.mdx`'s
 training section (`--output_dir`, `--job_name`, `--policy.device`,
@@ -16,7 +16,7 @@ training section (`--output_dir`, `--job_name`, `--policy.device`,
 was confirmed to exist and to already be on LeRobotDataset v3.0 via a direct
 fetch of its `meta/info.json` from huggingface.co on 2026-07-10 (206
 episodes, 25,650 frames). `--steps=3000` below is a deliberately small
-smoke-run value, not an upstream default — see the reasoning below and
+smoke-run value, not an upstream default; see the reasoning below and
 `references/policies-and-training.md`'s compute-sizing table before scaling
 it up for a real run.
 
@@ -27,7 +27,7 @@ fine-tune" key directive in `SKILL.md`: run this only after evaluating
 the eval pipeline works before spending compute on training.
 
 Requires the `training` and `pusht` extras (`uv add
-"lerobot[training,pusht]"` — see `SKILL.md`'s Quick start; `core_scripts`
+"lerobot[training,pusht]"`; see `SKILL.md`'s Quick start; `core_scripts`
 is only for the hardware CLIs and not needed here).
 
 ```bash
@@ -46,22 +46,22 @@ uv run lerobot-train \
 
 **Why these values:**
 
-- `--policy.type=act` — the smallest policy family (`references/policies-and-training.md`'s
+- `--policy.type=act`: the smallest policy family (`references/policies-and-training.md`'s
   compute table: ~2-6 GB VRAM, ~30-60 min for 5 epochs on an RTX 4090-class
-  GPU) — the right choice for a first smoke run, not a VRAM-bound VLA policy.
-- `--steps=3000` — deliberately short. `lerobot/pusht` has 25,650 frames;
+  GPU), the right choice for a first smoke run, not a VRAM-bound VLA policy.
+- `--steps=3000`: deliberately short. `lerobot/pusht` has 25,650 frames;
   3,000 steps at the ACT default batch size is well under one full epoch,
   enough to confirm the loss curve moves and a checkpoint saves/evaluates
   cleanly, not a converged policy. ACT trains at a constant LR (its
-  `get_scheduler_preset()` returns no scheduler — confirmed by fetching
+  `get_scheduler_preset()` returns no scheduler, confirmed by fetching
   `configuration_act.py` directly on 2026-07-10), so there's no LR-decay
   schedule to rescale when changing `--steps`, unlike scheduler-based
-  policies (diffusion, SmolVLA, the Pi0 family) — see
+  policies (diffusion, SmolVLA, the Pi0 family); see
   `references/policies-and-training.md` if switching `--policy.type` to one
   of those.
-- `--policy.device=cuda` — swap for `mps` (Apple Silicon) or `cpu` (smoke
+- `--policy.device=cuda`: swap for `mps` (Apple Silicon) or `cpu` (smoke
   test only, expect it to be much slower) per `SKILL.md`'s Platform gotchas.
-- `--wandb.enable=false` and `--policy.push_to_hub=false` — kept off for a
+- `--wandb.enable=false` and `--policy.push_to_hub=false`: kept off for a
   throwaway smoke run; flip both on for a real tracked run (`wandb login`
   first; dropping `--policy.push_to_hub=false` pushes the trained policy to
   `--policy.repo_id` on the Hub, which is the `huggingface` skill's
@@ -84,5 +84,5 @@ uv run lerobot-eval \
 
 A smoke run at this scale is not expected to solve PushT (success needs
 ≥95% T-coverage; even 10k steps measured `pc_success` 0 with
-`avg_max_reward` 0.28) — the goal is confirming the train -> checkpoint ->
+`avg_max_reward` 0.28); the goal is confirming the train -> checkpoint ->
 eval loop works end to end before committing to a long run.

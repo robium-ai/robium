@@ -1,6 +1,6 @@
 # robium CLI
 
-CLI for [robium](https://robium.ai) — the robotics skill pack for coding agents:
+CLI for [robium](https://robium.ai), the robotics skill pack for coding agents:
 ROS 2, Nav2, Gazebo, LeRobot, Isaac Sim/Lab, visualization, data, and testing
 skills for Claude Code, Codex, Gemini CLI, and Cursor.
 
@@ -31,21 +31,21 @@ npx robium-ai skills nav      # filter
 ## How setup works
 
 **The repo is the source of truth.** `setup` clones
-`github.com/robium-ai/robium` (default `~/robium`; one prompt, Enter accepts)
-— or uses the checkout you're already inside — then wires it in per agent:
+`github.com/robium-ai/robium` (default `~/robium`; one prompt, Enter accepts),
+or uses the checkout you're already inside, then wires it in per agent:
 
-- **Claude Code** — the full plugin (skills + the robium-architect agent +
+- **Claude Code**: the full plugin (skills + the robium-architect agent +
   capture hooks) via `claude plugin marketplace add <clone>` +
   `claude plugin install robium@robium`. Served from the clone.
-- **Codex, Gemini CLI, and Cursor** — each skill is **symlinked** into
+- **Codex, Gemini CLI, and Cursor**: each skill is **symlinked** into
   the shared [Agent Skills](https://agentskills.io) directory
   `~/.agents/skills/`, which all three discover automatically. No registration.
 
-`git pull` in the clone updates every agent at once — the npm package carries
+`git pull` in the clone updates every agent at once; the npm package carries
 no skill content, so skill releases never wait on an npm publish. Re-running
 `setup` refreshes the clone and repairs links; it never overwrites a
 same-named skill it doesn't own. Working *inside* the clone needs no setup at
-all for Codex/Gemini/Cursor — the repo ships a committed
+all for Codex/Gemini/Cursor; the repo ships a committed
 `.agents/skills/` farm they discover at workspace scope.
 
 Requires `git` (setup prints the manual recipe if missing).

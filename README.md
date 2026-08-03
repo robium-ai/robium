@@ -8,7 +8,7 @@
 ### Physical AI skills for your agents
 
 An open-source, continuously evolving collection of field-tested robotics<br>
-expertise — install robium as a plugin to empower your favorite AI coding<br>
+expertise. Install robium as a plugin to empower your favorite AI coding<br>
 agent with the robotics skills it needs.<br>
 Covers ROS 2, Nav2, Gazebo, MuJoCo, NVIDIA Isaac Sim, Isaac Lab, and LeRobot,<br>
 for Claude Code, Codex, Gemini CLI, and Cursor.
@@ -24,7 +24,7 @@ for Claude Code, Codex, Gemini CLI, and Cursor.
 
 ## Install
 
-**Quick** — clone the repository and install the skills for every supported
+**Quick**: clone the repository and install the skills for every supported
 agent detected on your machine:
 
 ```bash
@@ -34,22 +34,22 @@ npx robium-ai setup --agent codex    # or target one
 
 The default clone lives at `~/robium`. Target one agent with `--agent`.
 
-**Native install** — clone the repository, then use your agent's own package
+**Native install**: clone the repository, then use your agent's own package
 flow where one is available:
 
 ```bash
 git clone https://github.com/robium-ai/robium ~/robium
 
-# Claude Code — plugin with skills, architect agent, and capture hooks
+# Claude Code: plugin with skills, architect agent, and capture hooks
 claude plugin marketplace add ~/robium && claude plugin install robium@robium
 
-# Codex — native plugin
+# Codex: native plugin
 codex plugin marketplace add ~/robium && codex plugin add robium@robium
 
-# Gemini CLI — extension with automatic updates
+# Gemini CLI: extension with automatic updates
 gemini extensions install https://github.com/robium-ai/robium --auto-update
 
-# Cursor — versioned skills
+# Cursor: versioned skills
 mkdir -p ~/.cursor/skills && ln -s ~/robium/skills/* ~/.cursor/skills/
 ```
 
@@ -72,13 +72,13 @@ at [robium.ai](https://robium.ai/#how-it-fits).
 
 ```
 robium/
-├── skills/          the catalog — versioned, hand-crafted, validator-enforced
+├── skills/          the catalog: versioned, hand-crafted, validator-enforced
 ├── agents/          robium-architect: researches the stack, writes your brief
 ├── .claude-plugin/  Claude Code package
 ├── .codex-plugin/   Codex package and marketplace
 ├── gemini-extension.json  Gemini CLI extension
-├── learnings/       field evidence from real builds — input to the learning loop
-└── cli/             npx robium-ai — setup, doctor, skill search
+├── learnings/       field evidence from real builds, input to the learning loop
+└── cli/             npx robium-ai: setup, doctor, skill search
 ```
 
 The reference applications live in
@@ -86,7 +86,7 @@ The reference applications live in
 robium.ai site + live-demo infrastructure in
 [robium-ai/robium-website](https://github.com/robium-ai/robium-website).
 
-The catalog in one view — every skill is one folder under
+The catalog in one view: every skill is one folder under
 [`skills/`](./skills), browsable on [robium.ai](https://robium.ai):
 
 | Pillar | Skills |
@@ -104,16 +104,16 @@ entry point and routes to everything else.
 
 ## A catalog that maintains itself
 
-Robotics guidance rots fast — APIs move, versions pair differently, commands
+Robotics guidance rots fast: APIs move, versions pair differently, commands
 change shape. robium is built to notice:
 
-- **Capture** — hooks record what broke and what fixed it during real build
+- **Capture**: hooks record what broke and what fixed it during real build
   sessions; [`learnings/`](./learnings) holds the evidence.
-- **Mine** — the ecosystem's proven patterns are read out of real repos, with
+- **Mine**: the ecosystem's proven patterns are read out of real repos, with
   citations that must still hold at the pinned commit.
-- **Absorb** — evidence-gated pull requests fold both back into the versioned
+- **Absorb**: evidence-gated pull requests fold both back into the versioned
   skills. Agents draft; a human merges every change.
-- **Verify** — version facts are checked against live upstream docs at
+- **Verify**: version facts are checked against live upstream docs at
   authoring time, and each claim states how it was verified. Prior skill
   versions stay browsable under [`archive/`](./archive).
 

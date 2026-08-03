@@ -2,7 +2,7 @@
 # status: unverified
 # source: https://raw.githubusercontent.com/ros-navigation/navigation2/jazzy/nav2_bringup/launch/bringup_launch.py
 #         fetched directly via `curl` of the raw GitHub file (jazzy branch)
-#         on 2026-07-10 — the launch-argument names and defaults below
+#         on 2026-07-10; the launch-argument names and defaults below
 #         (namespace, slam, map, use_sim_time, params_file, autostart,
 #         use_composition, use_respawn, log_level, use_localization) mirror
 #         that file's DeclareLaunchArgument calls.
@@ -17,7 +17,7 @@
 # Pairs with ../examples/nav2-params-diffdrive.yaml: same frame names
 # (map/odom/base_link) and the same use_sim_time value must be used by every
 # other node in the system (robot_state_publisher, the sim, any odometry
-# source) — see the "use_sim_time must be consistent" key directive in
+# source); see the "use_sim_time must be consistent" key directive in
 # ../SKILL.md.
 #
 # Run against an existing map (see the "bringup with an existing map" usage
@@ -52,7 +52,7 @@ def generate_launch_description():
         'map',
         default_value='',
         description=(
-            "Full path to a saved map YAML file. Unused when slam:=true — "
+            "Full path to a saved map YAML file. Unused when slam:=true; "
             "leave empty in that case."
         ),
     )
@@ -70,7 +70,7 @@ def generate_launch_description():
         default_value='true',
         description=(
             "Use simulation (Gazebo) clock if true. Must match every other "
-            "node in the system, not just Nav2's own nodes — see SKILL.md's "
+            "node in the system, not just Nav2's own nodes; see SKILL.md's "
             "use_sim_time key directive."
         ),
     )
@@ -80,7 +80,7 @@ def generate_launch_description():
         description=(
             "Run slam_toolbox instead of nav2_map_server + nav2_amcl. "
             "Launch slam_toolbox's online_async_launch.py separately when "
-            "this is true — it is not included by this file."
+            "this is true; it is not included by this file."
         ),
     )
     declare_autostart_cmd = DeclareLaunchArgument(

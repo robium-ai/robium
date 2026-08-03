@@ -4,13 +4,13 @@
 #         skills/environments/examples/Dockerfile.ros2: that file teaches
 #         single-environment reproducibility (uv for the Python-glue
 #         layer); this file teaches multi-stage BUILD QUALITY for one
-#         module that ships as part of a multi-container system — smaller
+#         module that ships as part of a multi-container system: smaller
 #         runtime image, a build-cache boundary between toolchain and
 #         shipped artifact, and container-runtime behavior (signals, one
 #         process). Use together, not as alternatives.
 #
 # Assumes a standard colcon workspace at ./src (a ROS 2 package or set of
-# packages named "my_module" below — rename to match the real package).
+# packages named "my_module" below; rename to match the real package).
 # Re-verify the `ros:jazzy-ros-base-noble` tag against hub.docker.com/_/ros
 # and swap `jazzy` for the current default distro (see architect's Platform
 # gotchas: Lyrical Luth generally, Jazzy Jalisco for the Nav2 vertical)
@@ -18,7 +18,7 @@
 
 # ---- Stage 1: build ---------------------------------------------------
 # Full toolchain (colcon, compilers, build-essential). Discarded after this
-# stage — none of it reaches the runtime image.
+# stage; none of it reaches the runtime image.
 FROM ros:jazzy-ros-base-noble AS builder
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -33,7 +33,7 @@ WORKDIR /workspace
 COPY ./src/my_module/package.xml ./src/my_module/package.xml
 # `|| true`: rosdep exits non-zero when it hits keys it can't resolve for a
 # minimal/partial workspace (e.g. only package.xml copied so far, no full
-# ./src tree yet) — don't let that abort the build here; a real missing dep
+# ./src tree yet); don't let that abort the build here; a real missing dep
 # still surfaces later as a colcon build failure, which is the signal to act on.
 RUN . /opt/ros/jazzy/setup.sh && \
     rosdep update && \
@@ -49,7 +49,7 @@ FROM ros:jazzy-ros-base-noble
 
 COPY --from=builder /opt/my_module_install /opt/my_module_install
 
-# Non-root user — security default and volume-permission parity, matching
+# Non-root user: security default and volume-permission parity, matching
 # environments' Dockerfile.ros2 convention (host UID 1000).
 RUN useradd --create-home --uid 1000 robium && \
     chown -R robium:robium /opt/my_module_install
@@ -59,7 +59,7 @@ SHELL ["/bin/bash", "-c"]
 
 # exec form + `exec "$@"` keeps the launched process as the signal target
 # (not an untracked parent shell), so SIGINT/SIGTERM reach `ros2 launch`
-# directly for a clean lifecycle shutdown — see references/dockerfile-guide.md.
+# directly for a clean lifecycle shutdown; see references/dockerfile-guide.md.
 ENTRYPOINT ["/bin/bash", "-c", "source /opt/ros/jazzy/setup.bash && source /opt/my_module_install/setup.bash && exec \"$@\"", "--"]
 
 # One process per container: a single `ros2 launch` invocation, not a

@@ -10,7 +10,7 @@ moves to an internal port behind it. Production reference:
 Cloud Run routes exactly one port, and three demo needs share it: the
 viewer's WebSocket, a status feed for the demo page's terminal, and a
 stop control. Vanilla nginx can't express the session-claim logic, and a
-separate status server can't guarantee it lands on the same instance —
+separate status server can't guarantee it lands on the same instance;
 one process that tunnels AND owns session state is the smallest correct
 shape.
 
@@ -19,15 +19,15 @@ shape.
 | Route | Behavior |
 | --- | --- |
 | `POST /start?session=U` | Claim the instance for U. 503 `busy` if a live tunnel belongs to another session. Starts the session clock. |
-| ws upgrade (any path, `?session=U`) | Raw byte tunnel to the bridge (internal port). Claims like /start. One live tunnel max — a second concurrent viewer gets 503 (their retry reaches a fresh instance since this one reports busy). |
-| `GET /status?session=U` | 200 JSON `{claimed, ready, rtf, nodes, uptime_s, remaining_s, fleet:{running,budget}, log:[…]}`; **409** if claimed by a different session. Unclaimed instances answer (booting state) — the page re-claims via /start when it sees `claimed:false`. |
+| ws upgrade (any path, `?session=U`) | Raw byte tunnel to the bridge (internal port). Claims like /start. One live tunnel max: a second concurrent viewer gets 503 (their retry reaches a fresh instance since this one reports busy). |
+| `GET /status?session=U` | 200 JSON `{claimed, ready, rtf, nodes, uptime_s, remaining_s, fleet:{running,budget}, log:[…]}`; **409** if claimed by a different session. Unclaimed instances answer (booting state); the page re-claims via /start when it sees `claimed:false`. |
 | `POST /shutdown?session=U` | 200 then SIGINT to PID 1 → the launch shuts down → container exits → instance gone. **403** on session mismatch. |
 
 ## Claim semantics (the part that took iteration)
 
 - A claim is sacred **only while its tunnel is live**. Concurrent foreign
   ws → 503 (hijack guard).
-- An **idle claim is takeable** by a new session — this is the page-reload
+- An **idle claim is takeable** by a new session; this is the page-reload
   path: the new UUID + affinity cookie land on the old, already-booted
   instance and inherit it (instant ready). Without takeover, reloads 503
   for up to ~15 min of instance retention.
@@ -40,7 +40,7 @@ A status node in the app (e.g. extending the auto-init node) writes
 `/tmp/demo_status.json` every ~2 s: `{start, ready, rtf, nodes, log:[last
 ~40 rosout lines]}`. The gateway serves it with session/uptime/fleet
 folded in. Readiness is app-defined; log a greppable line
-(`DEMO READY rtf=…`) — the demo smoke and cloud verification key on it.
+(`DEMO READY rtf=…`); the demo smoke and cloud verification key on it.
 
 ## Boot watchdog (required for gz-based sims on Cloud Run)
 
@@ -57,8 +57,8 @@ boot failure into a bounded retry.
   keep-alive; silent close = edge 503 "malformed").
 - Exact-origin CORS + `Access-Control-Allow-Credentials: true` (the page
   fetches with `credentials:'include'` so the affinity cookie rides).
-- `os.kill(1, SIGINT)` — SIGTERM to PID 1 is dropped by the kernel
+- `os.kill(1, SIGINT)`: SIGTERM to PID 1 is dropped by the kernel
   (`ros2 launch` installs no handler).
 - The ws tunnel is a dumb byte pipe (`asyncio.gather(pipe(a,b),
-  pipe(b,a))`) — no ws parsing needed beyond detecting the Upgrade
+  pipe(b,a))`); no ws parsing needed beyond detecting the Upgrade
   header and forwarding the original request bytes.

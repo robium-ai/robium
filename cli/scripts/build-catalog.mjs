@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 // Minimal frontmatter reader for the fields the catalog needs. Handles plain
-// scalars and folded scalars (`description: >` + indented lines) — the two
+// scalars and folded scalars (`description: >` + indented lines), the two
 // shapes robium actually uses. Not a general YAML parser.
 export function parseFrontmatter(text) {
   const m = text.match(/^---\r?\n([\s\S]*?)\r?\n---/);
@@ -46,7 +46,7 @@ export async function buildCatalog(pluginDir) {
     try {
       text = await readFile(path.join(skillsDir, e.name, 'SKILL.md'), 'utf8');
     } catch {
-      continue; // no SKILL.md (e.g. _TEMPLATE) — not an installable skill
+      continue; // no SKILL.md (e.g. _TEMPLATE), so not an installable skill
     }
     const fm = parseFrontmatter(text);
     if (!fm.name || !fm.version || !fm.description) {

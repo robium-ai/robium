@@ -7,7 +7,7 @@ Sources: [ros2/ros2_documentation](https://github.com/ros2/ros2_documentation)
 (Launch-file-different-formats.rst, Launch-system.rst,
 Using-Substitutions.rst), [ros2/launch](https://github.com/ros2/launch)
 (architecture.md), and [ros-tooling/topic_tools
-README](https://github.com/ros-tooling/topic_tools/blob/main/README.md) —
+README](https://github.com/ros-tooling/topic_tools/blob/main/README.md),
 all fetched via ctx7/direct GitHub raw fetch on 2026-07-10 (docs.ros.org was
 blocked by an anti-bot page for direct fetch; re-verify there when
 reachable).
@@ -16,7 +16,7 @@ reachable).
 
 ROS 2 supports Python, XML, and YAML launch files with equivalent core
 functionality. Python is the default choice for anything beyond the
-simplest static node list — it's the only format with real conditionals,
+simplest static node list: it's the only format with real conditionals,
 loops, and composability without a substitution-language workaround. Reserve
 XML/YAML for trivial cases or when matching an existing package's convention.
 
@@ -38,7 +38,7 @@ def generate_launch_description():
     ])
 ```
 
-`generate_launch_description()` is the required entry point — `ros2 launch`
+`generate_launch_description()` is the required entry point: `ros2 launch`
 imports the file and calls this function. `output='screen'` sends the node's
 logging to the launching terminal instead of only to the log files.
 
@@ -71,7 +71,7 @@ def generate_launch_description():
 Run with `ros2 launch my_package my_launch.py message:="custom text"`.
 `parameters=` also accepts a path to a YAML params file (or a
 `launch_ros.parameter_descriptions.ParameterFile` when the YAML itself needs
-launch substitutions resolved, e.g. `$(env HOME)`-style values) — prefer a
+launch substitutions resolved, e.g. `$(env HOME)`-style values); prefer a
 YAML file over a long inline dict once a node has more than a handful of
 parameters, so the values are reviewable outside the launch file.
 
@@ -87,7 +87,7 @@ Node(
 
 Equivalent XML: `<remap from="input_topic" to="renamed_topic"/>` nested
 inside a `<node>` tag. Remapping is the first tool to reach for when two
-packages almost line up but use different topic/service names — it requires
+packages almost line up but use different topic/service names; it requires
 no source changes in either package.
 
 ## Including other launch files
@@ -108,7 +108,7 @@ IncludeLaunchDescription(
 ),
 ```
 
-`FindPackageShare` resolves to the installed `share/<package>` directory —
+`FindPackageShare` resolves to the installed `share/<package>` directory;
 use it instead of a hardcoded path so the include works regardless of where
 the workspace was built.
 
@@ -133,7 +133,7 @@ setup(
 ```
 
 Also add `<exec_depend>launch</exec_depend>` and
-`<exec_depend>launch_ros</exec_depend>` to `package.xml` — a package that
+`<exec_depend>launch_ros</exec_depend>` to `package.xml`; a package that
 ships launch files but doesn't declare these depends will build fine and
 then fail at `ros2 launch` time on a machine that happens not to have them
 installed already. See `examples/package-ament-python/` for the full,
@@ -145,7 +145,7 @@ Two common shapes for gluing packages you don't want to modify:
 
 **Rename at launch time (no extra running node).** Put the remap directly on
 whichever `Node` action you already control, as shown above. This is the
-default — reach for it first.
+default; reach for it first.
 
 **Republish as a standalone node (when neither package's launch file is a
 good place to put the remap, or the "bridge" needs to run independently).**
@@ -166,7 +166,7 @@ ros2 run topic_tools relay_field /chatter /header std_msgs/Header \
   "{stamp: {sec: 0, nanosec: 0}, frame_id: m.data}"
 ```
 
-Both are separate nodes from the `ros-tooling/topic_tools` package — add
+Both are separate nodes from the `ros-tooling/topic_tools` package; add
 `topic_tools` as a dependency and launch the relay as its own `Node` action
 (or `ExecuteProcess`) alongside the two packages being bridged, rather than
 forking either package to add compatibility code. This pattern stays inside

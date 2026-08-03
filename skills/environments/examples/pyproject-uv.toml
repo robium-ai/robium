@@ -3,7 +3,7 @@
 #
 # Minimal pyproject.toml for a pure-Python robium project managed with uv.
 # Use this shape when the project does NOT need ROS 2 or other system-level
-# dependencies — see skills/environments/SKILL.md's decision tree. Generated
+# dependencies; see skills/environments/SKILL.md's decision tree. Generated
 # by `uv init` + `uv add`, then hand-trimmed for illustration; re-run
 # `uv add`/`uv lock` in a real project rather than copying this verbatim.
 

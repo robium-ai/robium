@@ -4,7 +4,7 @@ import { setup } from '../src/setup.js';
 import { doctor } from '../src/doctor.js';
 import { skills } from '../src/skills.js';
 
-const USAGE = `robium — robotics skill pack for coding agents (https://robium.ai)
+const USAGE = `robium: robotics skill pack for coding agents (https://robium.ai)
 
 Usage:
   npx robium-ai setup [options]          Clone the robium repo and wire it into
