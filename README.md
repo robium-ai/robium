@@ -26,8 +26,6 @@ invent Gazebo syntax, or pick the wrong simulator.
 robium gives it versioned robotics skills for choosing the stack, building the
 system, and testing the result.
 
-![Robium turns a robotics prompt into a working development plan](assets/demo-terminal.gif)
-
 ## Install
 
 **Quick** — clone the repository and install the skills for every supported
