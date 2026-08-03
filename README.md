@@ -57,19 +57,6 @@ symlink-based installs.
 Your application stays in its own repository; Robium lives beside it. Use the
 reference apps as starting points and contribute reusable fixes back.
 
-## Your first robot sim — on a plain laptop
-
-No GPU, no robot, no cloud. After installing, ask for what you want in plain
-language:
-
-> *"Set up a MuJoCo manipulation sim I can run headless on my laptop."*
-
-The `architect` skill selects a stack and routes the agent through environment
-setup, simulation, and a smoke test. This MuJoCo path runs offscreen without a
-GPU, including on macOS.
-
-> *"Now build me a mobile robot that navigates a warehouse in simulation."*
-
 ## How it fits
 
 Robium provides robotics expertise. Your project provides the context. Your AI
