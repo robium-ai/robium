@@ -159,7 +159,7 @@ Use the [issue templates](https://github.com/robium-ai/robium/issues/new/choose)
 
 Open-ended questions and design discussion belong in
 [GitHub Discussions](https://github.com/robium-ai/robium/discussions) or the
-[Discord](https://discord.gg/cyd8xC6W6), not the issue tracker.
+[Discord](https://robium.ai/join/discord), not the issue tracker.
 
 ## Ground rules
 

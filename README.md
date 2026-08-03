@@ -15,7 +15,7 @@ agent with the robotics skills it needs.
 [![Website](https://img.shields.io/badge/robium.ai-website-4c8bf5)](https://robium.ai)
 [![npm](https://img.shields.io/npm/v/robium-ai?label=npm%20robium-ai&color=cb3837)](https://www.npmjs.com/package/robium-ai)
 [![License: MIT](https://img.shields.io/badge/license-MIT-3da638)](./LICENSE)
-[![Discord](https://img.shields.io/badge/Discord-Robium-5865F2?logo=discord&logoColor=white)](https://discord.gg/cyd8xC6W6)
+[![Discord](https://img.shields.io/badge/Discord-Robium-5865F2?logo=discord&logoColor=white)](https://robium.ai/join/discord)
 [![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97-robium-FFD21E)](https://huggingface.co/robium)
 
 </div>
@@ -161,7 +161,7 @@ uv run skills/skill-author/scripts/validate_skills.py
 [CONTRIBUTING.md](./CONTRIBUTING.md) has the five-step walkthrough;
 [`good-first-skill`](https://github.com/robium-ai/robium/labels/good-first-skill)
 issues are the on-ramp. Questions:
-[Discord](https://discord.gg/cyd8xC6W6) or
+[Discord](https://robium.ai/join/discord) or
 [Discussions](https://github.com/robium-ai/robium/discussions).
 
 ## License

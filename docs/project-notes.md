@@ -7,7 +7,7 @@ notes into the repo, corrected for the monorepo.)
 ## Community accounts
 
 - **Hugging Face org:** `robium` → https://huggingface.co/robium (verified live 2026-07-18).
-- **Discord:** "Robium" — invite https://discord.gg/cyd8xC6W6 (verified via Discord API 2026-07-20).
+- **Discord:** "Robium" — invite https://discord.gg/9ay5kjEuA (updated 2026-08-03). Public links use the stable redirect https://robium.ai/join/discord (nginx 302 in robium-website); rotate invites there, not in content.
   - ⚠️ **This invite expires 2026-08-19** (not created "Never expire"). Get a permanent
     invite before launch and swap it in `website/src/components/Nav.astro` +
     `website/src/components/Footer.astro` and here.
