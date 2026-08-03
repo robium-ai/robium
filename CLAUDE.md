@@ -87,7 +87,7 @@ python3 -c "import json; json.load(open('.claude-plugin/plugin.json')); json.loa
 
 ### Capture learnings as you work (mandatory)
 
-Append a bullet to `learnings/YYYY-MM-DD.md` **at the moment an event happens** (create the file on first note; use today's real date; append `-<app>` to the filename if two apps run the same day). Details — exact command, exact error, exact phrasing — are the valuable part and they evaporate by end of session. Capture ALL of these signal types, tagged `[skill-name]` or `[none]`:
+Append a bullet to `learnings/YYYY-MM-DD-<app>.md` **at the moment an event happens** (create the file on first note; use today's real date; the `-<app>` suffix is mandatory whenever the work is app-scoped — app sessions run in parallel and must never share a learnings file; plain `YYYY-MM-DD.md` is only for non-app work). Details — exact command, exact error, exact phrasing — are the valuable part and they evaporate by end of session. Capture ALL of these signal types, tagged `[skill-name]` or `[none]`:
 
 - **Wrong/stale guidance** — a skill's command/config/fact failed or is outdated.
 - **No skill fired** — you asked something a skill should cover and nothing triggered. Record the exact phrasing you used; it becomes an eval case.

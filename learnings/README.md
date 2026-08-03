@@ -6,7 +6,9 @@ session transcripts (Tier −1) live gitignored in `.robium/transcripts/`; entri
 here are **derived views with pointers back** — never the only copy of anything
 a transcript holds.
 
-One file per day: `YYYY-MM-DD.md` (`-<app>` suffix if two apps run the same day).
+One file per day per app: `YYYY-MM-DD-<app>.md` — the `-<app>` suffix is
+mandatory for app-scoped work (app sessions run in parallel; a shared dated
+file would collide). Plain `YYYY-MM-DD.md` only for non-app work.
 
 ## Entry template (schema v2)
 
