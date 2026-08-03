@@ -9,7 +9,9 @@
 
 An open-source, continuously evolving collection of field-tested robotics<br>
 expertise — install robium as a plugin to empower your favorite AI coding<br>
-agent with the robotics skills it needs.
+agent with the robotics skills it needs.<br>
+Covers ROS 2, Nav2, Gazebo, MuJoCo, NVIDIA Isaac Sim, Isaac Lab, and LeRobot,<br>
+for Claude Code, Codex, Gemini CLI, and Cursor.
 
 [![skills](https://github.com/robium-ai/robium/actions/workflows/skills.yml/badge.svg)](https://github.com/robium-ai/robium/actions/workflows/skills.yml)
 [![Website](https://img.shields.io/badge/robium.ai-website-4c8bf5)](https://robium.ai)
