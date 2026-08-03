@@ -15,7 +15,7 @@ const CLAUDE_MISSING = `✗ Claude Code not found on PATH.
 
 // Claude Code path: the full plugin (skills + robium-architect agent +
 // capture hooks) via Claude's marketplace, served from the local clone when
-// setup resolved one (marketplaceRef = clone path) — `git pull` updates it.
+// setup resolved one (marketplaceRef = clone path); `git pull` updates it.
 // Other agents are handled by setup.js via the shared ~/.agents/skills dir.
 export async function installClaude({
   exec = run,
@@ -36,7 +36,7 @@ export async function installClaude({
   } else if (/already|exists/i.test(add.stderr + add.stdout)) {
     const upd = await exec('claude', ['plugin', 'marketplace', 'update', MARKETPLACE_NAME]);
     log(upd.ok
-      ? '✓ Marketplace already present — refreshed to latest'
+      ? '✓ Marketplace already present; refreshed to latest'
       : '! Marketplace already present (refresh failed; continuing)');
   } else {
     error(`✗ Could not add marketplace ${marketplaceRef}:\n${(add.stderr || add.stdout).trim()}`);

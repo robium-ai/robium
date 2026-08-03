@@ -4,7 +4,7 @@
 #         https://github.com/ros2/ros2_documentation/blob/rolling/source/Tutorials/Intermediate/Launch/Using-Substitutions.rst
 #         (data_files pattern for installing a package's launch directory).
 #         Fetched via ctx7 on 2026-07-10; docs.ros.org was blocked by an
-#         anti-bot page for direct fetch — re-verify there when reachable.
+#         anti-bot page for direct fetch; re-verify there when reachable.
 #
 # package_name must match package.xml's <name>, the resource/ marker file
 # name, and the 'package=' argument in launch/talker.launch.py. The

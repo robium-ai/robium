@@ -3,12 +3,12 @@
 #         (Python launch file: DeclareLaunchArgument, LaunchConfiguration,
 #         Node action with parameters/remappings). Fetched via ctx7 this
 #         session; docs.ros.org was blocked by an anti-bot page for direct
-#         fetch — re-verify there when reachable.
+#         fetch; re-verify there when reachable.
 #
 # Launches this package's `talker` executable (the console_scripts entry
 # point in ../setup.py, which resolves to ros2_example_pkg.talker_node:main).
 # Demonstrates a launch argument feeding a declared node parameter, and a
-# topic remap — the "write a launch file" and "parameterize a node" usage
+# topic remap: the "write a launch file" and "parameterize a node" usage
 # patterns in ../../../SKILL.md. Run with:
 #   ros2 launch ros2_example_pkg talker.launch.py message:="hi from launch"
 

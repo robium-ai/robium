@@ -110,7 +110,7 @@ def build_variant(name, deltas_path, skills_dir, workdir):
             raise VariantBuildError(
                 f"variant {name!r} refused by apply_deltas: {refused}")
         raise VariantBuildError(
-            f"variant {name!r} applied zero ops (noop-only deltas — "
+            f"variant {name!r} applied zero ops (noop-only deltas; "
             "not a scored candidate)")
     return variant_skills
 

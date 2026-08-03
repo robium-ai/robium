@@ -8,7 +8,7 @@
       joint layout, the DiffDrive plugin block)
     - gazebosim/docs, harmonic/sensors.md (the IMU sensor plugin/tags) and
       the lidar tags from sdformat's lidar.sdf schema (using the current
-      preferred <lidar> tag rather than the tutorial's legacy <ray> tag —
+      preferred <lidar> tag rather than the tutorial's legacy <ray> tag;
       see ../references/sensors.md)
 
   Deviations from those sources, made deliberately and listed here rather
@@ -22,7 +22,7 @@
       without an extra static transform. A real robot's lidar/camera is
       normally offset from base_link via its own frame (see
       ../references/worlds-and-models.md's frame section) with a
-      robot_state_publisher-published static transform bridging the two —
+      robot_state_publisher-published static transform bridging the two;
       that TF piece is the `ros2` skill's territory and is intentionally
       left out of this minimal snippet.
     - <topic>, <odom_topic>, <tf_topic>, <frame_id>, and <child_frame_id> are
@@ -31,10 +31,10 @@
       "/odom", "/tf") instead of model-scoped, matching
       ../examples/ros-gz-bridge-config.yaml and what nav2's example params
       expect (odom_frame_id "odom", base_frame_id "base_link",
-      odom_topic "/odom") — see ../../nav2/examples/nav2-params-diffdrive.yaml.
+      odom_topic "/odom"); see ../../nav2/examples/nav2-params-diffdrive.yaml.
       The leading slash on every explicitly-set <topic>/<odom_topic>/
       <tf_topic> (and the sensors' <topic> tags below) matches the
-      convention gz-sim's own test worlds use for explicit topics — see
+      convention gz-sim's own test worlds use for explicit topics; see
       gz-sim's test/worlds/diff_drive_custom_topics.sdf
       (<topic>/model/foo/cmdvel</topic>, <odom_topic>/model/bar/odom</odom_topic>),
       fetched directly via raw GitHub on 2026-07-10. gz-transport topic
@@ -45,9 +45,9 @@
     - Dimensions, mass, and wheel geometry are simplified round numbers, not
       copied from either upstream file.
     - The wall/contact-sensor and keyboard-teleop plugins from the
-      moving_robot.sdf tutorial are omitted — out of scope for this snippet.
+      moving_robot.sdf tutorial are omitted; out of scope for this snippet.
 
-  Not yet run against a live `gz sim` — verify it loads before using it in a
+  Not yet run against a live `gz sim`; verify it loads before using it in a
   real project.
 -->
 <sdf version="1.9">
@@ -124,7 +124,7 @@
           </geometry>
         </collision>
 
-        <!-- lidar mounted at base_link's own origin — see the deviation
+        <!-- lidar mounted at base_link's own origin; see the deviation
              note above on why there is no separate offset frame here -->
         <sensor name="gpu_lidar" type="gpu_lidar">
           <topic>/scan</topic>

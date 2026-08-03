@@ -1,6 +1,6 @@
 ---
 name: mujoco
-version: 1.0.1
+version: 1.0.2
 description: >
   MuJoCo for lightweight, contact-rich robot manipulation simulation on
   macOS/Linux, especially single-arm grasping without ROS: headless offscreen
@@ -24,7 +24,7 @@ MuJoCo 3.x for robium's lightweight, non-ROS manipulation side: a fast
 contact-rich physics engine with an offscreen renderer, well suited to
 hand-building a single-arm grasping/pick-and-place environment when the full
 ROS + Gazebo stack (or a GPU-gated Isaac stack) is more than the task needs.
-This skill stays deliberately thin on the MuJoCo API itself — the model format
+This skill stays deliberately thin on the MuJoCo API itself: the model format
 (MJCF), the Python bindings, and the robot assets in mujoco_menagerie are all
 documented upstream and move release to release. What it embeds instead is the
 set of hard-won gotchas from the vla-trial SO-101 build (macOS arm64, MuJoCo
@@ -36,7 +36,7 @@ modes that cost the most time and give no error message when they bite.
 
 - Simulating a low-DOF arm (grasping, pick-and-place, contact-rich
   manipulation) where ROS is not required and a GPU-photoreal simulator is
-  overkill — MuJoCo runs natively and fast on Apple Silicon.
+  overkill; MuJoCo runs natively and fast on Apple Silicon.
 - Rendering camera observations headless for a policy/dataset pipeline, and
   needing that rendering to be deterministic/reproducible.
 - Writing an inverse-kinematics reach + grasp routine by hand (damped
@@ -46,7 +46,7 @@ modes that cost the most time and give no error message when they bite.
   adapting its scene into a manipulation task.
 - The trigger phrases in the description: 'MuJoCo', 'MJCF', 'mjpython',
   'MUJOCO_GL', 'menagerie', 'SO-101', 'offscreen render', 'IK', 'grasp'.
-- Cross-references — go to the sibling skill instead when the question is:
+- Cross-references: go to the sibling skill instead when the question is:
   - A ROS 2-integrated simulation (ros_gz bridge, SDF worlds) → the `gazebo`
     skill.
   - Photoreal rendering, synthetic data at scale, or GPU-parallel RL → the
@@ -62,19 +62,19 @@ modes that cost the most time and give no error message when they bite.
 - **Delegation posture: embed + links.** The robium-specific,
   hard-won gotchas (macOS render backend, version pins, offscreen-render
   determinism, IK/grasp failure modes) live here because they are not written
-  down anywhere upstream. For the physics/model API itself — MJCF syntax, the
+  down anywhere upstream. For the physics/model API itself (MJCF syntax, the
   `mujoco` Python bindings, `mj_step`/`mj_forward`, the `Renderer` class, and
-  robot assets — point upstream to MuJoCo's docs and the mujoco_menagerie repo
+  robot assets) point upstream to MuJoCo's docs and the mujoco_menagerie repo
   (see References); do not restate the API from memory, it changes across 3.x
   releases.
 - **On macOS, `MUJOCO_GL=cgl` is the only headless render backend.** <!-- id: macos-gl-cgl-only --> osmesa and
   egl are Linux-only (mujoco#2164). Set it before importing `mujoco`.
 - **Watch the version-pin trap.** <!-- id: mujoco-version-pin-trap --> Menagerie's SO-101 needs MuJoCo ≥3.1.3, but
   common gym wrappers pin it *down* (gym-hil pins `mujoco<3.9`, gym-xarm pins
-  `<3.0`) — depending on one of those can silently downgrade MuJoCo below the
+  `<3.0`); depending on one of those can silently downgrade MuJoCo below the
   model's requirement. Pin MuJoCo explicitly and verify the installed version.
 - **Hand-written IK fails silently.** <!-- id: ik-fails-silently --> A damped-least-squares solver does not
-  raise on an unreachable target or on a bad grasp orientation — it returns a
+  raise on an unreachable target or on a bad grasp orientation; it returns a
   locally-optimal pose short of the goal. Probe reachability and calibrate
   grasps empirically (see Usage patterns); never assume a returned qpos means
   success.
@@ -90,14 +90,14 @@ modes that cost the most time and give no error message when they bite.
 uv add "mujoco>=3.1.3"   # current 3.10 as of 2026-07; SO-101 needs >=3.1.3
 ```
 
-Do not let a gym wrapper (gym-hil, gym-xarm) choose the version transitively —
+Do not let a gym wrapper (gym-hil, gym-xarm) choose the version transitively;
 it can pin MuJoCo below what the model needs.
 
 **2. Get the robot asset from mujoco_menagerie, not upstream MJCF.** <!-- id: use-menagerie-not-upstream-mjcf --> Clone
 [mujoco_menagerie](https://github.com/google-deepmind/mujoco_menagerie) and use
 its SO-101 model (the robotstudio_so101 directory, which ships a pick-and-place
 scene, manipulation-tuned collision geometry, and a camera mount). Do NOT use
-the upstream TheRobotStudio/SO-ARM100 MJCF — its own README admits the gripper
+the upstream TheRobotStudio/SO-ARM100 MJCF: its own README admits the gripper
 linear-joint mapping is not reflected in the model.
 
 **3. Headless offscreen render (macOS):**
@@ -129,7 +129,7 @@ For MJCF syntax, the bindings, and API signatures, go to MuJoCo's own docs
 **Headless render is not the bottleneck on Apple Silicon.** <!-- id: render-not-bottleneck --> Measured on the
 vla-trial build: ~84 fps at 256x256 via `MUJOCO_GL=cgl`, against a 60 fps
 floor; `mj_step` ~0.012 ms vs ~11.8 ms per render. This kills the common
-upstream worry that "offscreen render is extremely slow" — for a low-DOF arm
+upstream worry that "offscreen render is extremely slow": for a low-DOF arm
 scene it is comfortably real-time. Render, don't skip frames to save time.
 
 **Deterministic offscreen rendering** (needed for reproducible datasets/evals):
@@ -141,7 +141,7 @@ scene it is comfortably real-time. Render, don't skip frames to save time.
 - **Warm up the renderer with one throwaway full reset + render in `__init__`.** <!-- id: renderer-warmup-reset -->
   A fresh `mujoco.Renderer`'s first reset→`mj_forward`→render cycle is not
   repeatable against later renders (~6 LSB). A raw pre-`mj_forward` warm-up does
-  NOT consume the cold cycle — it must be a full reset+render.
+  NOT consume the cold cycle; it must be a full reset+render.
 - Ruled out as a cause: MSAA offsamples (a red herring here).
 
 **Reachability probing (IK).** <!-- id: reachability-probing-ik --> Because the DLS solver returns silently on an
@@ -153,7 +153,7 @@ unreachable target, probe the full task footprint × every lift height
 Calibrate the gripper-local grasp offset by experiment: teleport the object to
 a grid, close, lift, and keep the offsets that actually lift. Key facts:
 
-- Calibration is a function of **pose**, not a gripper property — recalibrate <!-- id: grasp-calibration-is-pose-function -->
+- Calibration is a function of **pose**, not a gripper property; recalibrate <!-- id: grasp-calibration-is-pose-function -->
   after any wrist-orientation change.
 - It is millimeter-sensitive and non-monotonic: a 3 mm offset change cost 6/10 <!-- id: grasp-offset-millimeter-sensitive -->
   success in one sweep. Sweep the grasp offset *and* the pedestal height
@@ -165,7 +165,7 @@ vertical, so a 4.2 cm aperture could not span a 6 cm cube (closed on air,
 0/10). Diagnostic: print the world-frame pinch axis and check it is
 perpendicular to the grasped dimension. Fix: solve wrist roll as a 1-D root
 find (`pinch_z(roll)` is a smooth sinusoid), then re-solve position with roll
-pinned via jnt_range — adding roll to the DLS objective *diverges*. This took
+pinned via jnt_range; adding roll to the DLS objective *diverges*. This took
 the oracle grasp from 0/10 to 8/10. (Position-only IK also gives no signal
 about the orientation it chose; a level-finger constraint may be genuinely
 infeasible on a 5-DOF arm.)
@@ -176,31 +176,31 @@ infeasible on a 5-DOF arm.)
   the same pose. Cube present: arm_err=0.18, saturated_joints=[1 2]; cube
   banished: arm_err=0.0006, saturated=[]. Instantly tells you whether IK or a
   collision is the problem.
-- **Check `qfrc_actuator` vs `forcerange`** <!-- id: check-qfrc-actuator-forcerange --> — saturated joints mean BLOCKED,
+- **Check `qfrc_actuator` vs `forcerange`** <!-- id: check-qfrc-actuator-forcerange -->: saturated joints mean BLOCKED,
   not slow. Raising settle steps (e.g. 12→60) is a dead end when joints are
   saturated.
-- **The first waypoint can sweep the arm through the object** <!-- id: first-waypoint-sweep-collision --> — a position
+- **The first waypoint can sweep the arm through the object** <!-- id: first-waypoint-sweep-collision -->: a position
   servo takes an arbitrary joint path to the target. Raising the initial
   approach waypoint (0.16→0.20 m) fixed a 2/10 → 10/10 grasp.
 
 **Resolve gripper geoms by body, not name.** <!-- id: gripper-geoms-by-body --> Menagerie leaves mesh geoms
 UNNAMED, so a name-based gripper-geom list silently misses the fixed-jaw
-collision mesh — a false-success risk in contact checks. Collect gripper geoms
+collision mesh, a false-success risk in contact checks. Collect gripper geoms
 by `model.geom_bodyid` membership instead.
 
 **Determine gripper polarity empirically.** <!-- id: gripper-polarity-empirical --> Drive the gripper joint to each end
 of its `actuator_ctrlrange` and measure the fingertip gap. SO-101 is
 LOW=closed / HIGH=open; the upstream SO-ARM100 docs claim the opposite and even
-admit their own MJCF disagrees — so measure, don't trust the docs.
+admit their own MJCF disagrees, so measure, don't trust the docs.
 
 ## Platform gotchas
 
 - **macOS headless render backend is `MUJOCO_GL=cgl` only** (osmesa/egl are
   Linux-only, mujoco#2164). Set it before `import mujoco`.
-- **The macOS CGL renderer is thread-affine — a cross-thread first render is a
+- **The macOS CGL renderer is thread-affine: a cross-thread first render is a
   silent deadlock.** <!-- id: cgl-thread-affine-deadlock --> A `mujoco.Renderer` created on one thread hangs forever
   (no error, no timeout, no exception) the first time a *different* thread
-  renders on it — the stack sits in cgl `make_current`. This bites frameworks
+  renders on it; the stack sits in cgl `make_current`. This bites frameworks
   that run handlers on worker threads (e.g. Gradio): a first `env.reset()`
   called from a worker freezes the stream. Fix: construct the env/renderer in
   the same thread that runs the episode (a per-run env in the handler), not once
@@ -209,7 +209,7 @@ admit their own MJCF disagrees — so measure, don't trust the docs.
   `uv` (mujoco#1923). Offscreen rendering does not need `mjpython`.
 - **No off-the-shelf SO-101 Gymnasium env exists.** <!-- id: no-so101-gym-env --> gym-hil is Franka-only;
   LIBERO is Linux-only. A language-conditioned SO-101 sim env must be
-  hand-built — budget for it rather than expecting to import one.
+  hand-built; budget for it rather than expecting to import one.
 - **Menagerie assets can be geometrically wrong for the robot.** <!-- id: menagerie-assets-geometrically-wrong --> The SO-101
   scene put the floor at the arm's base level; a real rig has base + objects on
   a raised surface. A 6 cm pedestal restored the intended work envelope (fixing
@@ -225,21 +225,21 @@ admit their own MJCF disagrees — so measure, don't trust the docs.
   for the new model rather than porting the SO-101 numbers.
 - **Different task envelope:** re-check the scene geometry (floor height,
   object spawn, camera pose) against the robot's reach before writing task
-  logic — a pedestal or a re-placed spawn is often the fix, not the IK.
+  logic; a pedestal or a re-placed spawn is often the fix, not the IK.
 - **Feeding a LeRobot pipeline:** MuJoCo here produces the observations and
   executes actions; the dataset format, recording, and policy training/eval
-  belong to the `lerobot` skill — keep the sim env and the dataset layer
+  belong to the `lerobot` skill; keep the sim env and the dataset layer
   separate.
 
 ## References
 
-- Upstream (primary sources — check before writing model or physics code):
+- Upstream (primary sources; check before writing model or physics code):
   [MuJoCo documentation](https://mujoco.readthedocs.io/) (MJCF, Python
   bindings, the `Renderer` API), [google-deepmind/mujoco GitHub
   repo](https://github.com/google-deepmind/mujoco) (releases and the issues
   cited above: #2164 render backends, #1923 viewer-under-uv),
   [mujoco_menagerie](https://github.com/google-deepmind/mujoco_menagerie)
-  (robot assets, incl. the SO-101 model — prefer this over upstream
+  (robot assets, incl. the SO-101 model; prefer this over upstream
   TheRobotStudio/SO-ARM100 MJCF). All facts above observed on MuJoCo 3.x,
   macOS arm64, 2026-07-13/14 (vla-trial SO-101 build); re-verify version-tied
   claims against current releases.
@@ -253,6 +253,8 @@ admit their own MJCF disagrees — so measure, don't trust the docs.
 
 <!-- One dated line per battle-tested change, added by skill-author hardening sessions. -->
 
+- 1.0.2 (2026-08-03): style pass; removed em dashes throughout (no content changes).
+
 - 1.0.1 (2026-08-01): anchor IDs added to claim-bearing items (learning-engine Phase 1); no content changes.
 
-- 1.0.0 (2026-07-31): created — captured from the vla-trial SO-101 manipulation build (2026-07-13/14).
+- 1.0.0 (2026-07-31): created: captured from the vla-trial SO-101 manipulation build (2026-07-13/14).

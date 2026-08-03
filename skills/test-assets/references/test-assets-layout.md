@@ -1,7 +1,7 @@
 # The standard test-assets layout
 
-The folder format for a repo's owned test data — worlds, models, datasets,
-recordings, goldens — with provenance for every asset. Works in both sourcing
+The folder format for a repo's owned test data (worlds, models, datasets,
+recordings, goldens), with provenance for every asset. Works in both sourcing
 modes: **vendored** (data committed under a size budget) and **pointer**
 (data gitignored, only README + MANIFEST committed).
 
@@ -17,7 +17,7 @@ modes: **vendored** (data committed under a size budget) and **pointer**
       bags/          # recorded telemetry (rosbag2/MCAP), self-recorded
       goldens/       # tolerance-band reference outputs per app/scenario
 
-`bags/` and `goldens/` start empty and fill from seeded runs — they are
+`bags/` and `goldens/` start empty and fill from seeded runs; they are
 outputs of the project's own verified scenarios, not downloads.
 
 ## MANIFEST.yaml schema
@@ -36,10 +36,10 @@ outputs of the project's own verified scenarios, not downloads.
 
 Rules:
 
-- `revision` is always pinned — never a branch name. The vendor script
+- `revision` is always pinned, never a branch name. The vendor script
   records the resolved value after fetching.
 - `license` is read from the upstream repo/dataset card at vendor time, never
-  from memory. An asset whose license forbids redistribution is NOT vendored —
+  from memory. An asset whose license forbids redistribution is NOT vendored;
   it stays pointer-mode and the README flags it.
 - Every local modification to a vendored file is listed in `notes`; otherwise
   files are verbatim upstream. This is what makes refresh = re-fetch + diff.
@@ -50,7 +50,7 @@ Rules:
 - Size each slice for its job (a pipeline-smoke slice rarely needs more than
   a handful of episodes; keep each slice small enough for the repo's budget).
 - Record N and the source revision in the entry's `notes`.
-- A slice must remain a loadable dataset — for LeRobot data, metadata must
+- A slice must remain a loadable dataset; for LeRobot data, metadata must
   stay consistent with the reduced episode count (validation tooling: the
   `lerobot` skill).
 

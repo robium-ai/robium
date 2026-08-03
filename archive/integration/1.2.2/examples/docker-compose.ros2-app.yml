@@ -1,0 +1,64 @@
+# status: unverified
+# source: https://docs.docker.com/compose/how-tos/networking/ (compose networking),
+#         https://fast-dds.docs.eprosima.com/en/latest/fastdds/ros2/discovery_server/ros2_discovery_server.html
+#         (alternative to host networking, for cross-host setups — see
+#         references/compose-patterns.md), https://hub.docker.com/_/ros (image tags).
+#
+# Minimal two-service ROS 2 app: `sim` stands in for a simulator publishing
+# data, `app` stands in for the module that consumes it — the same shape as
+# a real sim+controller or sim+perception pair. Both run on the *same*
+# ROS 2 graph, so per the comms-choice table in SKILL.md this uses native
+# ROS 2 topics, not a non-ROS transport.
+#
+# DDS discovery is configured EXPLICITLY, not assumed:
+#   - `network_mode: host` puts both containers on the host's real network
+#     namespace, so default multicast-based DDS discovery works unmodified
+#     (see references/compose-patterns.md, option 1). Linux-only — see
+#     SKILL.md Platform gotchas for the macOS/Windows Docker Desktop caveat;
+#     for cross-host or non-Linux-host setups use option 2 or 3 in that
+#     reference instead (Fast DDS Discovery Server / static CycloneDDS
+#     peers) rather than switching to host networking blindly.
+#   - `ROS_DOMAIN_ID` is set explicitly and identically on both services so
+#     they're isolated from any other ROS 2 system on the same host network
+#     and from each other's default (0) collisions.
+#
+# Re-verify the `ros:jazzy-ros-base-noble` tag against hub.docker.com/_/ros
+# and swap `jazzy` for the current default distro (see architect's Platform
+# gotchas) before using this in a real project. `demo_nodes_cpp` is used as
+# a stand-in publisher/subscriber pair — it is not included in the `-base`
+# image variant by default, hence the apt-get install shown; a real module
+# should bake its dependencies into the image at build time instead (see
+# references/dockerfile-guide.md, examples/Dockerfile.multistage-ros2) —
+# installing at container start, as done here for a self-contained minimal
+# example, is not the production pattern.
+
+services:
+  sim:
+    image: ros:jazzy-ros-base-noble
+    network_mode: host
+    environment:
+      - ROS_DOMAIN_ID=42
+    command: >
+      bash -c "apt-get update &&
+               apt-get install -y --no-install-recommends ros-jazzy-demo-nodes-cpp &&
+               source /opt/ros/jazzy/setup.bash &&
+               ros2 run demo_nodes_cpp talker"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "source /opt/ros/jazzy/setup.bash && ros2 topic list | grep -q /chatter"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  app:
+    image: ros:jazzy-ros-base-noble
+    network_mode: host
+    environment:
+      - ROS_DOMAIN_ID=42
+    depends_on:
+      sim:
+        condition: service_healthy
+    command: >
+      bash -c "apt-get update &&
+               apt-get install -y --no-install-recommends ros-jazzy-demo-nodes-cpp &&
+               source /opt/ros/jazzy/setup.bash &&
+               ros2 run demo_nodes_cpp listener"

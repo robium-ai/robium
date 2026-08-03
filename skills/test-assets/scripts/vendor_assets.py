@@ -3,7 +3,7 @@
 # requires-python = ">=3.10"
 # dependencies = ["pyyaml", "huggingface_hub>=0.24"]
 # ///
-"""vendor_assets.py — manifest-driven test-asset fetcher/refresher.
+"""vendor_assets.py: manifest-driven test-asset fetcher/refresher.
 
 Reads a MANIFEST.yaml (schema: the test-assets skill's
 references/test-assets-layout.md), fetches each entry into place, and prints

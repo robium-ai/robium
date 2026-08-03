@@ -1,7 +1,7 @@
 // Locate the robium plugin in `claude plugin list --json` output.
 //
 // Claude Code emits entries shaped { id: "robium@robium", enabled: true, ... }
-// — the id is `name@marketplace`. Earlier code matched the bare token
+// where the id is `name@marketplace`. Earlier code matched the bare token
 // `"robium"`, which never appears in that JSON, so a correctly-installed plugin
 // read as missing (both install's verify step and doctor). Match the plugin
 // *name* (the part before `@`) to avoid false positives like `robium-x@y`.

@@ -4,16 +4,16 @@
 #         https://catalog.ngc.nvidia.com/orgs/nvidia/containers/isaac-sim
 #         (NGC catalog, confirming the `6.0.1` tag is current as of this
 #         session). Re-verify the tag against the NGC catalog before using
-#         this command in a real project — Isaac Sim ships new container
+#         this command in a real project; Isaac Sim ships new container
 #         tags with each release.
 
 # Prerequisites: Docker, the NVIDIA Container Toolkit installed on the host
-# (Linux only — see the environments skill's GPU-and-remote reference for
+# (Linux only; see the environments skill's GPU-and-remote reference for
 # that generic setup), and a working `nvidia-smi` inside a test container
 # to confirm GPU passthrough before running Isaac Sim itself.
 
 # Create the cache/config/data directories once, before the first run, and
-# make sure they're owned by the UID the container runs as (1234 below —
+# make sure they're owned by the UID the container runs as (1234 below,
 # the value the docs use for a non-root container user):
 mkdir -p ~/docker/isaac-sim/{cache/main,cache/computecache,logs,config,data,pkg}
 mkdir -p ~/.cache/ov/hub
@@ -42,7 +42,7 @@ docker run --name isaac-sim --entrypoint bash -it --gpus all \
 # Flag notes:
 # - `--gpus all`            required GPU passthrough (NVIDIA Container Toolkit).
 # - `--network=host`        required for WebRTC livestreaming to work, not
-#                            just a convenience — the signaling/media ports
+#                            just a convenience; the signaling/media ports
 #                            below need to be reachable directly.
 # - `-e "ACCEPT_EULA=Y"`    required; the container will not start without it.
 # - `-e "PRIVACY_CONSENT=Y"` optional telemetry opt-in, included here for

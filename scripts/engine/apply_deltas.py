@@ -532,7 +532,7 @@ def apply_file(deltas_path, skills_dir="skills", archive_dir="archive",
         # C2: Check body cap AFTER adding changelog lines
         if _body_line_count(working) >= BODY_CAP:
             report["refused"].extend(
-                _item(op, "would breach 500-line body cap — split to references/")
+                _item(op, "would breach 500-line body cap: split to references/")
                 for op in applied_here)
             report["noop"].extend(pending["noop"])
             continue
@@ -555,7 +555,7 @@ def apply_file(deltas_path, skills_dir="skills", archive_dir="archive",
             dest_final = _bump_and_log(buf["working"], buf["old_ver"], dest_new_ver,
                                        date, log_ops_dest)
             if _body_line_count(dest_final) >= BODY_CAP:
-                dest_breach = "would breach 500-line body cap — split to references/"
+                dest_breach = "would breach 500-line body cap: split to references/"
                 break
             buf["new_ver"] = dest_new_ver
             buf["final_lines"] = dest_final

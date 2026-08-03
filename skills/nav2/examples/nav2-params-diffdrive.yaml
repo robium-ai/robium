@@ -1,7 +1,7 @@
 # status: unverified
 # source: https://raw.githubusercontent.com/ros-navigation/navigation2/jazzy/nav2_bringup/params/nav2_params.yaml
 #         fetched directly via `curl` of the raw GitHub file (jazzy branch)
-#         on 2026-07-10 — this is nav2_bringup's own minimal diff-drive
+#         on 2026-07-10; this is nav2_bringup's own minimal diff-drive
 #         (TurtleBot 3) params file, the standard starting point the
 #         "start from the official minimal config" key directive in
 #         ../SKILL.md points at.
@@ -13,7 +13,7 @@
 #     map -> odom -> base_link chain this skill's key directives verify.
 #     A robot that uses a separate base_footprint frame (ground-projected,
 #     offset from base_link) needs its own static transform published
-#     between the two — that's the `ros2` skill's TF territory, not this
+#     between the two; that's the `ros2` skill's TF territory, not this
 #     file's.
 #   - route_server and collision_monitor sections dropped: both are newer,
 #     optional Nav2 subsystems (route-graph following, separate safety

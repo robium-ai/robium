@@ -3,16 +3,16 @@
 #         https://docs.astral.sh/uv/guides/integration/docker/ (uv-in-Docker pattern)
 #
 # Example: a ROS 2 workspace container with uv managing any pure-Python glue
-# code's dependencies (never `pip install` into this image's system Python —
+# code's dependencies (never `pip install` into this image's system Python;
 # see skills/environments/SKILL.md's key directives). Jazzy Jalisco is shown
 # here because it's the Nav2-vertical default; Lyrical Luth is the general
-# current-LTS default per skills/architect's Platform gotchas — re-verify
+# current-LTS default per skills/architect's Platform gotchas; re-verify
 # the ROS 2 base tag against hub.docker.com/_/ros and swap jazzy for lyrical
 # (or another current distro) before using in a real project.
 
 FROM ros:jazzy-ros-base-noble
 
-# Install uv by copying the binary from the official distroless image —
+# Install uv by copying the binary from the official distroless image;
 # avoids curl/pip bootstrapping.
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
 
@@ -28,7 +28,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /workspace
 
-# Python-side glue-code dependencies, isolated in a project venv via uv —
+# Python-side glue-code dependencies, isolated in a project venv via uv,
 # not the container's system Python.
 COPY pyproject.toml uv.lock ./
 RUN uv sync --locked

@@ -20,7 +20,7 @@ of the Isaac Lab 3.0.0 source/docs in that session, not recalled.
 
 ## Critical: checkpoints land under the EXPERIMENT NAME, not the task ID
 
-Checkpoints go to `logs/rsl_rl/unitree_go2_flat/<timestamp>/` — the subdir
+Checkpoints go to `logs/rsl_rl/unitree_go2_flat/<timestamp>/`: the subdir
 is the **experiment name** `unitree_go2_flat`, **not** the task ID
 `Isaac-Velocity-Flat-Unitree-Go2-v0`. A smoke test that asserts on a
 task-ID-shaped log path will fail even though training succeeded. Assert on
@@ -31,7 +31,7 @@ the experiment-name path.
 - **4096 envs converges by ~iteration 300** (reward climbs from ≈ −0.5 to a
   ≈ +36 plateau; episode length saturates at the 1000-step max). The
   1000–2000-iteration defaults are refinement, not required for a walking
-  policy — stop early once the plateau holds.
+  policy; stop early once the plateau holds.
 - **`save_interval` is a Hydra override**, not a CLI flag:
   `agent.save_interval=N` on the train command.
 - **Render videos post-hoc**, not during training: run
@@ -41,14 +41,14 @@ the experiment-name path.
 
 ## Reward and cost live in CONFIG, not code
 
-Reward and cost share a single `RewardsCfg` — a **cost is just a term with a
+Reward and cost share a single `RewardsCfg`: a **cost is just a term with a
 negative weight**. The per-step reward is `Σ weight · term() · dt`. Relevant
 files (verified against 3.0.0 source):
 
-- `locomotion/velocity/velocity_env_cfg.py` — the base `RewardsCfg`.
-- `locomotion/velocity/mdp/rewards.py` — task-specific reward term
+- `locomotion/velocity/velocity_env_cfg.py`: the base `RewardsCfg`.
+- `locomotion/velocity/mdp/rewards.py`: task-specific reward term
   functions.
-- `isaaclab/envs/mdp/rewards.py` — the generic reward term library.
+- `isaaclab/envs/mdp/rewards.py`: the generic reward term library.
 
 Weights override down a **3-layer chain**:
 `velocity_env_cfg` → `config/go2/rough_env_cfg` → `config/go2/flat_env_cfg`,
@@ -59,10 +59,10 @@ with the flat config winning for the flat task. Kernels: reward terms use
 
 To add a robot or task, scaffold an **isolated external project** with
 `./isaaclab.sh --new`. It creates a standalone repo that pip-installs Isaac
-Lab as a dependency and `gym.register`s the new task — you do not fork or
+Lab as a dependency and `gym.register`s the new task; you do not fork or
 edit the Isaac Lab repo. The "internal task" path (editing the Isaac Lab
 repo in place) is only for upstreaming, and it is **auto-disabled when Isaac
-Lab is pip-installed** — which is exactly the case inside the prebuilt NGC
+Lab is pip-installed**, which is exactly the case inside the prebuilt NGC
 container. So on the prebuilt image, external-project is the only path.
 (Verified vs the 3.0.0 doc: overview / own-project / template.rst.)
 

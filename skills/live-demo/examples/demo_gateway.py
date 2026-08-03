@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Demo session gateway — single process on $PORT (8765).
+"""Demo session gateway: single process on $PORT (8765).
 
-Status: verified 2026-07-13 — this exact file runs the nav-trial live demo
+Status: verified 2026-07-13; this exact file runs the nav-trial live demo
 on robium.ai (Cloud Run service demo-nav-trial). Adapt FLEET_BUDGET and
 the CORS origin for your deployment.
 
@@ -81,7 +81,7 @@ def http_response(status, body, extra=''):
     # 503s at the edge (verified 2026-07-13).
     # Exact-origin CORS + credentials: the page fetches with
     # credentials:'include' so Cloud Run's GAESA affinity cookie rides along
-    # (same-site via demo.robium.ai — the cookie is SameSite-Lax and never
+    # (same-site via demo.robium.ai; the cookie is SameSite-Lax and never
     # flows to run.app cross-site). ACAO:* is invalid with credentials.
     return (f'HTTP/1.1 {status}\r\nContent-Type: application/json\r\n'
             f'Content-Length: {len(body)}\r\n'
@@ -138,7 +138,7 @@ async def handle(reader, writer):
         # A claim is sacred only while its tunnel is LIVE: a concurrent ws
         # from any session -> 503 (hijack guard; that visitor's retry gets a
         # fresh instance). With no live tunnel, a new session may take over
-        # the claim — this is the page-reload path (new UUID + affinity
+        # the claim; this is the page-reload path (new UUID + affinity
         # cookie routes to the old, already-booted instance: instant ready).
         if state['tunnel_open']:
             writer.write(http_response('503 Busy', json.dumps({'error': 'busy'})))
@@ -212,7 +212,7 @@ async def handle(reader, writer):
         await asyncio.sleep(0.2)
         # SIGINT, not SIGTERM: PID 1 (ros2 launch) has no SIGTERM handler
         # installed, and unhandled signals to PID 1 are ignored by the
-        # kernel — SIGINT triggers launch's real shutdown (verified).
+        # kernel; SIGINT triggers launch's real shutdown (verified).
         os.kill(1, signal.SIGINT)
         return
 

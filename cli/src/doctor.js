@@ -11,10 +11,10 @@ export function buildChecks({ exec = run, platform = process.platform, arch = pr
       id: 'platform', label: 'Platform',
       async run() {
         if (appleSilicon) {
-          return { status: 'pass', detail: 'macOS arm64 (Apple Silicon — MPS available for local training)' };
+          return { status: 'pass', detail: 'macOS arm64 (Apple Silicon; MPS available for local training)' };
         }
         if (platform === 'linux' && !env.DISPLAY) {
-          return { status: 'pass', detail: `linux ${arch} (no DISPLAY — headless; use headless render backends)` };
+          return { status: 'pass', detail: `linux ${arch} (no DISPLAY, headless; use headless render backends)` };
         }
         return { status: 'pass', detail: `${platform} ${arch}` };
       },
@@ -45,10 +45,10 @@ export function buildChecks({ exec = run, platform = process.platform, arch = pr
       async run() {
         const v = await exec('docker', ['--version']);
         if (!v.ok) {
-          return { status: 'warn', detail: 'not found', hint: 'ROS 2 / Gazebo workflows run in containers — install Docker' };
+          return { status: 'warn', detail: 'not found', hint: 'ROS 2 / Gazebo workflows run in containers; install Docker' };
         }
         const info = await exec('docker', ['info', '--format', '{{.ServerVersion}}'], { timeout: 15_000 });
-        if (!info.ok) return { status: 'warn', detail: `${v.stdout.trim()} — daemon not running`, hint: 'start Docker' };
+        if (!info.ok) return { status: 'warn', detail: `${v.stdout.trim()} (daemon not running)`, hint: 'start Docker' };
         return { status: 'pass', detail: `${v.stdout.trim()} (daemon ${info.stdout.trim()})` };
       },
     },
@@ -71,7 +71,7 @@ export function buildChecks({ exec = run, platform = process.platform, arch = pr
       id: 'gpu', label: 'GPU',
       async run() {
         if (appleSilicon) {
-          return { status: 'pass', detail: 'Apple Silicon MPS (no CUDA — Isaac Sim/Lab need an NVIDIA RTX-class GPU, local or remote)' };
+          return { status: 'pass', detail: 'Apple Silicon MPS (no CUDA; Isaac Sim/Lab need an NVIDIA RTX-class GPU, local or remote)' };
         }
         const r = await exec('nvidia-smi', ['--query-gpu=name,driver_version', '--format=csv,noheader']);
         if (r.ok && r.stdout.trim()) return { status: 'pass', detail: r.stdout.trim().split('\n')[0] };
@@ -96,7 +96,7 @@ export function buildChecks({ exec = run, platform = process.platform, arch = pr
         const r = await exec('ros2', ['--help'], { timeout: 15_000 });
         return r.ok
           ? { status: 'info', detail: 'ros2 CLI on PATH' }
-          : { status: 'info', detail: 'not on PATH — fine; container workflows cover ROS 2' };
+          : { status: 'info', detail: 'not on PATH (fine; container workflows cover ROS 2)' };
       },
     },
   ];
@@ -123,6 +123,6 @@ export async function doctor({ json = false, log = console.log, ...opts } = {}) 
   }
   log(exitCode === 0
     ? '\nNo blockers found.'
-    : '\nBlockers found — fix the ✗ items above.');
+    : '\nBlockers found: fix the ✗ items above.');
   return exitCode;
 }

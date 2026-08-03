@@ -5,7 +5,7 @@ system. This is a different concern from the `environments` skill's
 docker-patterns.md reference: that reference is about a *single
 environment's* reproducibility (uv inside a ROS 2 image, GPU base tags,
 local/remote parity). This reference is about *build quality* for a module
-that's going to run as one service among several in compose — image size,
+that's going to run as one service among several in compose: image size,
 build-cache efficiency, and container-runtime behavior (signals, one
 process). Read both; they compose, they don't duplicate.
 
@@ -16,7 +16,7 @@ not just a compose one: a Dockerfile that `CMD`s a single `ros2 launch` (or
 a single node executable) is the default shape. If a Dockerfile's `CMD`
 starts multiple unrelated long-running processes (a supervisor script
 backgrounding several nodes), that's the signal to split into multiple
-Dockerfiles/services instead — supervisord-in-a-container patterns exist,
+Dockerfiles/services instead; supervisord-in-a-container patterns exist,
 but they trade away independent restart/scaling and should be a stated
 exception, not a default reach.
 
@@ -27,7 +27,7 @@ rosdep-resolved build dependencies) is large and mostly irrelevant at
 runtime. Split it:
 
 ```dockerfile
-# Stage 1: build — full toolchain, discarded after this stage.
+# Stage 1: build; full toolchain, discarded after this stage.
 # (re-verify `jazzy-ros-base-noble` against hub.docker.com/_/ros and the
 # current default distro before using this tag in a real project)
 FROM ros:jazzy-ros-base-noble AS builder
@@ -39,7 +39,7 @@ COPY ./src ./src
 RUN . /opt/ros/jazzy/setup.sh && \
     colcon build --merge-install --install-base /opt/module_install
 
-# Stage 2: runtime — only the built install/ tree and runtime deps.
+# Stage 2: runtime; only the built install/ tree and runtime deps.
 FROM ros:jazzy-ros-base-noble
 COPY --from=builder /opt/module_install /opt/module_install
 # runtime-only apt deps (no compilers, no -dev packages) go here if needed
@@ -49,7 +49,7 @@ CMD ["ros2", "launch", "my_module", "my_module.launch.py"]
 ```
 
 The runtime stage never sees `build-essential`, colcon, or the raw `src`
-tree — smaller image, smaller attack surface, and a build-cache boundary
+tree: smaller image, smaller attack surface, and a build-cache boundary
 that keeps "recompile" and "ship" concerns separate. See
 `examples/Dockerfile.multistage-ros2` for the complete, runnable-shape
 version this pattern is drawn from, and cross-reference `environments`'
@@ -73,17 +73,17 @@ participant teardown). Two things commonly break this in containers:
 - **Use exec form, not shell form, for the final `CMD`/`ENTRYPOINT` step**
   so the launched process is PID 1 (or receives signals directly) rather
   than being a child of an untracked shell that swallows the signal. The
-  `ENTRYPOINT` pattern above uses `exec "$@"` for exactly this reason —
+  `ENTRYPOINT` pattern above uses `exec "$@"` for exactly this reason;
   without `exec`, the sourced-setup shell stays PID 1 and `docker stop`
   has to wait out the full timeout before SIGKILL.
 - **`docker compose stop`'s default timeout (10s)** may not be enough for a
-  ROS 2 graph with several lifecycle nodes to shut down cleanly — raise
+  ROS 2 graph with several lifecycle nodes to shut down cleanly; raise
   `stop_grace_period` in compose for modules with real shutdown work to do,
   rather than accepting SIGKILL as the normal path.
 
 ## Non-root runtime user
 
-Same guidance as `environments`' `docker-patterns.md` — run the runtime
+Same guidance as `environments`' `docker-patterns.md`: run the runtime
 stage as a non-root user for a security default and permission parity with
 mounted volumes:
 
@@ -96,6 +96,6 @@ USER robium
 ## `.dockerignore`
 
 Exclude colcon build artifacts (`build/`, `install/`, `log/`) and any local
-venv from the build context — same reasoning as the single-environment case
+venv from the build context; same reasoning as the single-environment case
 in `environments`, and it matters more here because a multi-module repo's
 build context is larger and slower to send to the daemon if left unfiltered.

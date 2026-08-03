@@ -1,4 +1,4 @@
-# robium CLI (npx package) — design
+# robium CLI (npx package): design
 
 Date: 2026-07-18. Approved in-session (brainstormed in robium-plugin, built here).
 
@@ -12,7 +12,7 @@ utility (`doctor`). Fills the "A robium CLI" backlog item (robium-plugin
 ## Decisions
 
 - **Package**: npm name `robium-ai`, bin `robium`, v0.1.0. New sibling repo
-  `robium-ai/robium-cli` — keeps the plugin repo JS-free. The bare name
+  `robium-ai/robium-cli`; keeps the plugin repo JS-free. The bare name
   `robium` was unregistered but npm's similarity policy rejected it at publish
   time ("too similar to existing package radium"); `robium-cli` was ruled out
   for the same reason (`radium-cli` exists). `robium-ai` matches the domain
@@ -27,17 +27,17 @@ utility (`doctor`). Fills the "A robium CLI" backlog item (robium-plugin
   coming-soon, mirroring the website tabs. Cursor/Gemini manifest generation
   stays in the robium-plugin backlog ("public release machinery").
 - **Commands**:
-  - `install [--agent claude|cursor|gemini]` — detect `claude --version`;
+  - `install [--agent claude|cursor|gemini]`: detect `claude --version`;
     add marketplace `robium-ai/robium-plugin` (fall back to
     `marketplace update robium` if it already exists); install
     `robium@robium`; verify; print a "try this" next step.
-  - `doctor [--json]` — fast read-only checks, statuses
+  - `doctor [--json]`: fast read-only checks, statuses
     pass/warn/fail/info/skip, exit 1 only on fail: platform (Apple
     Silicon/MPS, Linux DISPLAY), Claude Code, robium plugin, Docker CLI +
     daemon, disk space (warn <20 GB), GPU (nvidia-smi / MPS), python3 + uv,
     native ros2 (informational only). `--json` is the future hook for skills
-    to consume — wiring that into skills is a separate, user-gated change.
-  - `skills [query]` — list name/version/first-sentence from
+    to consume; wiring that into skills is a separate, user-gated change.
+  - `skills [query]`: list name/version/first-sentence from
     `src/catalog.json`.
 - **Catalog**: `src/catalog.json` generated at publish time by
   `scripts/build-catalog.mjs` from the sibling robium-plugin checkout

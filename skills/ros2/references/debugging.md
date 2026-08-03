@@ -11,7 +11,7 @@ anti-bot page for direct fetch; re-verify there when reachable).
 
 ## First: is the environment actually sourced and configured?
 
-Before touching application-level debugging, rule out environment problems —
+Before touching application-level debugging, rule out environment problems;
 they produce error messages that look unrelated to the real cause:
 
 ```bash
@@ -22,14 +22,14 @@ ros2 doctor --report       # broad environment/health report in one command
 - **Empty/wrong `$ROS_DISTRO`, "command not found: ros2"**: the underlay
   wasn't sourced, or was sourced in the wrong shell. `source
   /opt/ros/lyrical/setup.bash` (underlay) then `source install/setup.bash`
-  (overlay), in that order, every new shell — see
+  (overlay), in that order, every new shell; see
   `references/workspace-and-packages.md`.
 - **Package builds but `ros2 run`/`ros2 pkg list` doesn't see it**: the
   overlay (`install/setup.bash`) wasn't re-sourced after the last build, or
   the package name in `package.xml` doesn't match what you're typing.
 - **Two unrelated ROS 2 systems interfering with each other** (nodes you
   didn't start showing up in `ros2 node list`, or traffic from another
-  project): a `ROS_DOMAIN_ID` collision — every ROS 2 system defaults to
+  project): a `ROS_DOMAIN_ID` collision: every ROS 2 system defaults to
   domain `0`. `export ROS_DOMAIN_ID=<project-unique-int>` in every shell/
   container for this project.
 
@@ -53,24 +53,24 @@ side by side, so an incompatible pairing (e.g. one `RELIABLE`, one
 
 ## Diagnosing "node not receiving messages"
 
-Work through these in order — this is the concrete version of the "QoS
+Work through these in order: this is the concrete version of the "QoS
 compatibility is the first suspect" directive:
 
 1. **Do both nodes appear in `ros2 node list`?** If not, it's a discovery
-   problem (domain ID mismatch, network/multicast blocked — see the
+   problem (domain ID mismatch, network/multicast blocked; see the
    `integration` skill's DDS-across-containers gotchas if this is a
    multi-container setup), not a QoS problem.
 2. **Does the topic appear in `ros2 topic list` with both a publisher and a
    subscriber count ≥ 1 in `ros2 topic info -v`?** If either count is 0, the
    node isn't actually creating the publisher/subscription you think it is
-   (check the topic name for a typo or an unintended remap) — not a QoS
+   (check the topic name for a typo or an unintended remap); not a QoS
    problem yet.
 3. **Are the QoS profiles shown by `ros2 topic info -v` compatible?**
    Reliability: a subscriber set to `reliable` will not connect to a
    publisher set to `best_effort`. Durability: this only affects *late
-   joiners* — a `volatile` publisher won't have delivered anything published
+   joiners*: a `volatile` publisher won't have delivered anything published
    before a late-joining subscriber connected. Mismatches here produce zero
-   messages with no error on either side — this is usually the actual cause
+   messages with no error on either side; this is usually the actual cause
    once steps 1–2 pass. See `references/interfaces-and-qos.md`.
 4. **Only after 1–3 check out**, look at application logic (callback errors,
    message filtering, executor not spinning).
@@ -78,14 +78,14 @@ compatibility is the first suspect" directive:
 ## Build and dependency failures
 
 - **`colcon build` fails with a missing header or `ModuleNotFoundError`**:
-  almost always an unresolved dependency — run `rosdep install --from-paths
+  almost always an unresolved dependency; run `rosdep install --from-paths
   src -y --ignore-src` before assuming it's a source bug. See
   `references/workspace-and-packages.md`.
 - **A package isn't found by colcon at all**: confirm it's actually under
   `src/` and has a valid `package.xml`; a malformed or missing `package.xml`
   makes colcon skip the directory silently rather than erroring loudly.
 - **Rebuilding a Python-only change has no effect**: confirm the workspace
-  was built with `--symlink-install` — without it, Python file edits require
+  was built with `--symlink-install`; without it, Python file edits require
   a rebuild to take effect, not just a re-source.
 
 ## TF2-specific debugging
@@ -97,7 +97,7 @@ ros2 run tf2_tools view_frames                             # renders the current
 
 `tf2_echo` failing with "could not find a connection" almost always means
 either the broadcaster node isn't running, or the frame names don't match
-exactly (case-sensitive, no leading slash in modern TF2) — `view_frames`
+exactly (case-sensitive, no leading slash in modern TF2); `view_frames`
 shows the whole tree at once, which is faster than guessing frame names one
 `tf2_echo` at a time when the tree has more than two or three frames.
 
@@ -105,7 +105,7 @@ shows the whole tree at once, which is faster than guessing frame names one
 
 - **`rosdep: command not found` / "no such key"**: `sudo rosdep init &&
   rosdep update` hasn't been run on this machine, or the rosdep index is
-  stale relative to a newly-released package — `rosdep update` again.
+  stale relative to a newly-released package; `rosdep update` again.
 - **A specific key won't resolve**: check it's spelled exactly as it appears
   upstream (rosdep keys are case-sensitive and package-specific, not always
   the same as the apt package name) and that the OS/distro combination is

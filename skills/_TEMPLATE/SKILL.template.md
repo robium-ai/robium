@@ -19,7 +19,7 @@ One-paragraph orientation: what this skill covers and the outcome it produces.
 
 ## Key directives
 
-- Delegation posture: one of — **embed** (knowledge lives here) / **embed + links** / **delegate to <upstream skill/plugin>**.
+- Delegation posture: one of **embed** (knowledge lives here) / **embed + links** / **delegate to <upstream skill/plugin>**.
 - The guardrails: "never X", "always Y", ordered by importance.
 
 ## Quick start
@@ -32,7 +32,7 @@ The decision tree or the 3-5 most common usage patterns, each with a snippet.
 
 ## Platform gotchas
 
-- macOS / Linux / GPU / remote-server notes. Only real ones — delete if none known yet.
+- macOS / Linux / GPU / remote-server notes. Only real ones; delete if none known yet.
 
 ## Customization
 
@@ -40,8 +40,8 @@ How to adapt the examples and configs to a different robot/task/env.
 
 ## References
 
-- `references/<topic>.md` — one line on what it covers
-- `examples/<file>` — one line, with status marker
+- `references/<topic>.md`: one line on what it covers
+- `examples/<file>`: one line, with status marker
 - Upstream: [official docs](URL), [examples repo](URL), related plugins/skills
 
 ## Changelog
