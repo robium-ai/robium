@@ -1,0 +1,33 @@
+name: Idea / feature
+description: A broader improvement, feature, or direction that isn't a single new skill or a bug.
+title: "[idea] "
+labels: ["idea"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For open-ended discussion and questions, prefer
+        [Discussions](../../discussions). Use this template when you have a
+        concrete proposal to track. A single new-tool skill goes in the
+        "New skill request" template instead.
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+      description: What you'd like to see, in a sentence or two.
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does it solve?
+      description: The friction or gap this addresses, and who it helps.
+    validations:
+      required: true
+  - type: textarea
+    id: sketch
+    attributes:
+      label: Rough sketch (optional)
+      description: How it might work, which half of the repo it touches (skills vs apps vs CLI vs site), or prior art.
+    validations:
+      required: false

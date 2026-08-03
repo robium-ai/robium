@@ -1,0 +1,10 @@
+skill: nav2
+observation: obs-nav2-003
+date: 2026-08-02
+variants:
+  - name: A
+    deltas: learnings/deltas/2026-08-02-nav2-ab-A.yaml
+  - name: B
+    deltas: learnings/deltas/2026-08-02-nav2-ab-B.yaml
+  - name: C
+    deltas: learnings/deltas/2026-08-02-nav2-ab-C.yaml

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions & open-ended discussion
+    url: https://github.com/robium-ai/robium/discussions
+    about: For "how do I…", design debate, or anything without a concrete skill request or bug — start a Discussion instead of an issue.
+  - name: Discord
+    url: https://discord.gg/cyd8xC6W6
+    about: Chat with the robium community — quick questions, skill ideas, and help.

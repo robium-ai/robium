@@ -1,0 +1,9 @@
+date: 2026-08-02
+deltas:
+  - skill: nav2
+    op: annotate
+    file: SKILL.md
+    find: "  Verified 2026-07-11 (nav-trial).\n- **On TB3 Jazzy, start from `turtlebot3_navigation2`'s `burger.yaml`, not"
+    replace: "  Verified 2026-07-11 (nav-trial).\n- **The controller plugin's `TwistStamped` return type is not the `/cmd_vel` wire format.** <!-- id: cmd-vel-plugin-api-decoupling --> `nav2_core::Controller::computeVelocityCommands()` always returns `TwistStamped` regardless of the `enable_stamped_cmd_vel` toggle documented in the cmd-vel-twiststamped gotcha above — a plugin returning `TwistStamped` does not imply `/cmd_vel` is published as `TwistStamped`; that inference is not valid, since `controller_server` converts/republishes per that separate parameter, not per the plugin's return type. Confirmed 2026-08-02 (`navigation2_tutorials`, rolling branch); re-verify against this skill's target distro (Jazzy Jalisco) before treating the exact return type as pinned — the Jazzy-specific docs.ros.org fetch was bot-blocked (Anubis Access Denied) at authoring time.\n- **On TB3 Jazzy, start from `turtlebot3_navigation2`'s `burger.yaml`, not"
+    reason: obs-nav2-003
+bump: {nav2: minor}

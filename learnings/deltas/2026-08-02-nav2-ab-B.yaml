@@ -1,0 +1,26 @@
+date: 2026-08-02
+deltas:
+  - skill: nav2
+    op: update
+    anchor: cmd-vel-twiststamped
+    content: |
+      - **`/cmd_vel` may be `TwistStamped`, not `Twist`.** <!-- id: cmd-vel-twiststamped --> Modern gz robot
+        integrations (TB3 on Jazzy among them) subscribe `TwistStamped`; a plain
+        `Twist` publisher never matches — no error, `ros2 topic pub` just waits
+        forever for a matching subscription — and the robot silently ignores
+        Nav2. Check with `ros2 topic info -v /cmd_vel`, and set
+        `enable_stamped_cmd_vel: true` in every cmd_vel-publishing section
+        (`controller_server`, `velocity_smoother`, `behavior_server`,
+        `collision_monitor`, `docking_server`). TB3 Jazzy's `burger.yaml` already
+        pre-sets `enable_stamped_cmd_vel: true` in all five of those sections, so
+        this trap only bites configs started from nav2_bringup's `nav2_params.yaml`.
+        This wire-format toggle is a separate fact from the controller plugin
+        API: `nav2_core::Controller::computeVelocityCommands()` always returns
+        `geometry_msgs::msg::TwistStamped` regardless of `enable_stamped_cmd_vel`
+        — a plugin returning `TwistStamped` does NOT imply `/cmd_vel` is
+        published as `TwistStamped`; that inference is not valid.
+        `controller_server` converts/republishes the plugin's `TwistStamped`
+        according to this parameter, not according to the plugin's return type.
+        Verified 2026-07-11 (nav-trial); plugin-API decoupling confirmed
+        2026-08-02 against `navigation2_tutorials` (rolling branch).
+    reason: obs-nav2-003

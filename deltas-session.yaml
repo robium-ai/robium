@@ -1,0 +1,21 @@
+date: 2026-08-02
+deltas:
+  - skill: environments
+    op: add
+    section: Platform gotchas
+    position: bottom
+    content: |
+      - **Don't infer a hung RunPod pod from proxy-timing artifacts — verify
+        with ground truth before terminating.** <!-- id: runpod-verify-before-terminating -->
+        A cold pull of a large (10-20GB) image plus per-attempt proxy-exec
+        round-trips (15-20s each) look identical to a hung container from
+        the outside — no "success" log line for many minutes, and RunPod's
+        console message ("Jupyter Lab... taking longer than expected") just
+        means nothing is listening on 8888 yet, not that the container is
+        stuck. Verify with a ground-truth channel — RunPod's Web Terminal
+        (independent of the pod's own entrypoint/sshd config) — before
+        terminating or recreating a pod on a hang guess; a wrong guess costs
+        a real pod plus a full re-pull. See `references/gpu-cloud.md` for
+        the fuller RunPod networking picture (provider choice, proxy
+        quirks, GCP quota gotchas).
+    reason: obs-environments-001

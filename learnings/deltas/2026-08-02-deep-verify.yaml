@@ -1,0 +1,8 @@
+date: '2026-08-02'
+deltas:
+- skill: lerobot
+  op: annotate
+  file: examples/load-dataset-snippet.py
+  find: 'status: unverified'
+  replace: 'status: verified 2026-08-02 (deep-verify: pusht-dataset-loads)'
+  reason: deep-verify-pusht-dataset-loads

@@ -1,0 +1,86 @@
+# status: unverified — becomes verified when the first hardening run
+# (the robium-applications test-assets corpus build) fetches it end-to-end.
+# Upstreams: see the skill's references/canonical-assets.md for evidence lines.
+# Revisions below say PIN-AT-ADOPTION: resolve each to a concrete
+# sha/version/revision when you first vendor (vendor_assets.py prints the
+# resolved value; --check fails until pins are concrete).
+
+- name: tb3_house
+  path: worlds/tb3_house
+  kind: github
+  upstream: https://github.com/ROBOTIS-GIT/turtlebot3_simulations
+  subpath: turtlebot3_gazebo/worlds
+  revision: PIN-AT-ADOPTION
+  fetched: null
+  license: Apache-2.0   # verify against repo LICENSE at vendor time
+  notes: verbatim
+
+- name: tugbot_warehouse
+  path: worlds/tugbot_warehouse
+  kind: fuel
+  upstream: "https://fuel.gazebosim.org/1.0/OpenRobotics/worlds/Tugbot in Warehouse"
+  revision: PIN-AT-ADOPTION
+  fetched: null
+  license: check-at-vendor
+  notes: flatten model deps via `deps` so the world loads offline
+  deps: []              # fill with the model URIs the world <include>s
+
+- name: turtlebot3_models
+  path: models/turtlebot3
+  kind: github
+  upstream: https://github.com/ROBOTIS-GIT/turtlebot3_simulations
+  subpath: turtlebot3_gazebo/models
+  revision: PIN-AT-ADOPTION
+  fetched: null
+  license: Apache-2.0   # verify at vendor time
+  notes: verbatim
+
+- name: unitree_go2
+  path: models/unitree_go2
+  kind: github
+  upstream: https://github.com/google-deepmind/mujoco_menagerie
+  subpath: unitree_go2
+  revision: PIN-AT-ADOPTION
+  fetched: null
+  license: check-at-vendor   # per-model licenses in Menagerie
+  notes: verbatim
+
+- name: unitree_g1
+  path: models/unitree_g1
+  kind: github
+  upstream: https://github.com/google-deepmind/mujoco_menagerie
+  subpath: unitree_g1
+  revision: PIN-AT-ADOPTION
+  fetched: null
+  license: check-at-vendor
+  notes: verbatim
+
+- name: so101
+  path: models/so101
+  kind: github
+  upstream: https://github.com/TheRobotStudio/SO-ARM100
+  subpath: Simulation/SO101
+  revision: PIN-AT-ADOPTION
+  fetched: null
+  license: check-at-vendor
+  notes: verbatim
+
+- name: so101_pickplace_sample
+  path: datasets/so101_pickplace_sample
+  kind: hf-dataset
+  upstream: https://huggingface.co/datasets/lerobot/svla_so101_pickplace
+  revision: PIN-AT-ADOPTION
+  fetched: null
+  license: check-at-vendor   # dataset card
+  notes: "slice: first N episodes, N sized to <=50 MB; confirm slice loads (lerobot)"
+  allow_patterns: []         # fill per dataset file layout at vendor time
+
+- name: pusht_sample
+  path: datasets/pusht_sample
+  kind: hf-dataset
+  upstream: https://huggingface.co/datasets/lerobot/pusht
+  revision: PIN-AT-ADOPTION
+  fetched: null
+  license: check-at-vendor
+  notes: "slice: first N episodes; train-smoke fixture"
+  allow_patterns: []

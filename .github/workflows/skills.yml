@@ -1,0 +1,37 @@
+name: skills
+
+# The skill validator is the repo's core invariant (CLAUDE.md: must print
+# "Checked N skills: PASS" and exit 0). Run it on every push and PR — the job
+# takes ~20s, so it is not worth a paths filter that would leave the README
+# badge reporting a stale run.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: skills-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: validate_skills
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Same installer scripts/bootstrap.sh and the SessionStart hook use, so
+      # CI and both local paths can never drift onto different uv versions.
+      # uv resolves the validator's inline PEP 723 dependency (pyyaml) and its
+      # own Python, so no setup-python step is needed.
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Validate skills
+        run: uv run skills/skill-author/scripts/validate_skills.py

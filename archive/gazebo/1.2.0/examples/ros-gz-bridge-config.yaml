@@ -1,0 +1,81 @@
+# status: unverified
+# Format sourced directly from gazebosim/ros_gz's ros_gz_bridge/README.md
+# ("Example 5: Configuring the Bridge via YAML"), fetched via raw GitHub
+# curl on 2026-07-10 — every field name here (ros_topic_name, gz_topic_name,
+# ros_type_name, gz_type_name, direction, qos_profile, frame_id) is copied
+# from that file's own documented shape, not invented.
+#
+# Pairs with ../examples/diffdrive-world-snippet.sdf: every gz_topic_name
+# below matches, character-for-character, a <topic>/<odom_topic>/<tf_topic>
+# set explicitly in that world's DiffDrive plugin, or a sensor's <topic>
+# tag — gz-transport topic matching is exact-string (a leading slash on one
+# side and not the other, e.g. "cmd_vel" vs. "/cmd_vel", is a silent
+# non-match, not a typo Gazebo warns about). Renaming a topic in one file
+# without the other silently breaks that bridge entry — see the "Bridge
+# sensor topics to ROS 2" usage pattern in ../SKILL.md.
+#
+# frame_id overrides below are set to "base_link" for scan/imu because the
+# example world mounts both sensors at base_link's own origin with no
+# separate offset frame (see that file's header for why) — a robot with an
+# offset sensor frame should instead publish a static base_link -> sensor
+# transform (the `ros2` skill's territory) and drop these overrides so the
+# sensor's own frame_id survives the bridge.
+#
+# Run with:
+#   ros2 run ros_gz_bridge parameter_bridge \
+#     --ros-args -p config_file:=ros-gz-bridge-config.yaml
+
+# Gazebo is the sole /clock source once bridged — see
+# ../references/ros2-bridge.md's "/clock needs special handling" section.
+# Every use_sim_time:=true ROS 2 node (including nav2) depends on this.
+- ros_topic_name: "/clock"
+  gz_topic_name: "/clock"
+  ros_type_name: "rosgraph_msgs/msg/Clock"
+  gz_type_name: "gz.msgs.Clock"
+  direction: GZ_TO_ROS
+
+# Velocity commands into the sim (matches the DiffDrive plugin's
+# <topic>/cmd_vel</topic> in the paired world file).
+- ros_topic_name: "/cmd_vel"
+  gz_topic_name: "/cmd_vel"
+  ros_type_name: "geometry_msgs/msg/Twist"
+  gz_type_name: "gz.msgs.Twist"
+  direction: ROS_TO_GZ
+
+# Wheel odometry out of the sim (matches <odom_topic>/odom</odom_topic>).
+# odom_frame_id / base_frame_id in nav2's example params
+# (nav2-params-diffdrive.yaml) expect exactly "odom" / "base_link", which
+# the DiffDrive plugin's <frame_id>/<child_frame_id> in the paired world
+# file already set.
+- ros_topic_name: "/odom"
+  gz_topic_name: "/odom"
+  ros_type_name: "nav_msgs/msg/Odometry"
+  gz_type_name: "gz.msgs.Odometry"
+  direction: GZ_TO_ROS
+
+# odom -> base_link transform (matches <tf_topic>/tf</tf_topic>).
+- ros_topic_name: "/tf"
+  gz_topic_name: "/tf"
+  ros_type_name: "tf2_msgs/msg/TFMessage"
+  gz_type_name: "gz.msgs.Pose_V"
+  direction: GZ_TO_ROS
+
+# Lidar scan (matches the gpu_lidar sensor's <topic>/scan</topic>). nav2's
+# example AMCL config reads scan_topic: "scan" — bridged here to the same
+# flat ROS topic name "/scan".
+- ros_topic_name: "/scan"
+  gz_topic_name: "/scan"
+  ros_type_name: "sensor_msgs/msg/LaserScan"
+  gz_type_name: "gz.msgs.LaserScan"
+  direction: GZ_TO_ROS
+  qos_profile: SENSOR_DATA
+  frame_id: "base_link"
+
+# IMU (matches the imu sensor's <topic>/imu</topic>).
+- ros_topic_name: "/imu"
+  gz_topic_name: "/imu"
+  ros_type_name: "sensor_msgs/msg/Imu"
+  gz_type_name: "gz.msgs.IMU"
+  direction: GZ_TO_ROS
+  qos_profile: SENSOR_DATA
+  frame_id: "base_link"

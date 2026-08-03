@@ -1,0 +1,48 @@
+# status: unverified
+# source: https://hub.docker.com/_/ros (image tags) and
+#         https://docs.astral.sh/uv/guides/integration/docker/ (uv-in-Docker pattern)
+#
+# Example: a ROS 2 workspace container with uv managing any pure-Python glue
+# code's dependencies (never `pip install` into this image's system Python —
+# see skills/environments/SKILL.md's key directives). Jazzy Jalisco is shown
+# here because it's the Nav2-vertical default; Lyrical Luth is the general
+# current-LTS default per skills/architect's Platform gotchas — re-verify
+# the ROS 2 base tag against hub.docker.com/_/ros and swap jazzy for lyrical
+# (or another current distro) before using in a real project.
+
+FROM ros:jazzy-ros-base-noble
+
+# Install uv by copying the binary from the official distroless image —
+# avoids curl/pip bootstrapping.
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
+
+ENV UV_LINK_MODE=copy \
+    UV_PYTHON_DOWNLOADS=0 \
+    ROS_DISTRO=jazzy
+
+# colcon-common-extensions ships in most ros-base images; installed
+# explicitly here for portability across variants.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      python3-colcon-common-extensions \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /workspace
+
+# Python-side glue-code dependencies, isolated in a project venv via uv —
+# not the container's system Python.
+COPY pyproject.toml uv.lock ./
+RUN uv sync --locked
+
+# ROS 2 workspace source and build.
+COPY ./src ./src
+RUN . /opt/ros/${ROS_DISTRO}/setup.sh && \
+    colcon build --symlink-install
+
+# Non-root user for local == remote parity (matches host UID 1000 convention).
+RUN useradd --create-home --uid 1000 robium && \
+    chown -R robium:robium /workspace
+USER robium
+
+SHELL ["/bin/bash", "-c"]
+ENTRYPOINT ["/bin/bash", "-c", "source /opt/ros/${ROS_DISTRO}/setup.bash && source install/setup.bash && exec \"$@\"", "--"]
+CMD ["bash"]

@@ -1,0 +1,125 @@
+{
+  "source": "robium-ai/robium",
+  "skills": [
+    {
+      "name": "architect",
+      "version": "1.8.0",
+      "description": "Entry-point skill for designing robotics applications with AI agents. Turns requirements (robot type, task, hardware, sim-vs-real, GPU/budget) into a full stack decision — middleware, simulation, data, visualization, training frameworks — plus a scaffold plan and a written architecture brief. Use when: starting any new robotics app; 'build a robot app', 'which robotics stack', 'scaffold a robotics project', 'mobile robot', 'robot arm', 'manipulation policy', 'navigation stack', backlog-driven kickoffs like 'let's do demo 1', 'do demo N', 'build the next demo'; or when requirements exist but the stack is unchosen. This is the entry-point skill of the robium plugin: load it first; it routes to every other robium skill per build phase. Not for: debugging an existing stack (use the matching tool skill) or authoring robium skills (skill-author)."
+    },
+    {
+      "name": "cloud-run",
+      "version": "1.0.1",
+      "description": "Deploy headless robotics / sim / demo containers to Google Cloud Run: the build → Artifact Registry → Cloud Run path plus the gotchas that bite sim workloads (no UDP multicast for gz-transport/DDS, CPU allocated only while a request is open, session affinity for per-visitor instances, request timeout / concurrency for long-lived WebSockets, VPC subnet sizing). Use when: 'deploy to Cloud Run', 'gcloud run deploy', 'Cloud Build', 'Artifact Registry', 'host the sim in the cloud', 'Cloud Run WebSocket / Foxglove bridge times out', 'session affinity', '--no-cpu-throttling', 'GZ_RELAY / GZ_IP on Cloud Run', deploy auth from CI with a GCP service-account key. Owns the Cloud Run deploy mechanics that live-demo and environments point at. Not for: the demo orchestrator, session gateway, or mission-control page (live-demo); GPU-cloud/RunPod or uv-vs-Docker choice (environments); general non-robotics gcloud/GCP basics (upstream Google docs)."
+    },
+    {
+      "name": "data",
+      "version": "1.2.2",
+      "description": "Data sourcing strategy for robotics and physical-AI: choose between offline datasets (HuggingFace hub, Open X-Embodiment and similar), simulation-generated data, and teleop/real-robot collection; plan storage formats, episode structure, and dataset versioning. Use when: 'where do we get data', 'training data for the robot', 'dataset for manipulation', 'generate data in sim', 'collect demonstrations', planning any data pipeline for robot learning. Umbrella skill — mechanics live downstream: hub operations in huggingface, LeRobot formats in lerobot, synthetic generation in isaac-sim/gazebo. Not for: model training itself (lerobot, isaac-lab) or sourcing test fixtures/assets (test-assets)."
+    },
+    {
+      "name": "environments",
+      "version": "1.7.0",
+      "description": "Virtual-environment-first setup for robotics projects: decide uv/venv vs Docker, make local and remote-server runs reproduce identically, handle GPU passthrough and headless/display forwarding. Use when: setting up any new robotics project environment; 'uv', 'venv', 'virtualenv', 'docker for this project', 'reproducible environment', 'works locally but not on the server', 'GPU in container'. Load early in any robium build, right after architect. Decision rule of thumb: pure-Python ML stacks → uv; anything needing ROS 2 or system deps → Docker. Not for: multi-module application Dockerfiles and compose wiring (integration skill)."
+    },
+    {
+      "name": "foxglove",
+      "version": "1.5.1",
+      "description": "Foxglove for robotics visualization: foxglove_bridge setup for live ROS 2 robots, layouts, MCAP recording and playback, and remote/web visualization of robots running on servers. Use when: 'foxglove', 'mcap', visualizing a robot running on a remote server, sharing visualization with others, or recording sessions for later analysis. The remote-viz answer in the robium stack — key to the local-vs-remote workflow (cross-ref environments). Not for: ROS desktop debugging (rviz2) or ML logging (rerun)."
+    },
+    {
+      "name": "gazebo",
+      "version": "1.3.2",
+      "description": "Modern Gazebo (gz — Harmonic/Ionic line) simulation: SDF worlds and models, sensors (lidar, camera, IMU, contact), the ros_gz bridge, spawning robots, and headless/server operation. Use when: 'gazebo', 'gz sim', 'ros_gz', 'simulate the robot', 'add a lidar to the sim', simulating mobile robots or sensors in the ROS ecosystem. Pairs with ros2 and nav2; simulator SELECTION lives in the simulation skill. Gazebo Classic (11) is EOL — this skill covers modern gz only and must never recommend Classic. Not for: Isaac Sim (isaac-sim) or non-ROS simulation."
+    },
+    {
+      "name": "huggingface",
+      "version": "1.1.1",
+      "description": "HuggingFace ecosystem for robotics projects: hub datasets and models for robot learning, and demo Spaces. DELEGATES: for hub mechanics (download/upload/auth/jobs), install HuggingFace's own skills — /plugin marketplace add huggingface/skills, then /plugin install hf-cli@huggingface-skills — and defer to them; this skill adds only the robotics-specific layer (which datasets and models matter for manipulation and navigation, robotics dataset conventions on the hub). Use when: HF hub operations inside a robotics project, 'huggingface dataset for robots', 'upload the policy to the hub', and the HF skills aren't installed yet. Pairs with lerobot and data."
+    },
+    {
+      "name": "integration",
+      "version": "1.2.2",
+      "description": "Glue robotics modules into one running system: choose module boundaries, pick inter-module communication (ROS 2 topics/services/actions, zenoh, gRPC, REST, shared memory), and write solid Dockerfiles and docker-compose for robotics workloads. Use when: wiring components together; 'containerize this', 'dockerfile', 'docker compose', 'how should these modules talk', 'connect the planner to the controller', multi-process or multi-container robotics systems. Load after architect chose the stack and environments set the env strategy. Not for: choosing the overall stack (architect) or single-project env setup (environments)."
+    },
+    {
+      "name": "isaac-lab",
+      "version": "1.1.1",
+      "description": "NVIDIA Isaac Lab: reinforcement-learning and imitation-learning workflows on top of Isaac Sim — prebuilt environments and tasks, training runs, and exporting policies. Use when: 'isaac lab', 'GPU RL for robots', 'train in isaac', sim-to-real policy training in the NVIDIA stack. Load after isaac-sim basics are settled (same GPU requirements apply — RTX-class NVIDIA GPU, no macOS). Alternative ML path to lerobot; the architect skill decides between them. Not for: Isaac Sim setup itself (isaac-sim) or imitation learning on real-robot datasets (lerobot)."
+    },
+    {
+      "name": "isaac-sim",
+      "version": "1.1.1",
+      "description": "NVIDIA Isaac Sim: installation and container setup, GPU/driver requirements, USD scenes, robots and sensors, the ROS 2 bridge, and headless/livestream operation for remote servers. Use when: 'isaac sim', 'omniverse', GPU photorealistic simulation, synthetic data generation, or NVIDIA robotics ecosystem work. State the GPU requirement BEFORE recommending Isaac Sim — if the user lacks an RTX-class NVIDIA GPU, route to gazebo instead. Simulator selection lives in the simulation skill. Not for: RL training workflows (isaac-lab) or lightweight simulation needs (gazebo)."
+    },
+    {
+      "name": "learning-loop",
+      "version": "0.2.0",
+      "description": "The session-side surface of robium's learning engine: consolidate captured flags and learnings into evidence-counted observations, absorb ready observations into anchor-targeted skill-edit PRs via the deterministic delta pipeline, refine (prune/dedup/staleness) through the same pipeline, run blind variant A/B on contested edits ('experiment', 'A/B this edit', 'try competing fixes'), deep-verify unverified examples in pinned fixtures ('deep verify', 'verify the examples'), and report loop health. Use when: 'consolidate', 'absorb', 'run the loop', 'update my skills', 'absorb these learnings', 'refine the skills', 'learning loop status', end-of-block retros, promoting .robium/queue.jsonl flags, or drafting an absorb/refine PR. Everything before git merge may run autonomously; nothing lands on main skills/** without a human merge. Not for: mining external repos (mining), fresh skill authoring or the quality bar (skill-author), building robot applications (architect)."
+    },
+    {
+      "name": "lerobot",
+      "version": "2.1.2",
+      "description": "HuggingFace LeRobot for physical-AI manipulation: the LeRobotDataset format, loading and recording episodes, training policies (ACT, diffusion, pi0) and VLAs (SmolVLA), evaluating in simulation, and teleoperation. Use when: 'lerobot', 'manipulation policy', 'imitation learning', 'train a robot arm policy', 'ACT', 'diffusion policy', 'smolvla', 'VLA', 'vision-language-action', 'fine-tune a policy', physical-AI dataset/training/eval tasks. Core skill of the manipulation vertical; pairs with huggingface (hub mechanics), environments (uv-first install), and data (sourcing strategy). Not for: classical motion planning or the NVIDIA RL stack (isaac-lab)."
+    },
+    {
+      "name": "live-demo",
+      "version": "1.3.2",
+      "description": "Turn a working robium app into a public, interactive web demo: a mission-control demo page (start/stop instance buttons, live boot terminal, fleet budget), per-visitor simulator instances on Cloud Run (scale-to-zero), and a visualizer handoff (Foxglove deep link or self-hosted viewer). Use when: 'live demo', 'demo page', 'let visitors drive the robot', 'try it live on the website', 'demo instance start/stop', 'host the sim for the demo', choosing the demo visualizer, or budgeting/deploying demo backends. Load after an app passes its smoke test (testing) — a demo hosts a finished app. Pairs with foxglove (bridge/viewer mechanics) and integration (container patterns). Not for: developer-facing visualization during a build (foxglove/rviz2) or general website building."
+    },
+    {
+      "name": "mining",
+      "version": "0.1.1",
+      "description": "Registry-driven mining of external example repos — the learning engine's second experience source. Surveys, deep-reads, and comparatively analyzes approved repos (vendor demos, framework samples, community robot apps) into evidence-cited observations (origin: external) that harden robium skills or propose new ones; maintains crawl records for drift re-checks. Use when: 'mine repo X', 'survey this repo', 'run a comparative run', 'learn from external repos', 'distill patterns from a repo', 'crawl SOURCES.md', triaging or re-crawling entries in learnings/SOURCES.md. Discovery is autonomous; mining spends only on human-approved registry entries. Output is observations plus registry updates — never direct skill edits. Not for: absorbing robium's own session learnings (learning-loop) or fresh skill authoring mechanics (skill-author)."
+    },
+    {
+      "name": "mujoco",
+      "version": "1.0.1",
+      "description": "MuJoCo for lightweight, contact-rich robot manipulation simulation on macOS/Linux, especially single-arm grasping without ROS: headless offscreen rendering, MJCF models, mujoco_menagerie assets, damped-least-squares inverse kinematics, and empirical grasp calibration. Use when: 'MuJoCo', 'MJCF', 'mjpython', 'MUJOCO_GL', 'menagerie', 'SO-101' / SO-ARM100 arm, 'offscreen render', 'inverse kinematics' / 'IK', 'grasp' / 'pick and place' in sim, hand-building a manipulation env, or headless mujoco.Renderer determinism. Load after architect or simulation route a non-ROS single-arm manipulation task here (Gazebo and Isaac Sim are the ROS / GPU-photoreal alternatives). Defers to MuJoCo's own docs and mujoco_menagerie for the physics/model API; embeds the macOS-arm64 platform and grasp/IK gotchas hard-won from a real SO-101 build. Not for: ROS-integrated sim (gazebo), GPU-parallel RL or photoreal synthetic data (isaac-sim / isaac-lab), or LeRobot policy training/eval mechanics (lerobot)."
+    },
+    {
+      "name": "nav2",
+      "version": "1.5.0",
+      "description": "Nav2 mobile-robot navigation for ROS 2: bringup, behavior trees, costmaps, planner/controller servers, localization (AMCL, slam_toolbox), waypoint following, and tuning. Use when: 'navigation', 'nav2', 'costmap', 'path planning', 'robot won't move to goal', 'localization', 'SLAM', 'AMCL', 'waypoint', or any autonomous mobile robot task. Load after architect selects the ROS nav stack; pairs with ros2 (foundation), gazebo (sim), and visualization (debugging). Not for: manipulation (lerobot) or generic ROS 2 issues (ros2)."
+    },
+    {
+      "name": "rerun",
+      "version": "1.2.1",
+      "description": "Rerun for data-centric robotics and ML visualization: logging APIs (Python), timelines, entity paths, and viewing policy rollouts, episode data, and sensor streams. Use when: 'rerun', visualizing ML training/eval rollouts, LeRobot episode data, or custom sensor pipelines outside ROS tooling. Defers heavily to Rerun's official examples and docs — check them before writing logging code. Pairs with lerobot and data. Not for: live ROS topic debugging (rviz2, foxglove)."
+    },
+    {
+      "name": "ros2",
+      "version": "1.7.0",
+      "description": "Core ROS 2 usage: workspaces, colcon builds, packages (ament_python/ament_cmake), nodes, topics/services/actions, QoS, launch files, parameters, TF2, rosdep, and gluing third-party packages together. Use when: any ROS 2 development or debugging; 'ros2', 'colcon', 'launch file', 'package.xml', 'QoS mismatch', 'TF', 'node not receiving messages', 'rosdep'. Foundation skill for the ROS vertical — load alongside nav2, gazebo, rviz2. ROS 2 only; ROS 1 is EOL and out of scope. Not for: navigation specifics (nav2), simulation (gazebo), or visualization (rviz2/foxglove)."
+    },
+    {
+      "name": "rviz2",
+      "version": "1.0.2",
+      "description": "RViz2 visualization for ROS 2: displays, TF frame debugging, markers, saved config files, and the common 'nothing shows up' fixes (fixed frame, QoS, sim time). Use when: 'rviz', 'rviz2', visualizing ROS topics, TF trees, costmaps, or robot models during development. ROS-native desktop debugging tool — for remote/web visualization use foxglove; for ML/data-centric logging use rerun. Pairs with ros2 and nav2."
+    },
+    {
+      "name": "simulation",
+      "version": "1.1.1",
+      "description": "Choose and set up robotics simulators, and simulate sensors correctly: Gazebo vs Isaac Sim selection, sensor fidelity (rates, noise models, frames matching the real robot), determinism, and sim-to-real considerations. Use when: 'simulate', 'which simulator', 'test without hardware', 'sensor simulation', 'sim-to-real', or any simulation-strategy question. Umbrella skill — after selection, load gazebo or isaac-sim for mechanics. Selection rule of thumb: ROS-centric mobile robotics or no NVIDIA GPU → gazebo; photorealism, synthetic data at scale, or NVIDIA RL stack → isaac-sim. Not for: simulator-specific how-to (gazebo, isaac-sim)."
+    },
+    {
+      "name": "skill-author",
+      "version": "2.0.1",
+      "description": "Author new robium skills and enforce the catalog quality bar. Owns the authoring workflow from skills/_TEMPLATE, the quality bar (references/quality-bar.md: template compliance, trigger-surface descriptions, <500-line bodies, stated delegation posture, upstream links, no invented syntax), and scripts/validate_skills.py — run it after ANY skills/ change. Use when: 'write a new robium skill', 'new skill for X', template compliance questions, description/trigger-surface tuning, or validator failures. Wraps Claude's skill-creator skill for evals and description tuning instead of reinventing it. Not for: absorbing learnings or refining the catalog (learning-loop), mining example repos (mining), building robot applications (architect and the domain skills)."
+    },
+    {
+      "name": "test-assets",
+      "version": "1.0.2",
+      "description": "Canonical test assets and fixture sourcing for robotics testing: which worlds, robot models, sample datasets, and recordings to test against for a given robot type; the standard test-assets folder layout with a provenance manifest; pointer vs vendored sourcing modes; fixture and golden policy (tolerance bands, seeded generation). Use when: 'test assets', 'test world', 'test fixture', 'download a test dataset', 'sample rosbag', 'which world should I test in', 'robot model for simulation tests', 'golden output', 'regression fixture', 'data for unit tests', setting up test data for any new robotics project. Load alongside testing when the test pyramid needs data. Not for: training-data sourcing (data), test structure and pass bars (testing), simulator selection rationale (simulation)."
+    },
+    {
+      "name": "testing",
+      "version": "1.4.2",
+      "description": "Test-driven robotics development: smoke tests for launch files, sim-based regression tests, node-level unit tests, policy eval as a test, and CI patterns for robotics repos. Use when: 'test the robot app', 'how do I test this node', 'smoke test', 'regression test in sim', setting up tests for a new robotics project, or before claiming any robotics app works. Applies to both verticals: launch_testing and pytest for ROS 2 apps; deterministic small-scale eval runs for ML policies. Load alongside whatever skill is building the thing under test. Not for: general (non-robotics) testing practices."
+    },
+    {
+      "name": "visualization",
+      "version": "1.0.3",
+      "description": "Choose and apply robotics visualization: selection guidance for rviz2 vs Foxglove vs Rerun, plus best practices — what to visualize at each dev stage, live vs recorded, local vs remote. Use when: 'visualize', 'see what the robot sees', 'debug visually', 'plot the trajectory', 'dashboard for the robot', choosing a viz tool, or recording data for later inspection. Umbrella skill — after selecting, load the matching tool skill: rviz2 (ROS-native debugging), foxglove (remote/web + MCAP recording), rerun (ML/data-centric logging). Not for: tool-specific how-to (the per-tool skills)."
+    }
+  ]
+}

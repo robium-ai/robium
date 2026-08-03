@@ -1,0 +1,54 @@
+name: New skill request
+description: Request a new robium skill for a robotics tool, or propose one you'd like to author.
+title: "[skill] "
+labels: ["skill"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        One skill covers one tool (a "tool skill") or one cross-cutting decision
+        (an "umbrella skill"). The contribution unit is small on purpose — see
+        [CONTRIBUTING.md](../blob/main/CONTRIBUTING.md). If you want to author
+        this yourself, say so below; we can tag it `good-first-skill`.
+  - type: input
+    id: tool
+    attributes:
+      label: Tool / library
+      description: The single robotics tool, framework, or library this skill would cover.
+      placeholder: "e.g. MoveIt 2, Genesis, Drake, ros2_control"
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: What should the skill cover?
+      description: The mechanics, gotchas, or decisions a coding agent would need. Keep it to one tool's worth of scope.
+      placeholder: "Installation, the core workflow, the platform gotchas that cost real time..."
+    validations:
+      required: true
+  - type: textarea
+    id: triggers
+    attributes:
+      label: When should it fire?
+      description: Example phrasings a user or agent would use that this skill should trigger on (feeds the skill's description trigger surface).
+      placeholder: |
+        - "plan a collision-free arm trajectory"
+        - "MoveIt won't find an IK solution"
+    validations:
+      required: false
+  - type: dropdown
+    id: authoring
+    attributes:
+      label: Would you like to author it?
+      options:
+        - "Just requesting — someone else can pick it up"
+        - "I'd like to author it myself"
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Anything else
+      description: Upstream docs, related existing skills, prior art, or reasons this matters.
+    validations:
+      required: false

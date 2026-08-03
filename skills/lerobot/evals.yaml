@@ -1,0 +1,10 @@
+triggers:
+  positive:
+    - phrase: vla based arm control
+      source: learnings/2026-07-13.md
+tasks:
+  - name: pusht-dataset-loads
+    example: examples/load-dataset-snippet.py
+    command: "uv run --with 'lerobot[dataset]' python skills/lerobot/examples/load-dataset-snippet.py"
+    pass_criteria: "observation\\.image"
+    timeout: 900

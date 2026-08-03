@@ -1,0 +1,17 @@
+{
+  "name": "robium",
+  "owner": {
+    "name": "robium-ai"
+  },
+  "metadata": {
+    "description": "Self-improving robotics skills for coding agents",
+    "version": "0.2.1"
+  },
+  "plugins": [
+    {
+      "name": "robium",
+      "source": "./",
+      "description": "Self-improving robotics expertise for AI agents: stack selection, simulation, visualization, data, testing, and training skills for physical-AI applications"
+    }
+  ]
+}

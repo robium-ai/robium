@@ -1,0 +1,50 @@
+name: Wrong or stale guidance
+description: Something in a skill or reference app is inaccurate, outdated, or misleading.
+title: "[quality] "
+labels: ["quality"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The best reports name the exact command/config/fact, what you expected,
+        and what actually happened — that's what makes a fix absorbable. "nav2
+        was confusing" isn't actionable; "the Quick start costmap YAML omits the
+        inflation_layer block → robot hugged obstacles" is.
+  - type: input
+    id: location
+    attributes:
+      label: Where is it?
+      description: Which skill or app, and the section/file if you can pin it down.
+      placeholder: "e.g. skills/nav2/SKILL.md — Quick start; or apps/nav-trial"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did the guidance say, and what did you expect?
+      description: Quote the command, config, or claim as written.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What actually happened?
+      description: The exact error or symptom, verbatim where possible.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: fix
+    attributes:
+      label: Known fix or correct value?
+      description: If you figured out the right command/config/fact, put it here — and how you verified it (e.g. the passing check).
+    validations:
+      required: false
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: OS / arch, tool version(s), and how you ran it (uv, Docker, remote GPU) if relevant.
+      placeholder: "e.g. macOS arm64, ROS 2 Jazzy in Docker, Gazebo Harmonic"
+    validations:
+      required: false

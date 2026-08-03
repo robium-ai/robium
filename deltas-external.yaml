@@ -1,0 +1,119 @@
+date: 2026-08-02
+deltas:
+  - skill: ros2
+    op: add
+    section: Usage patterns
+    position: bottom
+    content: |
+      **Test a launched process with launch_testing.** <!-- id: launch-testing-launched-process -->
+      `launch_testing` tests a process (a plain `ExecuteProcess` or a
+      `launch_ros.actions.Node`) through its real launch file rather than
+      mocking it: `generate_test_description()` returns a `LaunchDescription`
+      ending in `launch_testing.actions.ReadyToTest()`; an undecorated
+      `unittest.TestCase` runs while the process is alive
+      (`@launch_testing.markers.keep_alive` on the launched action keeps it
+      running through the active-test phase instead of exiting immediately),
+      asserting via `proc_output.assertWaitFor(...)` (or `get_node_names()`
+      for a launched node); a second `unittest.TestCase` decorated
+      `@launch_testing.post_shutdown_test()` asserts the exit code with
+      `launch_testing.asserts.assertExitCodes(proc_info)`. This closes the
+      gap the `testing` skill's `ros2-pytest-vs-launch-testing-split` anchor
+      already names — "needs a running node or launch file" tests route
+      here, but this skill previously had no such pattern. Confirmed
+      2026-08-02 against the `rolling`-branch `ros2/examples` repo; re-verify
+      the decorator/assertion API surface against this skill's default
+      distro (Lyrical Luth) before copying verbatim.
+    reason: obs-ros2-001
+  - skill: ros2
+    op: add
+    section: Usage patterns
+    position: bottom
+    content: |
+      **Control callback concurrency with executors + callback groups.** <!-- id: callback-group-executor-concurrency -->
+      Concurrency under a `MultiThreadedExecutor` is scoped per callback
+      group, not per executor: passing a `MutuallyExclusiveCallbackGroup()`
+      instance as `callback_group=` to `create_timer`/`create_subscription`/
+      etc. serializes only that group's own callbacks — other callbacks on
+      the same node (or in a different group) can still run concurrently.
+      Without an explicit group, a node's callbacks share one implicit
+      `MutuallyExclusiveCallbackGroup` by default, so a bare
+      `MultiThreadedExecutor(num_threads=N)` alone does not parallelize a
+      single node's own callbacks. Use `ReentrantCallbackGroup` instead when
+      a callback should run concurrently with itself rather than being
+      serialized. Confirmed 2026-08-02 against the `rolling`-branch
+      `ros2/examples` repo; re-verify the callback-group API surface against
+      this skill's default distro before relying on exact signatures.
+    reason: obs-ros2-003
+  - skill: nav2
+    op: add
+    section: Usage patterns
+    position: bottom
+    content: |
+      **Author a custom global planner plugin.** <!-- id: custom-global-planner-plugin -->
+      A global-planner plugin subclasses `nav2_core::GlobalPlanner` and
+      implements `configure(parent, name, tf, costmap_ros)` / `cleanup()` /
+      `activate()` / `deactivate()` / `createPlan(...)` — the `costmap_ros`
+      argument handed to `configure()` is how the plugin reaches the same
+      costmap `references/nav2-architecture.md`'s planner-server section
+      already documents. Registration needs exactly two pieces, not three:
+      `PLUGINLIB_EXPORT_CLASS(<YourClass>, nav2_core::GlobalPlanner)` in the
+      .cpp, and the CMakeLists.txt's
+      `pluginlib_export_plugin_description_file(nav2_core <plugin>.xml)`
+      call, which installs the plugin-description XML and writes the
+      ament-index marker pluginlib's `ClassLoader` queries at runtime — a
+      `package.xml` `<export>` tag for the same XML is a ROS 1 carryover
+      some tutorials still ship and is not load-bearing in ROS 2. Treat the
+      exact `configure()`/`createPlan()` parameter list as a conceptual
+      pattern, not a pinned signature — confirmed 2026-08-02 against the
+      `rolling`-branch `navigation2_tutorials` repo (no Jazzy/Humble/Iron
+      branch exists there to check directly); re-verify against this
+      skill's target distro (Jazzy Jalisco) before writing a plugin from it.
+    reason: obs-nav2-001
+  - skill: nav2
+    op: add
+    section: Usage patterns
+    position: bottom
+    content: |
+      **Author a custom costmap layer plugin.** <!-- id: custom-costmap-layer-plugin -->
+      A costmap layer plugin subclasses `nav2_costmap_2d::Layer` and
+      overrides `onInitialize()` (parameter declaration + one-time state),
+      `updateBounds(robot_x, robot_y, robot_yaw, min_x, min_y, max_x,
+      max_y)` (grows the costmap's dirty-bounds window), and
+      `updateCosts(master_grid, min_i, min_j, max_i, max_j)` (writes cost
+      values into that window) — plus `reset()`, `onFootprintChanged()`, and
+      `isClearable()`. Registration mirrors the planner-plugin pattern's
+      load-bearing half only (see the custom-global-planner-plugin pattern
+      above): `PLUGINLIB_EXPORT_CLASS(<YourClass>, nav2_costmap_2d::Layer)`
+      in the .cpp, paired with CMakeLists.txt's
+      `pluginlib_export_plugin_description_file(nav2_costmap_2d
+      <layer>.xml)` — the macro's first argument is `nav2_costmap_2d` here,
+      not `nav2_core` as in the planner case; it is pluginlib's
+      resource-index key, not a string a params file's `plugins:` list
+      names directly. Cross-references `references/nav2-architecture.md`'s
+      Costmap 2D section (which names the shared layer types — StaticLayer,
+      ObstacleLayer, VoxelLayer, InflationLayer — but not how to author a
+      new one). Confirmed 2026-08-02 against the `rolling`-branch
+      `navigation2_tutorials` repo; the `Layer` virtual-method set has been
+      stable across recent distros per search-synthesis, but re-verify
+      before absorbing a parameter list verbatim.
+    reason: obs-nav2-002
+  - skill: gazebo
+    op: annotate
+    anchor: vendor-launch-not-headless
+    content: |
+      - **Upstream robot-demo launch files often can't run headless as-is.** <!-- id: vendor-launch-not-headless -->
+        Vendor demo launches commonly hardcode a gz GUI client and
+        non-overridable server `gz_args` (verified 2026-07-11, nav-trial: Jazzy
+        `turtlebot3_gazebo`'s `turtlebot3_world.launch.py` unconditionally adds a
+        `-g` client and exposes no argument to inject `--headless-rendering`).
+        Don't fight the top-level file — include `ros_gz_sim`'s
+        `gz_sim.launch.py` yourself with headless `gz_args` (`-r -s
+        --headless-rendering`) and reuse the vendor's *sub*-launches (spawn,
+        robot_state_publisher, bridge config), which are usually cleanly
+        parameterized. Second official-repo witness (confirmed 2026-08-02):
+        `turtlebot4_simulator`'s `turtlebot4_gz_bringup/launch/sim.launch.py`
+        builds `gz_args` from `world` + `-r` + `-v 4` + `--gui-config` — no
+        `-s`/`-g` split, no launch arg to skip the GUI — the same
+        no-headless-by-default outcome via a structurally different
+        mechanism (one combined launch vs. TB3's two split ones).
+    reason: obs-gazebo-001

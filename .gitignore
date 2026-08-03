@@ -1,0 +1,47 @@
+# Python / uv
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.uv-cache/
+
+# Superpowers scratch
+.superpowers/
+
+# Claude worktrees
+.claude/worktrees/
+
+# ROS 2 / colcon workspaces inside apps
+**/build/
+**/install/
+**/log/
+
+# ML runs and data (apps keep small configs in git, not artifacts)
+**/outputs/
+**/wandb/
+**/checkpoints/
+*.ckpt
+*.safetensors
+
+# Recordings
+*.mcap
+*.db3
+*.rrd
+
+# OS noise
+.DS_Store
+
+# App bag recordings (keep the .gitkeep placeholder)
+apps/*/bags/*
+!apps/*/bags/.gitkeep
+
+# Node (cli/ and website/ subprojects; nested .gitignores also cover these)
+node_modules/
+dist/
+.astro/
+
+# Secrets — managed in Doppler; never commit real values (template is allowed)
+.env
+.env.*
+!.env.template
+.robium/

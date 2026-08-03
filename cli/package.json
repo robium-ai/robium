@@ -1,0 +1,47 @@
+{
+  "name": "robium-ai",
+  "version": "0.4.0",
+  "description": "CLI for robium — self-improving robotics skills for coding agents. Install the plugin, check your environment, browse the skill catalog.",
+  "keywords": [
+    "robotics",
+    "ros2",
+    "nav2",
+    "gazebo",
+    "lerobot",
+    "isaac-sim",
+    "simulation",
+    "physical-ai",
+    "claude-code",
+    "skills",
+    "cli"
+  ],
+  "license": "MIT",
+  "author": {
+    "name": "robium"
+  },
+  "homepage": "https://robium.ai",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/robium-ai/robium.git",
+    "directory": "cli"
+  },
+  "bugs": "https://github.com/robium-ai/robium/issues",
+  "type": "module",
+  "bin": {
+    "robium": "bin/robium.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test",
+    "build:catalog": "node scripts/build-catalog.mjs",
+    "prepublishOnly": "npm run build:catalog"
+  }
+}

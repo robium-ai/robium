@@ -1,0 +1,38 @@
+{
+  "name": "robium",
+  "version": "0.2.1",
+  "description": "Versioned robotics skills for AI coding agents building Physical AI applications.",
+  "author": {
+    "name": "robium",
+    "url": "https://github.com/robium-ai"
+  },
+  "homepage": "https://robium.ai",
+  "repository": "https://github.com/robium-ai/robium",
+  "license": "MIT",
+  "keywords": [
+    "robotics",
+    "physical-ai",
+    "ros2",
+    "simulation",
+    "skills"
+  ],
+  "interface": {
+    "displayName": "Robium",
+    "shortDescription": "Physical AI skills for coding agents",
+    "longDescription": "Versioned, field-tested robotics skills for architecture, simulation, data, visualization, testing, and deployment.",
+    "developerName": "Robium",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Robotics",
+      "Physical AI",
+      "Developer tooling"
+    ],
+    "websiteURL": "https://robium.ai",
+    "defaultPrompt": [
+      "Design the stack for a new robotics application.",
+      "Set up a robot simulation I can run locally.",
+      "Review this robotics project and recommend next steps."
+    ],
+    "brandColor": "#2563EB"
+  }
+}

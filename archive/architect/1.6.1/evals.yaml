@@ -1,0 +1,7 @@
+triggers:
+  positive:
+    - phrase: lets do demo 1
+      source: learnings/2026-07-13.md
+    - phrase: i actually meant to have ml vla based arm control here… lets decide the simulator, model, robot and how to visualize
+      source: learnings/2026-07-13.md
+tasks: []

@@ -1,0 +1,200 @@
+date: '2026-08-02'
+deltas:
+- skill: ros2
+  op: annotate
+  file: SKILL.md
+  find: '**Test a launched process with launch_testing.** <!-- id: launch-testing-launched-process -->
+
+    `launch_testing` tests a process (a plain `ExecuteProcess` or a
+
+    `launch_ros.actions.Node`) through its real launch file rather than
+
+    mocking it: `generate_test_description()` returns a `LaunchDescription`
+
+    ending in `launch_testing.actions.ReadyToTest()`; an undecorated
+
+    `unittest.TestCase` runs while the process is alive
+
+    (`@launch_testing.markers.keep_alive` on the launched action keeps it
+
+    running through the active-test phase instead of exiting immediately),
+
+    asserting via `proc_output.assertWaitFor(...)` (or `get_node_names()`
+
+    for a launched node); a second `unittest.TestCase` decorated
+
+    `@launch_testing.post_shutdown_test()` asserts the exit code with
+
+    `launch_testing.asserts.assertExitCodes(proc_info)`. This closes the
+
+    gap the `testing` skill''s `ros2-pytest-vs-launch-testing-split` anchor
+
+    already names — "needs a running node or launch file" tests route
+
+    here, but this skill previously had no such pattern. Confirmed
+
+    2026-08-02 against the `rolling`-branch `ros2/examples` repo; re-verify
+
+    the decorator/assertion API surface against this skill''s default
+
+    distro (Lyrical Luth) before copying verbatim.'
+  replace: '
+
+    **Test a launched process with launch_testing.** <!-- id: launch-testing-launched-process -->
+
+    `launch_testing` tests a process (a plain `ExecuteProcess` or a
+
+    `launch_ros.actions.Node`) through its real launch file rather than
+
+    mocking it: `generate_test_description()` is decorated
+
+    `@pytest.mark.launch_test` (what makes pytest collect the file) then
+
+    `@launch_testing.markers.keep_alive` (keeps the launched process alive
+
+    through the active-test phase instead of exiting immediately), and
+
+    returns a `LaunchDescription` ending in
+
+    `launch_testing.actions.ReadyToTest()`; an undecorated
+
+    `unittest.TestCase` runs while the process is alive, asserting via
+
+    `proc_output.assertWaitFor(...)` (or `get_node_names()` for a launched
+
+    node); a second `unittest.TestCase` decorated
+
+    `@launch_testing.post_shutdown_test()` asserts the exit code with
+
+    `launch_testing.asserts.assertExitCodes(proc_info)`. This is the
+
+    scaffold the `testing` skill''s `ros2-pytest-vs-launch-testing-split`
+
+    anchor routes to. Confirmed 2026-08-02 against the `rolling`-branch
+
+    `ros2/examples` repo; re-verify the decorator/assertion API surface
+
+    against this skill''s default distro (Lyrical Luth) before copying
+
+    verbatim.'
+  reason: obs-ros2-001
+- skill: ros2
+  op: update
+  anchor: callback-group-executor-concurrency
+  content: '
+
+    **Control callback concurrency with executors + callback groups.** <!-- id: callback-group-executor-concurrency -->'
+  reason: obs-ros2-003
+- skill: nav2
+  op: annotate
+  file: SKILL.md
+  find: '**Author a custom global planner plugin.** <!-- id: custom-global-planner-plugin -->
+
+    A global-planner plugin subclasses `nav2_core::GlobalPlanner` and
+
+    implements `configure(parent, name, tf, costmap_ros)` / `cleanup()` /
+
+    `activate()` / `deactivate()` / `createPlan(...)` — the `costmap_ros`
+
+    argument handed to `configure()` is how the plugin reaches the same
+
+    costmap `references/nav2-architecture.md`''s planner-server section
+
+    already documents. Registration needs exactly two pieces, not three:
+
+    `PLUGINLIB_EXPORT_CLASS(<YourClass>, nav2_core::GlobalPlanner)` in the
+
+    .cpp, and the CMakeLists.txt''s
+
+    `pluginlib_export_plugin_description_file(nav2_core <plugin>.xml)`
+
+    call, which installs the plugin-description XML and writes the
+
+    ament-index marker pluginlib''s `ClassLoader` queries at runtime — a
+
+    `package.xml` `<export>` tag for the same XML is a ROS 1 carryover
+
+    some tutorials still ship and is not load-bearing in ROS 2. Treat the
+
+    exact `configure()`/`createPlan()` parameter list as a conceptual
+
+    pattern, not a pinned signature — confirmed 2026-08-02 against the
+
+    `rolling`-branch `navigation2_tutorials` repo (no Jazzy/Humble/Iron
+
+    branch exists there to check directly); re-verify against this
+
+    skill''s target distro (Jazzy Jalisco) before writing a plugin from it.'
+  replace: '
+
+    **Author a custom global planner plugin.** <!-- id: custom-global-planner-plugin -->
+
+    A global-planner plugin subclasses `nav2_core::GlobalPlanner` and
+
+    implements `configure(parent, name, tf, costmap_ros)` / `cleanup()` /
+
+    `activate()` / `deactivate()` / `createPlan(...)` — the `costmap_ros`
+
+    argument handed to `configure()` is how the plugin reaches the same
+
+    costmap `references/nav2-architecture.md`''s planner-server section
+
+    already documents. Registration needs exactly two pieces, not three:
+
+    `PLUGINLIB_EXPORT_CLASS(<YourClass>, nav2_core::GlobalPlanner)` in the
+
+    .cpp, and the CMakeLists.txt''s
+
+    `pluginlib_export_plugin_description_file(nav2_core <plugin>.xml)`
+
+    call, which installs the plugin-description XML and writes the
+
+    ament-index marker pluginlib''s `ClassLoader` queries at runtime — a
+
+    `package.xml` `<export>` tag for the same XML is a ROS 1 carryover
+
+    some tutorials still ship and is not load-bearing in ROS 2, per
+
+    search-synthesis of ament_cmake/pluginlib docs (re-verify on next docs
+
+    pass). Treat the exact `configure()`/`createPlan()` parameter list as
+
+    a conceptual pattern, not a pinned signature — confirmed 2026-08-02
+
+    against the `rolling`-branch `navigation2_tutorials` repo (no
+
+    Jazzy/Humble/Iron branch exists there to check directly); re-verify
+
+    against this skill''s target distro (Jazzy Jalisco) before writing a
+
+    plugin from it.'
+  reason: obs-nav2-001
+- skill: nav2
+  op: update
+  anchor: custom-costmap-layer-plugin
+  content: '
+
+    **Author a custom costmap layer plugin.** <!-- id: custom-costmap-layer-plugin -->'
+  reason: obs-nav2-002
+- skill: testing
+  op: annotate
+  file: SKILL.md
+  find: "  - ROS 2 `launch_testing`/pytest mechanics themselves (fixtures, process\n    actions, assertions) → the upstream launch_testing README and ROS 2\n    testing docs (linked in References). The `ros2` skill does not yet\n    carry launch_testing content — until it does, go upstream directly\n    rather than hunting for it there. This skill frames launch/node testing\n    as a pyramid layer either way."
+  replace: "  - ROS 2 `launch_testing`/pytest mechanics themselves (fixtures, process\n    actions, assertions) → the `ros2` skill's `launch-testing-launched-process`\n    usage pattern for the four-part scaffold (generate_test_description,\n    ReadyToTest, an active TestCase, @post_shutdown_test), and the upstream\n    launch_testing README and ROS 2 testing docs (linked in References) for\n    full API depth. This skill frames launch/node testing as a pyramid layer\n    either way."
+  reason: obs-ros2-001
+- skill: testing
+  op: annotate
+  file: SKILL.md
+  find: mechanics in the upstream launch_testing docs (see References). Run both
+  replace: 'see the `ros2` skill''s `launch-testing-launched-process` pattern for the
+
+    scaffold, and the upstream launch_testing docs (see References) for full API
+
+    depth. Run both'
+  reason: obs-ros2-001
+- skill: testing
+  op: annotate
+  file: SKILL.md
+  find: '| Node / launch smoke | A node starts, a launch file brings up the expected set of nodes without crashing, expected topics/services appear | `launch_testing` + pytest | upstream launch_testing docs (see References; not yet in `ros2`) |'
+  replace: '| Node / launch smoke | A node starts, a launch file brings up the expected set of nodes without crashing, expected topics/services appear | `launch_testing` + pytest | `ros2` (`launch-testing-launched-process` pattern); upstream launch_testing docs (see References) for full API depth |'
+  reason: obs-ros2-001

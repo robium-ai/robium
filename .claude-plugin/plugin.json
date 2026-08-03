@@ -1,0 +1,22 @@
+{
+  "name": "robium",
+  "description": "Self-improving robotics expertise for AI agents: skills for architecting, integrating, simulating, visualizing, testing, and training physical-AI applications (ROS 2, Nav2, Gazebo, LeRobot, Isaac, HuggingFace) — captured from real builds, mined from the ecosystem, evidence-verified.",
+  "version": "0.2.1",
+  "author": {
+    "name": "robium"
+  },
+  "homepage": "https://github.com/robium-ai/robium",
+  "repository": "https://github.com/robium-ai/robium",
+  "license": "MIT",
+  "keywords": [
+    "robotics",
+    "ros2",
+    "nav2",
+    "gazebo",
+    "lerobot",
+    "isaac-sim",
+    "simulation",
+    "physical-ai",
+    "skills"
+  ]
+}

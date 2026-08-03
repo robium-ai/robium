@@ -1,0 +1,28 @@
+date: 2026-08-02
+deltas:
+  - skill: nav2
+    op: add
+    section: Usage patterns
+    position: bottom
+    content: |
+      **The controller plugin's `TwistStamped` return type is not the `/cmd_vel` wire format.** <!-- id: controller-plugin-cmdvel-decoupling -->
+      `nav2_core::Controller::computeVelocityCommands()` — the method
+      `controller_server` calls every control cycle to get a command from the
+      plugin — is declared returning `geometry_msgs::msg::TwistStamped`
+      unconditionally; every controller plugin (e.g.
+      `nav2_pure_pursuit_controller`) implements it that way regardless of
+      what topic type ends up on the wire. Do not read this as explaining or
+      confirming the Platform gotchas cmd-vel-twiststamped note: **a plugin
+      returning `TwistStamped` from `computeVelocityCommands()` does not
+      imply `/cmd_vel` is published as `TwistStamped` — that inference is
+      not valid.** `controller_server` receives the plugin's `TwistStamped`
+      either way and is free to convert/republish it as a plain `Twist` on
+      `/cmd_vel`; the wire format is a separate runtime choice,
+      `enable_stamped_cmd_vel` (see the cmd-vel-twiststamped gotcha above),
+      decoupled from the plugin API. Confirmed 2026-08-02 against the
+      `rolling`-branch `navigation2_tutorials` repo's
+      `nav2_pure_pursuit_controller` header, cross-checked against the
+      upstream `nav2_core::Controller` base-class header; re-verify against
+      this skill's target distro (Jazzy Jalisco) before treating the exact
+      parameter list as pinned.
+    reason: obs-nav2-003

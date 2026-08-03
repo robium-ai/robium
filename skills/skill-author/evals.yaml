@@ -1,0 +1,10 @@
+triggers:
+  positive:
+    - phrase: write a new robium skill for depth cameras
+      source: learning-engine Phase 2b restructure
+  negative:
+    - phrase: absorb these learnings into the skills
+      expect: learning-loop
+    - phrase: mine the nav2 tutorials repo for patterns
+      expect: mining
+tasks: []

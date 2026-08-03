@@ -1,0 +1,7 @@
+# Doppler project/config binding for this repo — safe to commit (no secrets).
+# On a new machine: install the Doppler CLI, `doppler login` (laptop) or set a
+# service token (headless server/CI), then run `doppler setup` from the repo
+# root — it reads this file and selects the project/config automatically.
+setup:
+  project: robium
+  config: dev
