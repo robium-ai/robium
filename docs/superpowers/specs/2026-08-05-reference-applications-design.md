@@ -264,11 +264,41 @@ command, architecture summary, expected result, repository link, case study.
 
 Every app ships: a README (prerequisites, five-minute quick start,
 configuration, expected output, troubleshooting, cleanup), one architecture
-diagram or data-flow explanation, a case study, at least one current
+diagram or data-flow explanation, an article (below), at least one current
 screenshot or recording, and explicit labels for simulated/recorded/mocked/
 live components. Documented commands are tested exactly as written (the
 clean-clone honesty check). Performance claims state hardware, data, scenario,
 and measurement method.
+
+### The article (case study as a living, portable document)
+
+`docs/case-study.md` IS the app's public article. One markdown file is the
+single source for the website's article pages, the frontpage feature slots,
+and cross-posting to other mediums (Medium, dev.to): the body is pure
+portable markdown, and everything the site needs is frontmatter it strips
+when cross-posting:
+
+```markdown
+---
+title: The article headline
+summary: One or two sentences shown on cards and list pages.
+app: indoor-navigation        # must equal the app id
+date: 2026-08-05              # last substantive revision (living document)
+hero: assets/trailer.gif      # app-relative short clip (or image); optional
+featured: true                # frontpage candidates; the site shows up to 3
+---
+
+Article body: problem, constraints, approach, Robium components used,
+major decisions, results, limitations, next steps.
+```
+
+Rules: the hero is a short clip (roughly 20 s or less, GIF/MP4) or a still
+image, honestly labeled (sim footage reads as sim); date moves when the
+content substantively changes - it is a living document, revised as the app
+evolves; the website lists ALL articles on its articles page and shows up
+to three featured ones on the frontpage. Ingestion follows the catalog
+pattern: generated from the apps checkout at build time with a committed
+fallback.
 
 ## 10. Growth, scaffolding, and roadmap
 
@@ -349,7 +379,9 @@ Roadmap (status as of 2026-08-05):
       the gateway/orchestrator pattern.
 - [ ] UI exposes input, output, status, reset, and failures clearly.
 - [ ] Visualizations include units, frames, time, and provenance.
-- [ ] README, architecture brief, case study, and current media present.
+- [ ] README, architecture brief, and current media present.
+- [ ] Article (docs/case-study.md) present with frontmatter (title, summary,
+      app, date; hero + featured where applicable); body reads standalone.
 - [ ] Claims identify their measurement conditions.
 - [ ] License, maintainer, maturity, and support expectations clear.
 
