@@ -122,7 +122,13 @@ robium-ai app new <id> [--from <app>]    # scaffold by copying the closest exist
 
 `app run` and `app check` do not reimplement anything: they read
 `robium-app.yaml` and exec the mapped command in the app directory, streaming
-output. `app check` layers `robium-ai doctor` facts (Docker, GPU, disk,
+output. The apps repo is resolved by rule, never hardcoded: `--dir <path>`,
+else `$ROBIUM_APPS_DIR`, else walk up from the current directory to the first
+repo containing REGISTRY.md plus robium-app.yaml files.
+
+Files stay within a small YAML subset so the zero-dependency CLI can parse
+them: 2-space-indented nested maps, scalars, inline arrays, `{}`, quoted
+strings, and comments. No anchors, no multi-line strings, no inline maps. `app check` layers `robium-ai doctor` facts (Docker, GPU, disk,
 Python/uv) against the app's declared `requirements`. `app new` follows the
 registry's bootstrap rule: copy the closest shipped app and diverge, instead
 of abstract templates. Every command supports non-interactive use and `--json`
@@ -175,8 +181,12 @@ verbs:                     # standard verbs -> actual commands (section 4b)
   down: make down
 
 scenarios:                 # optional; name -> command + one-line description
-  slam: {command: make slam, summary: drive the mapping route and save the map}
-  nav: {command: make nav, summary: navigation on the saved map, manual init pose}
+  slam:
+    command: make slam
+    summary: drive the mapping route and save the map
+  nav:
+    command: make nav
+    summary: navigation on the saved map, manual init pose
 
 requirements:
   hardware: []             # e.g. [turtlebot4] for real-robot apps

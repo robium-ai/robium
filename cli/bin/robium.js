@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { setup } from '../src/setup.js';
 import { doctor } from '../src/doctor.js';
 import { skills } from '../src/skills.js';
+import { appCmd } from '../src/apps.js';
 
 const USAGE = `robium: robotics skill pack for coding agents (https://robium.ai)
 
@@ -13,6 +14,8 @@ Usage:
   npx robium-ai install                  Alias for setup
   npx robium-ai doctor [--json]          Check your environment
   npx robium-ai skills [query]           Browse the skill catalog
+  npx robium-ai app <subcommand>         Work with reference applications
+                                         (list | describe | check | run)
 
 Setup options:
   --agent <name>   Target one agent instead of auto-detecting
@@ -37,6 +40,8 @@ export function parseArgs(argv) {
     else if (a === '--agent') args.flags.agent = argv[++i];
     else if (a.startsWith('--dir=')) args.flags.dir = a.slice('--dir='.length);
     else if (a === '--dir') args.flags.dir = argv[++i];
+    else if (a.startsWith('--scenario=')) args.flags.scenario = a.slice('--scenario='.length);
+    else if (a === '--scenario') args.flags.scenario = argv[++i];
     else if (a.startsWith('-')) args.flags.unknown = a;
     else args._.push(a);
   }
@@ -69,6 +74,8 @@ export async function main(argv) {
       return doctor({ json: flags.json });
     case 'skills':
       return skills({ query: pos[1] });
+    case 'app':
+      return appCmd({ args: pos.slice(1), flags });
     default:
       console.error(`Unknown command: ${cmd}\n\n${USAGE}`);
       return 1;
