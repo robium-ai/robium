@@ -26,7 +26,22 @@ npx robium-ai doctor --json   # machine-readable (for agents/scripts)
 # Browse the skill catalog
 npx robium-ai skills          # all skills
 npx robium-ai skills nav      # filter
+
+# Work with reference applications (robium-app.yaml contract)
+npx robium-ai app list                        # catalog of apps in the apps repo
+npx robium-ai app describe indoor-navigation  # one app's metadata (JSON)
+npx robium-ai app check indoor-navigation     # preflight: doctor facts + make check
+npx robium-ai app run indoor-navigation       # the default demo
+npx robium-ai app run indoor-navigation --scenario slam
+npx robium-ai app validate --json               # schema-check every app (CI)
+npx robium-ai app new my-app --from indoor-navigation   # scaffold by copy
 ```
+
+`app` commands find the apps repo via `--dir <path>`, else `$ROBIUM_APPS_DIR`,
+else by walking up from the current directory to the first repo containing
+`REGISTRY.md` plus `robium-app.yaml` files. They exec each app's declared
+commands (Make verbs); nothing is reimplemented in the CLI. See the
+reference-apps spec: `docs/superpowers/specs/2026-08-05-reference-applications-design.md`.
 
 ## How setup works
 

@@ -122,7 +122,13 @@ robium-ai app new <id> [--from <app>]    # scaffold by copying the closest exist
 
 `app run` and `app check` do not reimplement anything: they read
 `robium-app.yaml` and exec the mapped command in the app directory, streaming
-output. `app check` layers `robium-ai doctor` facts (Docker, GPU, disk,
+output. The apps repo is resolved by rule, never hardcoded: `--dir <path>`,
+else `$ROBIUM_APPS_DIR`, else walk up from the current directory to the first
+repo containing REGISTRY.md plus robium-app.yaml files.
+
+Files stay within a small YAML subset so the zero-dependency CLI can parse
+them: 2-space-indented nested maps, scalars, inline arrays, `{}`, quoted
+strings, and comments. No anchors, no multi-line strings, no inline maps. `app check` layers `robium-ai doctor` facts (Docker, GPU, disk,
 Python/uv) against the app's declared `requirements`. `app new` follows the
 registry's bootstrap rule: copy the closest shipped app and diverge, instead
 of abstract templates. Every command supports non-interactive use and `--json`
@@ -175,8 +181,12 @@ verbs:                     # standard verbs -> actual commands (section 4b)
   down: make down
 
 scenarios:                 # optional; name -> command + one-line description
-  slam: {command: make slam, summary: drive the mapping route and save the map}
-  nav: {command: make nav, summary: navigation on the saved map, manual init pose}
+  slam:
+    command: make slam
+    summary: drive the mapping route and save the map
+  nav:
+    command: make nav
+    summary: navigation on the saved map, manual init pose
 
 requirements:
   hardware: []             # e.g. [turtlebot4] for real-robot apps
@@ -273,15 +283,23 @@ Scaffolding is `robium-ai app new <id> --from <closest-app>`: copy a shipped,
 battle-tested app and diverge (the REGISTRY.md "Bootstrap for" rule), rather
 than generating from abstract templates.
 
-Roadmap:
+Roadmap (status as of 2026-08-05):
 
-- **v1:** `robium-app.yaml` schema agreed; yaml files added to the five
-  shipped apps; `robium-ai app list|describe|run|check` implemented against
-  them; `make check` added per app.
-- **v1.1:** schema validation in CI; `app new`; website ingestion from yaml;
-  orchestrator config derived from yaml.
-- **v1.2:** hosted-demo conventions extracted into a reusable gateway package;
-  compatibility badges; reusable UI components.
+- **v1 — shipped:** `robium-app.yaml` schema agreed; yaml files on all five
+  shipped apps plus the archived workspace flavor; `robium-ai app
+  list|describe|run|check`; `make check` per app, honestly scoped for
+  hardware/remote-GPU apps. (robium#67, robium-internal-apps#2)
+- **v1.1 — shipped:** `app validate` (per-field errors, --json) run by apps
+  CI on every push/PR; `app new <id> --from <app>` scaffold-by-copy;
+  website catalog ingestion from yaml (fetch-apps.mjs, /apps page);
+  orchestrator configs derived from the yamls' demo.orchestrator sections
+  (sync-demos.mjs, drift check in site smoke). (robium#67,
+  robium-internal-apps#2, robium-website#11)
+- **v1.2 — shipped:** hosted-demo contract extracted to the vendorable
+  shared/demo-gateway package (env-configured, stdlib contract test in CI);
+  compatibility badges machine-derived from the metadata; the LiveDemo
+  island reusable by any gateway-contract demo. (robium-internal-apps#2,
+  robium-website#11)
 - **Later:** scenario registry, benchmark datasets, community galleries,
   cross-app composition, only after the core is reliable.
 
