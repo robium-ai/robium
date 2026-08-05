@@ -3,6 +3,8 @@ import { spawn } from 'node:child_process';
 import path from 'node:path';
 import os from 'node:os';
 import { runChecks } from './doctor.js';
+import { appValidate } from './appValidate.js';
+import { scaffoldApp } from './appNew.js';
 
 // ---------------------------------------------------------------------------
 // robium-app.yaml parser. Deliberately a YAML *subset* so the CLI stays
@@ -148,6 +150,8 @@ Usage:
   npx robium-ai app describe <id> [--json]         Show one app's metadata
   npx robium-ai app check <id>                     Preflight: doctor facts + the app's own make check
   npx robium-ai app run <id> [--scenario NAME]     Run the app's demo (or a declared scenario)
+  npx robium-ai app validate [--json]              Validate every robium-app.yaml (CI-friendly)
+  npx robium-ai app new <id> --from <existing-id>  Scaffold by copying the closest shipped app
 
 Apps repo resolution: --dir <path>, else $ROBIUM_APPS_DIR, else walk up from
 the current directory to the first repo with REGISTRY.md + robium-app.yaml files.`;
@@ -183,6 +187,8 @@ export async function appCmd({ args = [], flags = {}, log = console.log, exec = 
   }
   const appsDir = requireAppsDir(flags, log);
   if (!appsDir) return 1;
+  if (sub === 'validate') return appValidate({ appsDir, flags, log });
+  if (sub === 'new') return scaffoldApp({ appsDir, id, from: flags.from, log });
   const apps = loadApps(appsDir);
 
   switch (sub) {

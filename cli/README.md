@@ -33,6 +33,8 @@ npx robium-ai app describe indoor-navigation  # one app's metadata (JSON)
 npx robium-ai app check indoor-navigation     # preflight: doctor facts + make check
 npx robium-ai app run indoor-navigation       # the default demo
 npx robium-ai app run indoor-navigation --scenario slam
+npx robium-ai app validate --json               # schema-check every app (CI)
+npx robium-ai app new my-app --from indoor-navigation   # scaffold by copy
 ```
 
 `app` commands find the apps repo via `--dir <path>`, else `$ROBIUM_APPS_DIR`,

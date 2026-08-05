@@ -15,7 +15,8 @@ Usage:
   npx robium-ai doctor [--json]          Check your environment
   npx robium-ai skills [query]           Browse the skill catalog
   npx robium-ai app <subcommand>         Work with reference applications
-                                         (list | describe | check | run)
+                                         (list | describe | check | run |
+                                          validate | new)
 
 Setup options:
   --agent <name>   Target one agent instead of auto-detecting
@@ -42,6 +43,8 @@ export function parseArgs(argv) {
     else if (a === '--dir') args.flags.dir = argv[++i];
     else if (a.startsWith('--scenario=')) args.flags.scenario = a.slice('--scenario='.length);
     else if (a === '--scenario') args.flags.scenario = argv[++i];
+    else if (a.startsWith('--from=')) args.flags.from = a.slice('--from='.length);
+    else if (a === '--from') args.flags.from = argv[++i];
     else if (a.startsWith('-')) args.flags.unknown = a;
     else args._.push(a);
   }
