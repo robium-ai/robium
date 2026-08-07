@@ -10,7 +10,7 @@ THROTTLE_S = 900
 
 
 def main() -> None:
-    from robium_hooks import count_flags, read_event, robium_dir
+    from robium_hooks import count_flags, emit_context, read_event, robium_dir
 
     event = read_event()
     if event.get("stop_hook_active"):
@@ -29,7 +29,10 @@ def main() -> None:
         return
     with open(marker, "w") as f:
         f.write(str(now))
-    print(f"robium: {n} pending learning flag(s) — run a retro/promotion when convenient.")
+    emit_context(
+        "Stop",
+        f"robium: {n} pending learning flag(s) — run a retro/promotion when convenient.",
+    )
 
 
 if __name__ == "__main__":

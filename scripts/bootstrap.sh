@@ -34,8 +34,6 @@ fi
 if command -v uv >/dev/null 2>&1; then
   say "Validating skills…"; uv run skills/skill-author/scripts/validate_skills.py || true
 fi
-say "Checking .agents/skills farm…"; python3 scripts/check_agents_farm.py || true
-
 # 3) Secrets (maintainer-only, opt-in) ---------------------------------------
 if [ "$WITH_SECRETS" = "1" ]; then
   say "Secrets: setting up Doppler…"

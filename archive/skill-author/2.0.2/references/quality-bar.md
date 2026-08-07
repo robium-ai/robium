@@ -1,14 +1,14 @@
 # The robium quality bar
 
-Every skill in `skills/` must pass this checklist. The authoring skeleton lives
-under `templates/skill/`, outside plugin discovery. `scripts/validate_skills.py` enforces the
+Every skill in `skills/` (except `_TEMPLATE`, which is a skeleton, not a
+skill) must pass this checklist. `scripts/validate_skills.py` enforces the
 mechanical items automatically; the rest are checked by hand during
 authoring, mining, or hardening. Run the validator before every commit that
 touches `skills/`; see `../SKILL.md`.
 
 ## 1. Template compliance
 
-The skill was copied from the templates/skill skeleton and kept its section
+The skill was copied from the skills/_TEMPLATE skeleton and kept its section
 structure: `## When to use this skill`, `## Key directives`,
 `## Quick start`, `## Decision guidance` (umbrella skills) or
 `## Usage patterns` (per-tool skills), `## Platform gotchas`,
@@ -19,7 +19,7 @@ level-2 headers.
   `missing required section '<section>'` for anything absent. Header order
   and the umbrella-vs-tool choice of `## Decision guidance` vs
   `## Usage patterns` are not mechanically checked; verify by eye against
-  `templates/skill/SKILL.template.md`.
+  `_TEMPLATE`.
 
 ## 2. Description is a trigger surface
 

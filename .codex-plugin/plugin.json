@@ -1,6 +1,6 @@
 {
   "name": "robium",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Versioned robotics skills for AI coding agents building Physical AI applications.",
   "author": {
     "name": "robium",
@@ -16,6 +16,7 @@
     "simulation",
     "skills"
   ],
+  "skills": "./skills/",
   "interface": {
     "displayName": "Robium",
     "shortDescription": "Physical AI skills for coding agents",

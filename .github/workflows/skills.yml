@@ -1,6 +1,6 @@
 name: skills
 
-# The skill validator is the repo's core invariant (CLAUDE.md: must print
+# The skill validator is the repo's core invariant (AGENTS.md: must print
 # "Checked N skills: PASS" and exit 0). Run it on every push and PR — the job
 # takes ~20s, so it is not worth a paths filter that would leave the README
 # badge reporting a stale run.

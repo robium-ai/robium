@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { findRobiumPlugin } from '../src/plugins.js';
+import { findCodexRobiumPlugin, findRobiumPlugin } from '../src/plugins.js';
 
 // Regression: claude emits { id: "robium@robium", ... }; the earlier
 // `.includes('"robium"')` check never matched this shape.
@@ -22,4 +22,15 @@ test('findRobiumPlugin: does not false-match a different plugin name', () => {
 test('findRobiumPlugin: non-JSON or non-array → null', () => {
   assert.equal(findRobiumPlugin('not json'), null);
   assert.equal(findRobiumPlugin('{}'), null);
+});
+
+test('findCodexRobiumPlugin matches Codex plugin list JSON', () => {
+  const p = findCodexRobiumPlugin('{"installed":[{"pluginId":"robium@robium","enabled":true}]}');
+  assert.ok(p);
+  assert.equal(p.enabled, true);
+});
+
+test('findCodexRobiumPlugin rejects malformed and unrelated payloads', () => {
+  assert.equal(findCodexRobiumPlugin('not json'), null);
+  assert.equal(findCodexRobiumPlugin('{"installed":[{"pluginId":"other@robium"}]}'), null);
 });

@@ -1,5 +1,5 @@
 import { run } from './exec.js';
-import { findRobiumPlugin } from './plugins.js';
+import { findCodexRobiumPlugin, findRobiumPlugin } from './plugins.js';
 
 const MARKETPLACE_REF = 'robium-ai/robium';
 const MARKETPLACE_NAME = 'robium';
@@ -16,7 +16,7 @@ const CLAUDE_MISSING = `✗ Claude Code not found on PATH.
 // Claude Code path: the full plugin (skills + robium-architect agent +
 // capture hooks) via Claude's marketplace, served from the local clone when
 // setup resolved one (marketplaceRef = clone path); `git pull` updates it.
-// Other agents are handled by setup.js via the shared ~/.agents/skills dir.
+// Gemini and Cursor are handled by setup.js through their native skill dirs.
 export async function installClaude({
   exec = run,
   log = console.log,
@@ -59,5 +59,60 @@ export async function installClaude({
   log(verified
     ? '✓ Verified: robium is installed and enabled'
     : '! Could not verify install (run `claude plugin list` to check)');
+  return 0;
+}
+
+const CODEX_MISSING = `✗ Codex not found on PATH.
+
+  Install Codex first, then re-run:
+
+    npx robium-ai setup --agent codex`;
+
+// Codex path: install the native plugin so users receive the skills and the
+// learning-capture hooks as one versioned bundle. The local clone remains the
+// marketplace source, so updating it and refreshing the marketplace updates
+// the plugin payload.
+export async function installCodex({
+  exec = run,
+  log = console.log,
+  error = console.error,
+  marketplaceRef = MARKETPLACE_REF,
+} = {}) {
+  const ver = await exec('codex', ['--version']);
+  if (!ver.ok) {
+    error(CODEX_MISSING);
+    return 1;
+  }
+  log(`✓ Codex detected (${ver.stdout.trim()})`);
+
+  const add = await exec('codex', ['plugin', 'marketplace', 'add', marketplaceRef]);
+  if (add.ok) {
+    log(`✓ Codex marketplace added: ${marketplaceRef}`);
+  } else if (/already|exists|configured/i.test(add.stderr + add.stdout)) {
+    const upd = await exec('codex', ['plugin', 'marketplace', 'upgrade', MARKETPLACE_NAME]);
+    log(upd.ok
+      ? '✓ Codex marketplace already present; refreshed to latest'
+      : '! Codex marketplace already present (refresh failed; continuing)');
+  } else {
+    error(`✗ Could not add Codex marketplace ${marketplaceRef}:\n${(add.stderr || add.stdout).trim()}`);
+    return 1;
+  }
+
+  const inst = await exec('codex', ['plugin', 'add', PLUGIN_SPEC, '--json']);
+  if (inst.ok) {
+    log(`✓ Codex plugin installed: ${PLUGIN_SPEC}`);
+  } else if (/already|installed/i.test(inst.stderr + inst.stdout)) {
+    log(`✓ Codex plugin already installed: ${PLUGIN_SPEC}`);
+  } else {
+    error(`✗ Could not install Codex plugin ${PLUGIN_SPEC}:\n${(inst.stderr || inst.stdout).trim()}`);
+    return 1;
+  }
+
+  const list = await exec('codex', ['plugin', 'list', '--json']);
+  const plugin = list.ok ? findCodexRobiumPlugin(list.stdout) : null;
+  const verified = !!plugin && plugin.enabled !== false;
+  log(verified
+    ? '✓ Verified: robium is installed and enabled in Codex'
+    : '! Could not verify Codex install (run `codex plugin list` to check)');
   return 0;
 }

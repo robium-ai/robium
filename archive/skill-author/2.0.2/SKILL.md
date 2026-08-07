@@ -1,9 +1,9 @@
 ---
 name: skill-author
-version: 2.0.3
+version: 2.0.2
 description: >
   Author new robium skills and enforce the catalog quality bar. Owns the
-  authoring workflow from templates/skill, the quality bar
+  authoring workflow from skills/_TEMPLATE, the quality bar
   (references/quality-bar.md: template compliance, trigger-surface
   descriptions, <500-line bodies, stated delegation posture, upstream links,
   no invented syntax), and scripts/validate_skills.py: run it after ANY
@@ -59,7 +59,7 @@ learning-loop skill, mining in the mining skill.
 
 **Fresh authoring** (new skill from scratch):
 
-1. `cp -r templates/skill skills/<new-skill-name>`, rename the dir to
+1. `cp -r skills/_TEMPLATE skills/<new-skill-name>`, rename the dir to
    match the intended `name:`, and rename `SKILL.template.md` to `SKILL.md` <!-- id: template-rename-not-skill-md -->
    (the template file is deliberately not named SKILL.md so plugin
    discovery never exposes the skeleton as an installable skill).
@@ -113,10 +113,10 @@ learning-loop skill, mining in the mining skill.
 ## Customization
 
 - The authoring workflow is process, not code; there is nothing to template
-  beyond the skeleton in templates/skill itself. When robium's quality bar
+  beyond the skeleton in skills/_TEMPLATE itself. When robium's quality bar
   changes (a new required section, a new constraint), update
   `REQUIRED_SECTIONS`/checks in `scripts/validate_skills.py`,
-  the template skeleton, and `references/quality-bar.md` together;
+  the _TEMPLATE skeleton, and `references/quality-bar.md` together;
   the three must never drift apart.
 - If a project forks robium and wants a stricter or looser bar (e.g. a
   600-line cap, or an extra required `## Safety` section), edit the
@@ -144,8 +144,6 @@ learning-loop skill, mining in the mining skill.
 
 <!-- One dated line per battle-tested change, added by skill-author hardening sessions. -->
 
-- 2.0.3 (2026-08-07): moved the authoring skeleton out of `skills/` so native
-  Codex plugin validation sees only installable skill directories.
 - 2.0.2 (2026-08-03): style pass; removed em dashes throughout (no content changes).
 - 2.0.1 (2026-08-02): validator checks evals.yaml tasks: entry schema
   (name/command/pass_criteria required and pass_criteria a compilable

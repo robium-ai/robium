@@ -3,9 +3,20 @@
 Dated record of shipped work across the robium repos. Newest on top.
 
 Forward-looking work is tracked in **GitHub Issues**, not here — see
-`robium-ai/robium-plugin/issues` (and the sibling repos for demo and site work).
+`robium-ai/robium/issues` (and the sibling repos for demo and site work).
 This file is the history the old `docs/BACKLOG.md` "Done" section held, migrated
 verbatim on 2026-07-22.
+
+## 2026-08-07 — Codex-native maintainer and installation support
+
+Added canonical `AGENTS.md` guidance across every Robium repository, kept
+`CLAUDE.md` as a compatibility bridge, moved the local Codex marketplace to
+`.agents/plugins/`, and made the plugin explicitly package its skill catalog.
+The shared capture hooks now use the Codex/Claude plugin-root compatibility
+contract and emit valid structured Stop output. The `robium-ai` CLI 0.5.0
+installs and diagnoses the native Codex plugin; Codex-only workstations no
+longer fail doctor checks. The authoring template moved outside `skills/` so
+the plugin passes native validation (skill-author 2.0.3).
 
 ## 2026-08-02 — Learning engine Phase 3: experiment engine + deep-verify
 

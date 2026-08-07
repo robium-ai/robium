@@ -24,8 +24,8 @@ for Claude Code, Codex, Gemini CLI, and Cursor.
 
 ## Install
 
-**Quick**: clone the repository and install the skills for every supported
-agent detected on your machine:
+**Quick**: clone the repository and install the native plugin or skills for
+every supported agent detected on your machine:
 
 ```bash
 npx robium-ai setup                  # auto-detects your agents
@@ -53,8 +53,9 @@ gemini extensions install https://github.com/robium-ai/robium --auto-update
 mkdir -p ~/.cursor/skills && ln -s ~/robium/skills/* ~/.cursor/skills/
 ```
 
-The repository remains the source of truth. Pull it to update local plugin and
-symlink-based installs.
+The repository remains the source of truth. Pull it to update symlink-based
+installs; for native plugins, re-run `npx robium-ai setup -y` and start a new
+session so the host refreshes its installed cache.
 
 Your application stays in its own repository; Robium lives beside it. Use the
 reference apps as starting points and contribute reusable fixes back.
@@ -75,7 +76,10 @@ robium/
 ├── skills/          the catalog: versioned, hand-crafted, validator-enforced
 ├── agents/          robium-architect: researches the stack, writes your brief
 ├── .claude-plugin/  Claude Code package
-├── .codex-plugin/   Codex package and marketplace
+├── .codex-plugin/   Codex package manifest
+├── .agents/plugins/ Codex-native repository marketplace
+├── hooks/           shared Claude/Codex learning-capture hooks
+├── AGENTS.md        canonical Codex-native maintainer guidance
 ├── gemini-extension.json  Gemini CLI extension
 ├── learnings/       field evidence from real builds, input to the learning loop
 └── cli/             npx robium-ai: setup, doctor, skill search

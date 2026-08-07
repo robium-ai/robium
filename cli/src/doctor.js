@@ -1,6 +1,6 @@
 import os from 'node:os';
 import { run } from './exec.js';
-import { findRobiumPlugin } from './plugins.js';
+import { findCodexRobiumPlugin, findRobiumPlugin } from './plugins.js';
 
 const GLYPH = { pass: '✓', warn: '!', fail: '✗', info: '·', skip: '-' };
 
@@ -20,23 +20,57 @@ export function buildChecks({ exec = run, platform = process.platform, arch = pr
       },
     },
     {
+      id: 'coding-agent', label: 'Coding agent',
+      async run() {
+        const [claude, codex] = await Promise.all([
+          exec('claude', ['--version']),
+          exec('codex', ['--version']),
+        ]);
+        const found = [claude.ok && 'Claude Code', codex.ok && 'Codex'].filter(Boolean);
+        return found.length
+          ? { status: 'pass', detail: found.join(', ') }
+          : { status: 'fail', detail: 'neither Claude Code nor Codex found on PATH', hint: 'install one, then run: npx robium-ai setup' };
+      },
+    },
+    {
       id: 'claude', label: 'Claude Code',
       async run() {
         const r = await exec('claude', ['--version']);
-        if (!r.ok) return { status: 'fail', detail: 'not found on PATH', hint: 'install: https://claude.com/claude-code' };
+        if (!r.ok) return { status: 'skip', detail: 'not installed (optional)' };
         return { status: 'pass', detail: r.stdout.trim() };
       },
     },
     {
-      id: 'plugin', label: 'robium plugin',
+      id: 'claude-plugin', label: 'Claude plugin',
       async run() {
         const r = await exec('claude', ['plugin', 'list', '--json']);
         if (!r.ok) return { status: 'skip', detail: 'could not query plugin list' };
         const plugin = findRobiumPlugin(r.stdout);
-        if (!plugin) return { status: 'warn', detail: 'not installed', hint: 'run: npx robium-ai install' };
+        if (!plugin) return { status: 'warn', detail: 'not installed', hint: 'run: npx robium-ai setup --agent claude' };
         if (plugin.enabled === false) {
           return { status: 'warn', detail: 'installed but not loaded', hint: 'check plugin dependencies: claude plugin list' };
         }
+        return { status: 'pass', detail: 'installed' };
+      },
+    },
+    {
+      id: 'codex', label: 'Codex',
+      async run() {
+        const r = await exec('codex', ['--version']);
+        if (!r.ok) return { status: 'skip', detail: 'not installed (optional)' };
+        return { status: 'pass', detail: r.stdout.trim() };
+      },
+    },
+    {
+      id: 'codex-plugin', label: 'Codex plugin',
+      async run() {
+        const ver = await exec('codex', ['--version']);
+        if (!ver.ok) return { status: 'skip', detail: 'Codex not installed' };
+        const r = await exec('codex', ['plugin', 'list', '--json']);
+        if (!r.ok) return { status: 'skip', detail: 'could not query Codex plugin list' };
+        const plugin = findCodexRobiumPlugin(r.stdout);
+        if (!plugin) return { status: 'warn', detail: 'not installed', hint: 'run: npx robium-ai setup --agent codex' };
+        if (plugin.enabled === false) return { status: 'warn', detail: 'installed but disabled', hint: 'enable robium in the Codex plugin browser' };
         return { status: 'pass', detail: 'installed' };
       },
     },

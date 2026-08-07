@@ -16,6 +16,8 @@ function fakeExec(table) {
 const ALL_GOOD = {
   'claude --version': { stdout: '2.1.211 (Claude Code)\n' },
   'claude plugin list': { stdout: '[{"id":"robium@robium","enabled":true}]' },
+  'codex --version': { stdout: 'codex-cli 0.146.0\n' },
+  'codex plugin list': { stdout: '{"installed":[{"pluginId":"robium@robium","enabled":true}]}' },
   'docker --version': { stdout: 'Docker version 27.0.0\n' },
   'docker info': { stdout: '27.0.0\n' },
   df: { stdout: 'Filesystem 1024-blocks Used Available Capacity Mounted\n/dev/disk 999 1 209715200 1% /\n' },
@@ -32,31 +34,43 @@ test('doctor: all healthy on linux → no fail, exit 0', async () => {
   assert.equal(code, 0);
 });
 
-test('doctor: missing claude → fail check and exit 1', async () => {
+test('doctor: Codex-only setup is healthy', async () => {
   const table = { ...ALL_GOOD };
   delete table['claude --version'];
   delete table['claude plugin list'];
   const results = await runChecks({ exec: fakeExec(table), platform: 'linux', arch: 'x64', env: {} });
-  assert.equal(results.find((r) => r.id === 'claude').status, 'fail');
-  assert.equal(results.find((r) => r.id === 'plugin').status, 'skip');
+  assert.equal(results.find((r) => r.id === 'coding-agent').status, 'pass');
+  assert.equal(results.find((r) => r.id === 'claude').status, 'skip');
+  assert.equal(results.find((r) => r.id === 'codex-plugin').status, 'pass');
   const code = await doctor({ exec: fakeExec(table), platform: 'linux', arch: 'x64', env: {}, log: () => {} });
-  assert.equal(code, 1);
+  assert.equal(code, 0);
 });
 
-test('doctor: plugin not installed → warn with install hint', async () => {
+test('doctor: Claude plugin not installed → warn with install hint', async () => {
   const table = { ...ALL_GOOD, 'claude plugin list': { stdout: '[]' } };
   const results = await runChecks({ exec: fakeExec(table), platform: 'linux', arch: 'x64', env: {} });
-  const plugin = results.find((r) => r.id === 'plugin');
+  const plugin = results.find((r) => r.id === 'claude-plugin');
   assert.equal(plugin.status, 'warn');
-  assert.match(plugin.hint, /npx robium-ai install/);
+  assert.match(plugin.hint, /setup --agent claude/);
 });
 
 test('doctor: plugin installed but failed to load → warn "not loaded", not "not installed"', async () => {
   const table = { ...ALL_GOOD, 'claude plugin list': { stdout: '[{"id":"robium@robium","enabled":false}]' } };
   const results = await runChecks({ exec: fakeExec(table), platform: 'linux', arch: 'x64', env: {} });
-  const plugin = results.find((r) => r.id === 'plugin');
+  const plugin = results.find((r) => r.id === 'claude-plugin');
   assert.equal(plugin.status, 'warn');
   assert.match(plugin.detail, /not loaded/);
+});
+
+test('doctor: no supported coding agent is a blocker', async () => {
+  const table = { ...ALL_GOOD };
+  delete table['claude --version'];
+  delete table['claude plugin list'];
+  delete table['codex --version'];
+  delete table['codex plugin list'];
+  const results = await runChecks({ exec: fakeExec(table), platform: 'linux', arch: 'x64', env: {} });
+  assert.equal(results.find((r) => r.id === 'coding-agent').status, 'fail');
+  assert.equal(await doctor({ exec: fakeExec(table), platform: 'linux', arch: 'x64', env: {}, log: () => {} }), 1);
 });
 
 test('doctor: docker daemon down → warn, not fail', async () => {

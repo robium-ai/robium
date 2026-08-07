@@ -246,7 +246,9 @@ def test_stop_nudge_throttles(tmp_path):
              "session_id": "s4", "cwd": str(tmp_path), "prompt": "no, wrong port"})
     r1 = run_hook("stop_nudge.py", {"hook_event_name": "Stop", "session_id": "s4",
                   "cwd": str(tmp_path), "stop_hook_active": False})
-    assert "pending" in r1.stdout
+    out = json.loads(r1.stdout)
+    assert out["hookSpecificOutput"]["hookEventName"] == "Stop"
+    assert "pending" in out["hookSpecificOutput"]["additionalContext"]
     r2 = run_hook("stop_nudge.py", {"hook_event_name": "Stop", "session_id": "s4",
                   "cwd": str(tmp_path), "stop_hook_active": False})
     assert r2.stdout.strip() == ""  # throttled

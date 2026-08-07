@@ -22,7 +22,7 @@ def main() -> None:
                  f"robium learning engine: {len(flags)} pending flag(s) in "
                  f".robium/queue.jsonl ({summary}). Promote to learnings/ at the "
                  "next natural break; see learnings/README.md (schema) or the "
-                 "capture section of CLAUDE.md.")
+                 "capture section of AGENTS.md.")
 
 
 if __name__ == "__main__":

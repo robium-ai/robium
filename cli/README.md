@@ -52,16 +52,21 @@ or uses the checkout you're already inside, then wires it in per agent:
 - **Claude Code**: the full plugin (skills + the robium-architect agent +
   capture hooks) via `claude plugin marketplace add <clone>` +
   `claude plugin install robium@robium`. Served from the clone.
-- **Codex, Gemini CLI, and Cursor**: each skill is **symlinked** into
-  the shared [Agent Skills](https://agentskills.io) directory
-  `~/.agents/skills/`, which all three discover automatically. No registration.
+- **Codex**: the native plugin (skills + capture hooks) via
+  `codex plugin marketplace add <clone>` + `codex plugin add robium@robium`.
+  Review and trust the bundled hooks with `/hooks` before expecting capture.
+- **Gemini CLI and Cursor**: each skill is symlinked from the clone into the
+  agent's native user skill directory (`~/.gemini/skills` or
+  `~/.cursor/skills`).
 
-`git pull` in the clone updates every agent at once; the npm package carries
-no skill content, so skill releases never wait on an npm publish. Re-running
-`setup` refreshes the clone and repairs links; it never overwrites a
-same-named skill it doesn't own. Working *inside* the clone needs no setup at
-all for Codex/Gemini/Cursor; the repo ships a committed
-`.agents/skills/` farm they discover at workspace scope.
+`git pull` updates symlink-based installs immediately. Native plugin hosts use
+an installed cache, so re-run `setup` after pulling and start a new session.
+The npm package carries no skill content, so skill releases never wait on an
+npm publish. Re-running `setup` refreshes the clone, reinstalls native plugins,
+and repairs links; it never overwrites a
+same-named skill it doesn't own. Run `setup` before working inside a clone so
+Codex uses the plugin as the single source of Robium skills and hooks; keeping a
+second repo-scoped `.agents/skills/` copy would register every skill twice.
 
 Requires `git` (setup prints the manual recipe if missing).
 

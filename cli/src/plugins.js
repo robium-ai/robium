@@ -15,3 +15,20 @@ export function findRobiumPlugin(stdout) {
   if (!Array.isArray(plugins)) return null;
   return plugins.find((p) => typeof p?.id === 'string' && p.id.split('@')[0] === 'robium') ?? null;
 }
+
+// Codex emits { installed: [{ pluginId: "robium@robium", enabled: true }] }.
+// Keep the parser tolerant of an array so it also works with older snapshots.
+export function findCodexRobiumPlugin(stdout) {
+  let payload;
+  try {
+    payload = JSON.parse(stdout);
+  } catch {
+    return null;
+  }
+  const plugins = Array.isArray(payload) ? payload : payload?.installed;
+  if (!Array.isArray(plugins)) return null;
+  return plugins.find((p) => {
+    const id = p?.pluginId ?? p?.id;
+    return typeof id === 'string' && id.split('@')[0] === 'robium';
+  }) ?? null;
+}

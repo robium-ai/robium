@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { installClaude } from '../src/install.js';
+import { installClaude, installCodex } from '../src/install.js';
 
 function recordingExec(responses) {
   const calls = [];
@@ -20,6 +20,13 @@ const HAPPY = {
   'claude plugin marketplace add': {},
   'claude plugin install': {},
   'claude plugin list': { stdout: '[{"id":"robium@robium","enabled":true}]' },
+};
+
+const CODEX_HAPPY = {
+  'codex --version': { stdout: 'codex-cli 0.146.0\n' },
+  'codex plugin marketplace add': {},
+  'codex plugin add': { stdout: '{"installed":true}\n' },
+  'codex plugin list': { stdout: '{"installed":[{"pluginId":"robium@robium","enabled":true}]}' },
 };
 
 test('installClaude: happy path runs add → install → verify, exit 0', async () => {
@@ -51,4 +58,35 @@ test('installClaude: marketplace already exists → falls back to update', async
   const code = await installClaude({ exec, log: () => {}, error: () => {} });
   assert.equal(code, 0);
   assert.ok(calls.includes('claude plugin marketplace update robium'));
+});
+
+test('installCodex: happy path runs marketplace add → plugin add → verify', async () => {
+  const { exec, calls } = recordingExec(CODEX_HAPPY);
+  const code = await installCodex({ exec, log: () => {}, error: () => {} });
+  assert.equal(code, 0);
+  assert.deepEqual(calls, [
+    'codex --version',
+    'codex plugin marketplace add robium-ai/robium',
+    'codex plugin add robium@robium --json',
+    'codex plugin list --json',
+  ]);
+});
+
+test('installCodex: marketplace already exists → upgrades it', async () => {
+  const { exec, calls } = recordingExec({
+    ...CODEX_HAPPY,
+    'codex plugin marketplace add': { ok: false, stderr: 'marketplace already configured' },
+    'codex plugin marketplace upgrade': {},
+  });
+  const code = await installCodex({ exec, log: () => {}, error: () => {} });
+  assert.equal(code, 0);
+  assert.ok(calls.includes('codex plugin marketplace upgrade robium'));
+});
+
+test('installCodex: missing binary is actionable', async () => {
+  const { exec } = recordingExec({});
+  let err = '';
+  const code = await installCodex({ exec, log: () => {}, error: (s) => { err += s; } });
+  assert.equal(code, 1);
+  assert.match(err, /setup --agent codex/);
 });

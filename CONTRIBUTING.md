@@ -8,7 +8,7 @@ open a PR. That's the whole loop.
 ## The two halves of the repo
 
 robium has two halves that feed each other (see
-[`CLAUDE.md`](./CLAUDE.md) for the full picture):
+[`AGENTS.md`](./AGENTS.md) for the full picture):
 
 - **The knowledge layer** (`skills/`, `agents/`, agent manifests): robotics
   expertise packaged for supported coding agents. Each skill is a
@@ -21,7 +21,7 @@ robium has two halves that feed each other (see
 
 Most contributions land in the first half: **a new or improved skill**. That's
 what this guide walks through. App and infrastructure work follows the mode
-rules in `CLAUDE.md`; open an issue first so we can point you at the right
+rules in `AGENTS.md`; open an issue first so we can point you at the right
 starting app.
 
 ## Contribute a skill in five steps
@@ -43,14 +43,14 @@ Looking for an on-ramp? Issues labeled
 are the contributor-funnel wishlist: skills we want that are a good first
 contribution.
 
-### 2. Copy the `_TEMPLATE` skeleton
+### 2. Copy the skill skeleton
 
 ```bash
-cp -r skills/_TEMPLATE skills/<your-skill-name>
+cp -r templates/skill skills/<your-skill-name>
 mv skills/<your-skill-name>/SKILL.template.md skills/<your-skill-name>/SKILL.md
 ```
 
-The skeleton at `skills/_TEMPLATE/SKILL.template.md` carries the required
+The skeleton at `templates/skill/SKILL.template.md` carries the required
 section structure and inline guidance. (It is intentionally *not* named
 `SKILL.md` so plugin discovery doesn't load the skeleton itself; don't rename
 it in place.)
@@ -114,11 +114,11 @@ line count, and that every backtick-quoted `references/`, `scripts/`, or
 (is the description a good trigger surface? is the delegation posture right?)
 are checked by a human in review.
 
-Manifest sanity check, if you touched anything under `.claude-plugin/`
-(you usually won't; skills are auto-discovered and don't need manifest edits):
+Manifest sanity check, if you touched either agent plugin manifest or the
+shared hooks configuration:
 
 ```bash
-python3 -c "import json; json.load(open('.claude-plugin/plugin.json')); json.load(open('.claude-plugin/marketplace.json')); print('OK')"
+python3 -c "import json; [json.load(open(p)) for p in ('.claude-plugin/plugin.json', '.claude-plugin/marketplace.json', '.codex-plugin/plugin.json', '.agents/plugins/marketplace.json', 'hooks/hooks.json')]; print('OK')"
 ```
 
 ### 5. Open a PR
@@ -142,10 +142,10 @@ welcome. A few extra rules apply because skills are versioned like software:
 - **Add a `## Changelog` line** starting with the new version:
   `- <new-version> (YYYY-MM-DD): <what changed and why>`.
 
-If you're working through Claude Code, note that the STRICT skill-update policy
-in `CLAUDE.md` means skills are never edited automatically; a human always
+When working through Codex or Claude Code, note that the STRICT skill-update policy
+in `AGENTS.md` means skills are never edited automatically; a human always
 selects and approves the change. See
-`skills/skill-author/references/learnings-loop.md` for the full hardening
+`skills/learning-loop/references/learnings-loop.md` for the full hardening
 process maintainers use.
 
 ## Reporting bugs and requesting skills
@@ -163,7 +163,7 @@ Open-ended questions and design discussion belong in
 
 ## Ground rules
 
-- Match the repo's tone and factual claims; don't contradict `CLAUDE.md` or
+- Match the repo's tone and factual claims; don't contradict `AGENTS.md` or
   invent facts. When unsure about a versioned fact, verify against live docs.
 - One logical change per PR. A new skill, or one skill's fix, is the ideal
   size.

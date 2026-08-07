@@ -103,8 +103,8 @@
     },
     {
       "name": "skill-author",
-      "version": "2.0.2",
-      "description": "Author new robium skills and enforce the catalog quality bar. Owns the authoring workflow from skills/_TEMPLATE, the quality bar (references/quality-bar.md: template compliance, trigger-surface descriptions, <500-line bodies, stated delegation posture, upstream links, no invented syntax), and scripts/validate_skills.py: run it after ANY skills/ change. Use when: 'write a new robium skill', 'new skill for X', template compliance questions, description/trigger-surface tuning, or validator failures. Wraps Claude's skill-creator skill for evals and description tuning instead of reinventing it. Not for: absorbing learnings or refining the catalog (learning-loop), mining example repos (mining), building robot applications (architect and the domain skills)."
+      "version": "2.0.3",
+      "description": "Author new robium skills and enforce the catalog quality bar. Owns the authoring workflow from templates/skill, the quality bar (references/quality-bar.md: template compliance, trigger-surface descriptions, <500-line bodies, stated delegation posture, upstream links, no invented syntax), and scripts/validate_skills.py: run it after ANY skills/ change. Use when: 'write a new robium skill', 'new skill for X', template compliance questions, description/trigger-surface tuning, or validator failures. Wraps Claude's skill-creator skill for evals and description tuning instead of reinventing it. Not for: absorbing learnings or refining the catalog (learning-loop), mining example repos (mining), building robot applications (architect and the domain skills)."
     },
     {
       "name": "test-assets",

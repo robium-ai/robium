@@ -2,18 +2,13 @@ import { homedir } from 'node:os';
 import path from 'node:path';
 import { cp, lstat, mkdir, readdir, realpath, rm, stat, symlink, writeFile } from 'node:fs/promises';
 import { run } from './exec.js';
-import { installClaude } from './install.js';
+import { installClaude, installCodex } from './install.js';
 import { resolveRepo } from './repo.js';
 
-// Claude Code installs as a plugin (skills + the robium-architect agent +
-// capture hooks), served from the clone. Every other supported agent reads
-// the open Agent Skills format (agentskills.io) from the shared
-// ~/.agents/skills/ directory:
-//   codex:    primary user dir IS ~/.agents/skills
-//   gemini:   ~/.agents/skills is the documented alias of ~/.gemini/skills
-//   cursor:   reads ~/.agents/skills alongside ~/.cursor/skills
-// We SYMLINK each skill into the clone, so `git pull` (and local edits)
-// update every agent at once. `--copy` copies from the clone instead.
+// Claude Code and Codex install the native plugin (skills + capture hooks),
+// served from the clone. Gemini and Cursor receive Agent Skills symlinks in
+// their own user directories. Keeping those links out of ~/.agents/skills
+// avoids duplicate Codex skill registrations when the plugin is enabled.
 export const AGENTS = ['claude', 'codex', 'gemini', 'cursor'];
 
 const LABEL = {
@@ -55,7 +50,8 @@ export async function detectAgents({ exec = run, home = homedir() } = {}) {
 // A path is "ours" when it resolves to a skill dir inside a robium checkout.
 async function isRobiumSkillTarget(resolved) {
   return (await isFile(path.join(resolved, 'SKILL.md')))
-    && (await isFile(path.join(resolved, '..', '..', '.claude-plugin', 'plugin.json')));
+    && ((await isFile(path.join(resolved, '..', '..', '.codex-plugin', 'plugin.json')))
+      || (await isFile(path.join(resolved, '..', '..', '.claude-plugin', 'plugin.json'))));
 }
 
 // Decide whether we may replace what's at dest. Returns true for: nothing,
@@ -160,9 +156,14 @@ export async function setup({
     if (rc !== 0) failed = true;
   }
 
-  const sharedTargets = targets.filter((a) => a !== 'claude');
-  if (sharedTargets.length) {
-    const targetDir = path.join(home, '.agents', 'skills');
+  if (targets.includes('codex')) {
+    const rc = await installCodex({ exec, log, error, marketplaceRef: repo });
+    if (rc !== 0) failed = true;
+  }
+
+  const skillTargets = targets.filter((a) => a === 'gemini' || a === 'cursor');
+  for (const target of skillTargets) {
+    const targetDir = path.join(home, target === 'gemini' ? '.gemini' : '.cursor', 'skills');
     try {
       const { linked, copied } = await linkSkills({
         src: path.join(repo, 'skills'),
@@ -172,10 +173,10 @@ export async function setup({
         log,
       });
       const how = [linked && `${linked} linked`, copied && `${copied} copied`].filter(Boolean).join(', ');
-      log(`✓ Skills installed to ${path.join('~', '.agents', 'skills')} (${how || 'up to date'})`);
-      log(`  Read automatically by: ${sharedTargets.map((a) => LABEL[a]).join(', ')}; git pull in the repo updates them.`);
+      log(`✓ Skills installed to ${path.join('~', target === 'gemini' ? '.gemini' : '.cursor', 'skills')} (${how || 'up to date'})`);
+      log(`  Read automatically by ${LABEL[target]}; git pull in the repo updates them.`);
     } catch (e) {
-      error(`✗ Could not install skills to ~/.agents/skills: ${e.message}`);
+      error(`✗ Could not install skills for ${LABEL[target]}: ${e.message}`);
       failed = true;
     }
   }
@@ -183,7 +184,7 @@ export async function setup({
   if (!failed) {
     log(`
 Done. The robium repo is your skill source: ${repo}
-  update:      git -C ${repo} pull
+  update:      git -C ${repo} pull && npx robium-ai setup -y
   contribute:  edit skills there and open a PR
 
 Open your agent and try:

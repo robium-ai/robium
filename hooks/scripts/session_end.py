@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""SessionEnd hook — archive the session transcript before Claude Code retention
-prunes it (spec §4.0: transcripts are Tier −1, the engine's raw record)."""
+"""SessionEnd hook — archive the agent transcript before host retention prunes
+it (spec §4.0: transcripts are Tier −1, the engine's raw record)."""
 import os
 import shutil
 import sys

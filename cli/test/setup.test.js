@@ -20,12 +20,18 @@ function agentExec(present) {
       }
       return { ok: true, code: 0, stdout: '', stderr: '' };
     }
+    if (present.includes('codex') && cmd === 'codex' && args[0] === 'plugin') {
+      if (args[1] === 'list') {
+        return { ok: true, code: 0, stdout: '{"installed":[{"pluginId":"robium@robium","enabled":true}]}', stderr: '' };
+      }
+      return { ok: true, code: 0, stdout: '', stderr: '' };
+    }
     return { ok: false, code: 1, stdout: '', stderr: 'not found' };
   };
   return { exec, calls };
 }
 
-// Fixture: a fake robium checkout (repo detection needs .claude-plugin +
+// Fixture: a fake robium checkout (repo detection needs a plugin manifest +
 // skills/), two skills, a _TEMPLATE that must never install.
 async function makeFixtures() {
   const base = await mkdtemp(path.join(os.tmpdir(), 'robium-setup-'));
@@ -34,6 +40,8 @@ async function makeFixtures() {
   await mkdir(home, { recursive: true });
   await mkdir(path.join(repo, '.claude-plugin'), { recursive: true });
   await writeFile(path.join(repo, '.claude-plugin', 'plugin.json'), '{}');
+  await mkdir(path.join(repo, '.codex-plugin'), { recursive: true });
+  await writeFile(path.join(repo, '.codex-plugin', 'plugin.json'), '{}');
   for (const name of ['ros2', 'gazebo']) {
     await mkdir(path.join(repo, 'skills', name, 'references'), { recursive: true });
     await writeFile(path.join(repo, 'skills', name, 'SKILL.md'), `---\nname: ${name}\nversion: 1.0.0\ndescription: test\n---\nbody\n`);
@@ -63,19 +71,21 @@ test('detectAgents: finds binaries on PATH, cursor via ~/.cursor dir', async () 
   await rm(base, { recursive: true, force: true });
 });
 
-test('setup: codex+gemini → symlinks into the checkout, no claude calls, exit 0', async () => {
+test('setup: codex+gemini → native Codex plugin plus Gemini skill links', async () => {
   const fx = await makeFixtures();
   const { exec, calls } = agentExec(['codex', 'gemini']);
   let out = '';
   const code = await setup(opts(fx, { exec, log: (s) => { out += `${s}\n`; } }));
   assert.equal(code, 0);
-  const target = path.join(fx.home, '.agents', 'skills');
+  const target = path.join(fx.home, '.gemini', 'skills');
   const st = await lstat(path.join(target, 'ros2'));
   assert.ok(st.isSymbolicLink());
   assert.equal(await readlink(path.join(target, 'ros2')), path.join(fx.src, 'ros2'));
   assert.ok(await exists(path.join(target, 'gazebo', 'references', 'notes.md')));
   assert.ok(!(await exists(path.join(target, '_TEMPLATE'))));
   assert.ok(!calls.some((c) => c.startsWith('claude plugin')));
+  assert.ok(calls.includes(`codex plugin marketplace add ${fx.repo}`));
+  assert.ok(calls.includes('codex plugin add robium@robium --json'));
   assert.match(out, /2 linked/);
   assert.match(out, /Codex, Gemini CLI/);
   await rm(fx.base, { recursive: true, force: true });
@@ -92,12 +102,12 @@ test('setup: claude-only → plugin flow with the checkout as marketplace ref', 
   await rm(fx.base, { recursive: true, force: true });
 });
 
-test('setup: foreign real dir with same name is skipped, not clobbered', async () => {
+test('setup: foreign Gemini skill with same name is skipped, not clobbered', async () => {
   const fx = await makeFixtures();
-  const foreign = path.join(fx.home, '.agents', 'skills', 'ros2');
+  const foreign = path.join(fx.home, '.gemini', 'skills', 'ros2');
   await mkdir(foreign, { recursive: true });
   await writeFile(path.join(foreign, 'SKILL.md'), 'someone elses ros2 skill\n');
-  const { exec } = agentExec(['codex']);
+  const { exec } = agentExec(['gemini']);
   let out = '';
   const code = await setup(opts(fx, { exec, log: (s) => { out += `${s}\n`; } }));
   assert.equal(code, 0);
@@ -108,11 +118,11 @@ test('setup: foreign real dir with same name is skipped, not clobbered', async (
 
 test('setup: v0.3 marker copy upgrades to symlink', async () => {
   const fx = await makeFixtures();
-  const old = path.join(fx.home, '.agents', 'skills', 'ros2');
+  const old = path.join(fx.home, '.gemini', 'skills', 'ros2');
   await mkdir(old, { recursive: true });
   await writeFile(path.join(old, 'SKILL.md'), 'old copied version\n');
   await writeFile(path.join(old, '.robium-managed'), 'robium-ai 0.3.0\n');
-  const { exec } = agentExec(['codex']);
+  const { exec } = agentExec(['gemini']);
   const code = await setup(opts(fx, { exec }));
   assert.equal(code, 0);
   assert.ok((await lstat(old)).isSymbolicLink());
@@ -145,10 +155,10 @@ test('linkSkills: robium symlink replaced; foreign symlink skipped; broken repla
 
 test('setup --copy: real dirs with marker, sourced from the checkout', async () => {
   const fx = await makeFixtures();
-  const { exec } = agentExec(['codex']);
+  const { exec } = agentExec(['gemini']);
   const code = await setup(opts(fx, { exec, copy: true }));
   assert.equal(code, 0);
-  const dest = path.join(fx.home, '.agents', 'skills', 'ros2');
+  const dest = path.join(fx.home, '.gemini', 'skills', 'ros2');
   assert.ok(!(await lstat(dest)).isSymbolicLink());
   assert.match(await readFile(path.join(dest, '.robium-managed'), 'utf8'), /robium-ai/);
   await rm(fx.base, { recursive: true, force: true });
@@ -156,22 +166,22 @@ test('setup --copy: real dirs with marker, sourced from the checkout', async () 
 
 test('setup: re-run is idempotent', async () => {
   const fx = await makeFixtures();
-  const { exec } = agentExec(['codex']);
+  const { exec } = agentExec(['gemini']);
   assert.equal(await setup(opts(fx, { exec })), 0);
   assert.equal(await setup(opts(fx, { exec })), 0);
-  const names = (await readdir(path.join(fx.home, '.agents', 'skills'))).sort();
+  const names = (await readdir(path.join(fx.home, '.gemini', 'skills'))).sort();
   assert.deepEqual(names, ['gazebo', 'ros2']);
   await rm(fx.base, { recursive: true, force: true });
 });
 
-test('setup: explicit agent not detected → installs anyway with a note', async () => {
+test('setup: explicit Gemini target not detected → installs skills anyway with a note', async () => {
   const fx = await makeFixtures();
   const { exec } = agentExec([]);
   let out = '';
-  const code = await setup(opts(fx, { exec, agent: 'codex', log: (s) => { out += `${s}\n`; } }));
+  const code = await setup(opts(fx, { exec, agent: 'gemini', log: (s) => { out += `${s}\n`; } }));
   assert.equal(code, 0);
   assert.match(out, /not detected/);
-  assert.ok(await exists(path.join(fx.home, '.agents', 'skills', 'ros2')));
+  assert.ok(await exists(path.join(fx.home, '.gemini', 'skills', 'ros2')));
   await rm(fx.base, { recursive: true, force: true });
 });
 
