@@ -1,8 +1,6 @@
 import json
-import os
 import subprocess
 import sys
-import time
 from pathlib import Path
 
 SCRIPTS = Path(__file__).resolve().parents[2] / "hooks" / "scripts"
@@ -170,7 +168,11 @@ def test_ptu_ignores_clean_output_and_other_tools(tmp_path):
     assert read_queue(tmp_path) == []
 
 
-def test_ptu_commit_nudge_when_flags_pending(tmp_path):
+def test_ptu_never_writes_stdout(tmp_path):
+    """Capture-only hook: even with flags pending, PostToolUse stays silent.
+
+    SessionStart is the single nudge channel; this hook must add no noise.
+    """
     for i in range(3):
         run_hook("user_prompt_submit.py", {"hook_event_name": "UserPromptSubmit",
                  "session_id": "s2", "cwd": str(tmp_path),
@@ -179,15 +181,7 @@ def test_ptu_commit_nudge_when_flags_pending(tmp_path):
                  "cwd": str(tmp_path), "tool_name": "Bash",
                  "tool_input": {"command": "git commit -m 'feat: x'"},
                  "tool_response": "1 file changed"})
-    out = json.loads(r.stdout)
-    assert "pending learning" in out["hookSpecificOutput"]["additionalContext"]
-
-
-def test_ptu_no_nudge_on_amend_or_empty_queue(tmp_path):
-    r = run_hook("post_tool_use.py", {"hook_event_name": "PostToolUse", "session_id": "s2",
-                 "cwd": str(tmp_path), "tool_name": "Bash",
-                 "tool_input": {"command": "git commit --amend"},
-                 "tool_response": "ok"})
+    assert r.returncode == 0
     assert r.stdout.strip() == ""
 
 
@@ -217,8 +211,8 @@ def test_ptu_command_mentioning_commit_not_swallowed(tmp_path):
     assert "No such file" in flags[0]["excerpt"]
 
 
-def test_ptu_no_nudge_on_empty_queue(tmp_path):
-    """A non-amend git commit with clean output and empty queue should emit nothing."""
+def test_ptu_clean_commit_not_flagged(tmp_path):
+    """A git commit with clean output produces no flag and no output."""
     r = run_hook("post_tool_use.py", {"hook_event_name": "PostToolUse", "session_id": "s3",
                  "cwd": str(tmp_path), "tool_name": "Bash",
                  "tool_input": {"command": "git commit -m 'feat: y'"},
@@ -239,42 +233,6 @@ def test_session_start_initializes_and_summarizes(tmp_path):
                   "session_id": "s3", "cwd": str(tmp_path), "source": "startup"})
     out = json.loads(r2.stdout)
     assert "1 pending" in out["hookSpecificOutput"]["additionalContext"]
-
-
-def test_stop_nudge_throttles(tmp_path):
-    run_hook("user_prompt_submit.py", {"hook_event_name": "UserPromptSubmit",
-             "session_id": "s4", "cwd": str(tmp_path), "prompt": "no, wrong port"})
-    r1 = run_hook("stop_nudge.py", {"hook_event_name": "Stop", "session_id": "s4",
-                  "cwd": str(tmp_path), "stop_hook_active": False})
-    out = json.loads(r1.stdout)
-    assert out["hookSpecificOutput"]["hookEventName"] == "Stop"
-    assert "pending" in out["hookSpecificOutput"]["additionalContext"]
-    r2 = run_hook("stop_nudge.py", {"hook_event_name": "Stop", "session_id": "s4",
-                  "cwd": str(tmp_path), "stop_hook_active": False})
-    assert r2.stdout.strip() == ""  # throttled
-
-
-def test_stop_nudge_respects_stop_hook_active(tmp_path):
-    r = run_hook("stop_nudge.py", {"hook_event_name": "Stop", "session_id": "s4",
-                 "cwd": str(tmp_path), "stop_hook_active": True})
-    assert r.stdout.strip() == "" and r.returncode == 0
-
-
-def test_stop_nudge_window_pinned(tmp_path):
-    # seed one flag so the nudge is eligible
-    run_hook("user_prompt_submit.py", {"hook_event_name": "UserPromptSubmit",
-             "session_id": "s5", "cwd": str(tmp_path), "prompt": "no, wrong topic name"})
-    marker = tmp_path / ".robium" / ".last-nudge"
-    ev = {"hook_event_name": "Stop", "session_id": "s5", "cwd": str(tmp_path),
-          "stop_hook_active": False}
-    # first nudge creates the marker
-    assert "pending" in run_hook("stop_nudge.py", ev).stdout
-    # inside the window (100s ago) → suppressed
-    os.utime(marker, (time.time() - 100, time.time() - 100))
-    assert run_hook("stop_nudge.py", ev).stdout.strip() == ""
-    # outside the window (901s ago) → fires again
-    os.utime(marker, (time.time() - 901, time.time() - 901))
-    assert "pending" in run_hook("stop_nudge.py", ev).stdout
 
 
 OBS_READY = """## costmap inflation missing <!-- id: obs-nav2-007 -->
@@ -325,15 +283,3 @@ def test_ups_silent_when_no_match_or_marker(tmp_path):
         "cwd": str(tmp_path),
         "prompt": "[robium-recall] costmap inflation obstacles"})
     assert r2.stdout.strip() == "" and read_queue(tmp_path) == []
-
-
-def test_pre_compact_snapshots_queue(tmp_path):
-    run_hook("user_prompt_submit.py", {
-        "hook_event_name": "UserPromptSubmit", "session_id": "s9",
-        "cwd": str(tmp_path), "prompt": "no, wrong distro again"})
-    r = run_hook("pre_compact.py", {"hook_event_name": "PreCompact",
-                 "session_id": "s9", "cwd": str(tmp_path), "trigger": "auto"})
-    assert r.returncode == 0
-    snap = tmp_path / ".robium" / "queue-precompact.jsonl"
-    assert snap.exists()
-    assert snap.read_text() == (tmp_path / ".robium" / "queue.jsonl").read_text()

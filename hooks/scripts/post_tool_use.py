@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""PostToolUse(Bash) hook — flag error-bearing commands; nudge after git commit.
+"""PostToolUse(Bash) hook — flag error-bearing commands.
 
-Dedup: one flag per (command-head, error-signature) per session. Fail-open.
+Capture only: the sole nudge channel is SessionStart, so this hook never
+writes to stdout. Dedup: one flag per (command-head, error-signature) per
+session. Fail-open.
 """
 import json
 import os
 import sys
 
 sys.path.insert(0, __file__.rsplit("/", 1)[0])
-
-NUDGE_THRESHOLD = 3
 
 
 def _response_text(resp) -> str:
@@ -25,7 +25,7 @@ def _response_text(resp) -> str:
 
 def main() -> None:
     from classify import error_signature, is_error_result
-    from robium_hooks import append_flag, count_flags, emit_context, excerpt, read_event, robium_dir
+    from robium_hooks import append_flag, excerpt, read_event, robium_dir
     from scrub import scrub
 
     event = read_event()
@@ -35,7 +35,6 @@ def main() -> None:
     command = (event.get("tool_input") or {}).get("command", "")
     output = _response_text(event.get("tool_response"))
 
-    # Error capture: always evaluate for Bash commands
     if is_error_result(command, output):
         sig = error_signature(command, output)
         seen_path = os.path.join(robium_dir(cwd), f".seen-{event.get('session_id', 'na')}")
@@ -52,14 +51,6 @@ def main() -> None:
                 "signature": sig,
                 "excerpt": excerpt(scrub(output)[-2000:], 400),
             })
-
-    # Nudge check: independent of error capture. Check after append so count reflects any new flag.
-    if "git commit" in command and "--amend" not in command:
-        n = count_flags(cwd)
-        if n >= NUDGE_THRESHOLD:
-            emit_context("PostToolUse",
-                         f"robium: {n} pending learning flag(s) in .robium/queue.jsonl — "
-                         "end-of-block retro due; consider promoting them to learnings/.")
 
 
 if __name__ == "__main__":
