@@ -3,7 +3,7 @@
 **Date:** 2026-08-03
 **Status:** approved (design reviewed in session)
 **Scope decision:** technical SEO + fixes only — no new content pages, no
-visibility changes to robium-internal-apps or robium-website (both stay private),
+repository-visibility changes,
 deploy to production at the end.
 
 ## Context
@@ -16,9 +16,8 @@ The robium project and the robium.ai site just went public. An audit found:
   200 with the homepage** (soft-404s everywhere — poisons crawl signals).
 - The homepage has **18 broken links** to
   `github.com/robium-ai/robium/tree/main/apps/*` — those paths moved to the
-  private robium-internal-apps repo during the 2026-08-03 repo split. Decision:
-  **remove the app deep-links** (not repoint) until the apps are promoted to
-  the public robium-ai/robium-apps showcase.
+  applications repo during the 2026-08-03 repo split. The canonical public
+  target is now robium-ai/robium-apps.
 - The GitHub repo (robium-ai/robium) is in decent shape (description,
   homepage, 11 topics) but can improve keyword coverage and social preview.
 

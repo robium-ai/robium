@@ -5,7 +5,7 @@
   root-cause: the traversal guard compares `os.path.realpath(joined)` against the configured STATIC_ROOT string; macOS tmpdirs live under the `/var -> /private/var` symlink, so the canonicalized child never string-prefixes the un-canonicalized root. Containers hid the bug because /opt/lichtblick has no symlinks.
   fix: canonicalize the root once at startup, `STATIC_ROOT = os.path.realpath(env)` (check: `python3 shared/demo-gateway/test_gateway.py` prints GATEWAY CONTRACT TEST PASS).
   dead-ends: not a permissions or PORT issue; /status worked throughout, which localized it to the static path guard.
-  anchors: robium-internal-apps shared/demo-gateway/demo_gateway.py STATIC_ROOT constant.
+  anchors: robium-apps shared/demo-gateway/demo_gateway.py STATIC_ROOT constant.
   source: extracting the gateway package, spec v1.2.
 
 - [none] figured-out-from-scratch <!-- id: lrn-0805-02 -->

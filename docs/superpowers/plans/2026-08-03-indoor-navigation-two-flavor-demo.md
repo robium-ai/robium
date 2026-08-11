@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Apps work happens in the existing worktree: `/Users/mdemirst/repos/robium-internal-apps/.worktrees/indoor-navigation` (branch `work/indoor-navigation`). Website work happens in `/Users/mdemirst/repos/robium-website` on a new branch `nav-two-flavor-demo`.
+- Apps work happens in the existing worktree: `/Users/mdemirst/repos/robium-apps/.worktrees/indoor-navigation` (branch `work/indoor-navigation`). Website work happens in `/Users/mdemirst/repos/robium-website` on a new branch `nav-two-flavor-demo`.
 - Two-hats rule: never edit robium `skills/**` during this build. Capture learnings to `/Users/mdemirst/repos/robium/learnings/2026-08-03-indoor-navigation.md` the moment friction happens (schema v2 first line: `[skill] signal-type <!-- id: lrn-0803-NN -->`).
 - REGISTRY.md updates land in the SAME commit as the app change they describe.
 - macOS host: `timeout(1)` does not exist; use bounded shell loops (the Makefile already does).
@@ -23,7 +23,7 @@
 
 ## File Structure
 
-robium-internal-apps (worktree):
+robium-apps (worktree):
 
 ```
 indoor-navigation-workspace/        # Task 1: verbatim copy of today's app (image retagged)
@@ -65,7 +65,7 @@ tests/ (site smoke)                          # Task 9: assertions updated
 - [ ] **Step 1: Copy the app directory**
 
 ```bash
-cd /Users/mdemirst/repos/robium-internal-apps/.worktrees/indoor-navigation
+cd /Users/mdemirst/repos/robium-apps/.worktrees/indoor-navigation
 cp -R indoor-navigation indoor-navigation-workspace
 ```
 
@@ -139,7 +139,7 @@ PTY terminal. Kept runnable as the reference for the gateway's /pty and
 - [ ] **Step 6: Commit (app + registry together)**
 
 ```bash
-cd /Users/mdemirst/repos/robium-internal-apps/.worktrees/indoor-navigation
+cd /Users/mdemirst/repos/robium-apps/.worktrees/indoor-navigation
 git add indoor-navigation-workspace REGISTRY.md
 git commit -m "feat: archive IDE-workspace demo flavor as indoor-navigation-workspace
 
@@ -166,7 +166,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - [ ] **Step 1: Create the default layout**
 
 ```bash
-cd /Users/mdemirst/repos/robium-internal-apps/.worktrees/indoor-navigation/indoor-navigation
+cd /Users/mdemirst/repos/robium-apps/.worktrees/indoor-navigation/indoor-navigation
 mkdir lichtblick
 cp foxglove/indoor-navigation-layout.json lichtblick/nav-layout.json
 ```
@@ -540,9 +540,9 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - [ ] **Step 1: Push and open the PR**
 
 ```bash
-cd /Users/mdemirst/repos/robium-internal-apps/.worktrees/indoor-navigation
+cd /Users/mdemirst/repos/robium-apps/.worktrees/indoor-navigation
 git push -u origin work/indoor-navigation
-gh pr create --repo robium-ai/robium-internal-apps \
+gh pr create --repo robium-ai/robium-apps \
   --title "indoor-navigation: two-flavor demo (bundled Lichtblick viewer) + workspace archive" \
   --body "$(cat <<'EOF'
 Implements the two-flavor demo design (robium repo:
@@ -776,8 +776,8 @@ import NavLiveDemo from '../../components/demo/NavLiveDemo.tsx';
     <h2>Run the same demo on your machine</h2>
     <p>The live demo above is a stock Docker container. Run the identical
        thing locally; the viewer is bundled, nothing else to install:</p>
-    <pre><code>git clone https://github.com/robium-ai/robium-internal-apps
-cd robium-internal-apps/indoor-navigation
+    <pre><code>git clone https://github.com/robium-ai/robium-apps
+cd robium-apps/indoor-navigation
 make build   # one-time, about 10 min
 make demo    # then open http://localhost:8765</code></pre>
     <p>The repo is the full application robium built: launch files, Nav2
@@ -786,7 +786,7 @@ make demo    # then open http://localhost:8765</code></pre>
 </Base>
 ```
 
-(When the app is promoted to the public robium-apps repo, only the clone URL in this block changes.)
+(The public robium-apps clone URL is canonical.)
 
 - [ ] **Step 4: Type-check and dev-run**
 
@@ -835,7 +835,7 @@ git push -u origin nav-two-flavor-demo
 gh pr create --repo robium-ai/robium-website \
   --title "nav-trial: slim two-flavor demo page (instance-served Lichtblick)" \
   --body "$(cat <<'EOF'
-Companion to the robium-internal-apps two-flavor PR. The page drops the IDE
+Companion to the robium-apps two-flavor PR. The page drops the IDE
 workspace for nav-trial, polls boot status, then iframes the viewer served
 by the demo container itself; adds the run-it-locally section. Orchestrator
 config updated to post-rename image/package names.
@@ -861,7 +861,7 @@ Simulate a visitor: copy the app out of the repo context and follow the README v
 ```bash
 rm -rf /private/tmp/claude-501/-Users-mdemirst-repos-robium/*/scratchpad/nav-clone 2>/dev/null
 SCRATCH=$(ls -d /private/tmp/claude-501/-Users-mdemirst-repos-robium/*/scratchpad | head -1)
-cp -R /Users/mdemirst/repos/robium-internal-apps/.worktrees/indoor-navigation/indoor-navigation "$SCRATCH/nav-clone"
+cp -R /Users/mdemirst/repos/robium-apps/.worktrees/indoor-navigation/indoor-navigation "$SCRATCH/nav-clone"
 cd "$SCRATCH/nav-clone"
 make build && make demo
 ```

@@ -6,8 +6,8 @@
 
 v2 keeps v1's direction and principles and reconciles them with what already
 exists: the `robium-ai` CLI (npm, `cli/` in the robium monorepo), the five
-shipped apps in robium-internal-apps, REGISTRY.md, the learnings loop, the
-promotion model, and the demo-gateway/orchestrator/bundled-viewer hosting
+shipped apps in robium-apps, REGISTRY.md, the learnings loop, and the
+demo-gateway/orchestrator/bundled-viewer hosting
 pattern proven by indoor-navigation.
 
 ## 1. Vision and principles
@@ -33,11 +33,10 @@ and adapt it.
 
 ## 2. Where apps live and how they are structured
 
-Apps live one-per-directory in **robium-internal-apps** (private proving
-ground). Polished apps are **promoted** to the public **robium-apps** showcase
-as single clean commits; promotion is a copy, so every app is written
-promotion-ready (README and paths make sense standalone). `REGISTRY.md` at the
-internal repo root is the human catalog: quick-index row + card per app,
+Apps live one-per-directory in the public **robium-apps** repository, which is
+both their development home and showcase. Every app stays release-ready, with
+a standalone README and paths that work from a clean clone. `REGISTRY.md` at
+the repo root is the human catalog: quick-index row + card per app,
 updated in the SAME commit as the app change.
 
 Required files per app (merge of v1's tree and the shipped apps' shape):
@@ -216,8 +215,8 @@ Required: `schema_version`, `id` (== directory name), `name`, `summary`,
 3. **Reference-ready:** `make smoke` green from a clean clone, metadata and
    docs complete, REGISTRY.md card landed in the same commit, learnings
    captured throughout.
-4. **Published:** promoted to the public robium-apps showcase; website card
-   live; hosted demo (if any) verified.
+4. **Published:** public robium-apps change reviewed; website card live;
+   hosted demo (if any) verified.
 5. **Maintained or archived:** registry `verified` dates on re-verification;
    archived apps stay runnable with a shelved note (pattern:
    indoor-navigation-workspace) rather than silently rotting.
@@ -318,17 +317,17 @@ Roadmap (status as of 2026-08-05):
 - **v1 — shipped:** `robium-app.yaml` schema agreed; yaml files on all five
   shipped apps plus the archived workspace flavor; `robium-ai app
   list|describe|run|check`; `make check` per app, honestly scoped for
-  hardware/remote-GPU apps. (robium#67, robium-internal-apps#2)
+  hardware/remote-GPU apps. (robium#67, robium-apps#2)
 - **v1.1 — shipped:** `app validate` (per-field errors, --json) run by apps
   CI on every push/PR; `app new <id> --from <app>` scaffold-by-copy;
   website catalog ingestion from yaml (fetch-apps.mjs, /apps page);
   orchestrator configs derived from the yamls' demo.orchestrator sections
   (sync-demos.mjs, drift check in site smoke). (robium#67,
-  robium-internal-apps#2, robium-website#11)
+  robium-apps#2, robium-website#11)
 - **v1.2 — shipped:** hosted-demo contract extracted to the vendorable
   shared/demo-gateway package (env-configured, stdlib contract test in CI);
   compatibility badges machine-derived from the metadata; the LiveDemo
-  island reusable by any gateway-contract demo. (robium-internal-apps#2,
+  island reusable by any gateway-contract demo. (robium-apps#2,
   robium-website#11)
 - **Later:** scenario registry, benchmark datasets, community galleries,
   cross-app composition, only after the core is reliable.

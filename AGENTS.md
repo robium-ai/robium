@@ -7,9 +7,9 @@ Canonical repository guidance for Codex, Claude Code, and other coding agents wo
 **robium** has two halves that feed each other:
 
 - **The plugin** (`skills/`, `hooks/`, `.codex-plugin/`, `.claude-plugin/`) — a native Codex and Claude Code plugin of robotics skills: natural-language SKILL.md files (agentskills.io format), curated references and examples, and learning-capture hooks. Claude also receives the legacy architect subagent; Codex uses the `architect` skill because plugin packaging does not distribute project custom-agent definitions. There is no application framework code, no build step, and deliberately **no invented syntax/DSL**: the deliverable is knowledge, real example files (Dockerfiles, YAML, SDF, Python snippets), and a few genuinely reusable scripts.
-- **The applications** (the sibling repo [robium-ai/robium-internal-apps](https://github.com/robium-ai/robium-internal-apps), plus `learnings/` here) — the proving ground **and reference library** for the plugin. Polished apps are promoted from there to the public [robium-ai/robium-apps](https://github.com/robium-ai/robium-apps) showcase as single clean commits. Apps are built *using* robium's skills, but the operator is robium's developer, not a client. Every app session wears two hats: build the app honestly, and treat every skill interaction as QA data. `learnings/` is a primary product; the apps themselves are the second — canonical, battle-tested samples that future applications reference or **bootstrap from**.
+- **The applications** (the sibling public repo [robium-ai/robium-apps](https://github.com/robium-ai/robium-apps), plus `learnings/` here) — the proving ground, canonical development home, and reference library for the plugin. Apps are built *using* robium's skills, but the operator is robium's developer, not a client. Every app session wears two hats: build the app honestly, and treat every skill interaction as QA data. `learnings/` is a primary product; the apps themselves are the second — canonical, battle-tested samples that future applications reference or **bootstrap from**.
 
-The halves were merged into one monorepo for the engine era, then re-split on 2026-08-03 ahead of the public release: the applications now live in `robium-ai/robium-internal-apps` (private proving ground; polished apps promote to the public `robium-ai/robium-apps`) and the landing site + live-demo orchestrator in `robium-ai/robium-website`. This repo keeps the plugin, the CLI (`cli/`, the `robium-ai` npm package), the learning engine (`learnings/`, `scripts/engine/`), and the design docs (`docs/`). The hardening loop is unchanged — apps stumble → learnings captured (in this repo) → skills absorbed.
+The halves were merged into one monorepo for the engine era, then re-split on 2026-08-03 ahead of the public release. Since 2026-08-10, applications live only in `robium-ai/robium-apps`; the landing site + live-demo orchestrator live in `robium-ai/robium-website`. This repo keeps the plugin, the CLI (`cli/`, the `robium-ai` npm package), the learning engine (`learnings/`, `scripts/engine/`), and the design docs (`docs/`). The hardening loop is unchanged — apps stumble → learnings captured (in this repo) → skills absorbed.
 
 ## Modes — anchor the work to the half that owns the output
 
@@ -17,11 +17,11 @@ Even in one repo, a session operates in one of a few modes, and the mode selects
 
 - **Authoring skills** → you are producing new `skills/**` content with the `skill-author` skill (quality bar + validator). The engine-era update policy below governs how edits land.
 - **Running the learning engine** → consolidate/absorb/refine with the `learning-loop` skill, mine external repos with `mining`. Everything up to a PR may run autonomously; nothing merges to `main` `skills/**` without a human.
-- **Building or QA'ing an app** → the app code lives in a robium-internal-apps checkout; learnings output still lands in THIS repo's `learnings/`. The two-hats rule applies: use skills as a client would, log learnings, and do **not** edit skills mid-build.
+- **Building or QA'ing an app** → the app code lives in a robium-apps checkout; learnings output still lands in THIS repo's `learnings/`. The two-hats rule applies: use skills as a client would, log learnings, and do **not** edit skills mid-build.
 - **CLI work** → `cli/` (the `robium-ai` npm package; publish from that dir — see `cli/README.md`).
-- **Site / live-demo infrastructure** → the robium-website repo (Astro site + demo orchestrator; has its own AGENTS.md with the deploy pipeline and Cloud Run facts). Demo *backends* live in robium-internal-apps.
+- **Site / live-demo infrastructure** → the robium-website repo (Astro site + demo orchestrator; has its own AGENTS.md with the deploy pipeline and Cloud Run facts). Demo *backends* live in robium-apps.
 
-The sibling repos are `robium-ai/robium-internal-apps` (applications + REGISTRY.md; private), `robium-ai/robium-apps` (public showcase of promoted apps), and `robium-ai/robium-website` (site + orchestrator, own AGENTS.md); the engine-era skill-update policy below still governs any `skills/**` edit regardless of which repo you launch from.
+The sibling repos are `robium-ai/robium-apps` (canonical applications + REGISTRY.md) and `robium-ai/robium-website` (site + orchestrator, own AGENTS.md); the engine-era skill-update policy below still governs any `skills/**` edit regardless of which repo you launch from.
 
 ## Repo layout
 
@@ -79,14 +79,14 @@ codex plugin add robium@robium
 
 ### Registry (mandatory)
 
-`REGISTRY.md` at the root of the robium-internal-apps repo is the index of every app — stack, pass bar, what it can bootstrap, battle scars. Two rules:
+`REGISTRY.md` at the root of the robium-apps repo is the index of every app — stack, pass bar, what it can bootstrap, battle scars. Two rules:
 
 - **Read it first** when starting any new app: if an existing app resembles the target, bootstrap from it (copy its structure/env/test shape, then diverge) instead of scaffolding from scratch.
 - **Keep it current**: an app is not done until its registry card is added/updated (quick-index row + card, `verified` date = last smoke pass), in the same commit as the app change.
 
 ### Building apps
 
-- One app per `<name>/` directory in robium-internal-apps: own env, own tests, own `docs/architecture-brief.md` (written by the `robium-architect` agent at kickoff; refined afterward with the `architect` skill in the main conversation).
+- One app per `<name>/` directory in robium-apps: own env, own tests, own `docs/architecture-brief.md` (written by the `robium-architect` agent at kickoff; refined afterward with the `architect` skill in the main conversation).
 - Test-driven: an app is not done until its smoke test passes (robium `testing` skill's bar).
 - Environment-first: uv or Docker per the robium `environments` skill; local and remote runs must reproduce identically.
 

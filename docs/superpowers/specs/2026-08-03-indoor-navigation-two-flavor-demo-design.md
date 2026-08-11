@@ -1,7 +1,7 @@
 # indoor-navigation two-flavor demo - design
 
 **Date:** 2026-08-03 · **Status:** approved (brainstorming session)
-**Surfaces:** robium-internal-apps (`indoor-navigation/`, new `indoor-navigation-workspace/`) + robium-website (demo page, self-hosted Lichtblick, orchestrator config)
+**Surfaces:** robium-apps (`indoor-navigation/`, new `indoor-navigation-workspace/`) + robium-website (demo page, self-hosted Lichtblick, orchestrator config)
 
 ## Purpose
 
@@ -38,7 +38,7 @@ beyond Docker.
    `make demo`, then open `http://localhost:8765`; live = the orchestrator
    spawns the same image and the demo page iframes the instance-served
    viewer at its host.
-4. **Distribution: build in robium-internal-apps now; promote to the public
+4. **Distribution: build in robium-apps now; promote to the public
    robium-apps showcase when done.** README written promotion-ready
    (promotion = copy, not rewrite). Prebuilt-image handout deferred to
    promotion time.
@@ -87,7 +87,7 @@ viewer, no Safari `ws://localhost`-from-https block in the local flavor.
 The orchestrator stays lifecycle-only and out of the data path (existing
 design fact, unchanged).
 
-## Changes - robium-internal-apps
+## Changes - robium-apps
 
 1. **`indoor-navigation-workspace/` (new):** verbatim copy of today's
    `indoor-navigation/`, then registry quick-index row + card ("IDE-workspace
@@ -164,7 +164,7 @@ design fact, unchanged).
 
 ## Out of scope (deferred)
 
-- Promotion to public robium-apps (explicit follow-up once this lands).
+- Publishing and continued development happen directly in public robium-apps.
 - Prebuilt public image handout (`docker run` no-clone path) - promotion-time
   decision.
 - manip/vla demo pages migrating off the Workspace IDE - separate efforts.

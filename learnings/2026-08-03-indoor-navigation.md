@@ -6,7 +6,7 @@
   fix: invoke as `pty_probe.py localhost:8765 smoke` (check: `make demo-smoke` prints `PTY OK (egress assertion skipped - local)` and `DEMO SMOKE PASS`).
   dead-ends: not a container/port problem; curl against :8765 endpoints all green before the probe line.
   anchors: indoor-navigation-workspace/Makefile demo-smoke target; tests/pty_probe.py host.partition(':') branch.
-  source: robium-internal-apps work/indoor-navigation, archiving task of the two-flavor demo plan.
+  source: robium-apps work/indoor-navigation, archiving task of the two-flavor demo plan.
 
 - [live-demo] figured-out-from-scratch <!-- id: lrn-0803-02 -->
   symptom: after adding a viewer redirect on bare GET /, the demo gate failed with `WS HANDSHAKE FAIL` / HTTP 302 from check_ws.sh, though the tunnel worked before.

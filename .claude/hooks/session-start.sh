@@ -36,6 +36,6 @@ uv run skills/skill-author/scripts/validate_skills.py || true
 # 3) npm is NOT needed here: cli/ has zero dependencies and its `node --test`
 #    suite runs without node_modules; installing there only litters an
 #    untracked lockfile. (website/ and apps/ live in their own repos now —
-#    robium-ai/robium-website and robium-ai/robium-internal-apps.)
+#    robium-ai/robium-website and robium-ai/robium-apps.)
 
 say "robium web session ready."

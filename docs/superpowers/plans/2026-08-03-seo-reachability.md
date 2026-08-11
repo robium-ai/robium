@@ -13,7 +13,7 @@
 - **Content rule (robium-website CLAUDE.md):** everything on the site is real — never invent a metric, transcript line, or count. JSON-LD must mirror on-page content verbatim.
 - **No frameworks on the landing page:** plain `<script>`/static markup only; JSON-LD is inert `application/ld+json`, which is fine.
 - **Canonical domain is `https://robium.ai`** — never `.org`/`.dev`.
-- **robium-internal-apps and robium-website repos are PRIVATE** (the public robium-ai/robium-apps showcase holds only promoted apps) — the site must not link to them or claim they're public.
+- **Repository links must reflect current visibility.** Application links target the public robium-ai/robium-apps repository.
 - **`tests/smoke.sh` pins literal page strings** — any copy change updates smoke in the same commit.
 - Site repo path: `~/repos/robium-website`. Plugin repo path: `~/repos/robium`. Both commit straight to `main` (site deploys are gated by `make smoke`).
 - Commit messages end with `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>`.
@@ -446,7 +446,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 Append to the dist-mode block of `tests/smoke.sh`:
 
 ```bash
-  # apps/ paths moved to the private robium-internal-apps repo — no public deep-links.
+  # Application paths moved to the public robium-apps repo.
   grep -rq "tree/main/apps" dist/ && { echo "FAIL: stale robium/tree/main/apps link in dist"; fail=1; } || echo "ok: no stale apps links"
 ```
 
@@ -511,7 +511,7 @@ Expected: `SMOKE PASS` including `ok: no stale apps links`. (If any pre-existing
 git add src/components/SkillsTable.astro src/components/demo/About.tsx src/components/Faq.astro tests/smoke.sh
 git commit -m "fix: drop links to private apps repo; correct open-source claim
 
-apps/ moved to the private robium-internal-apps repo in the 2026-08-03 split —
+apps/ moved to the robium-apps repo in the 2026-08-03 split —
 18 homepage links 404'd for public visitors, and the FAQ claimed the
 apps and site repos were public.
 
