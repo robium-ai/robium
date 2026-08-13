@@ -18,3 +18,16 @@
 
 - [foxglove] fired ✓ · accurate ✓ (bridge placement, browser visualization, Twist teleop, and ROS-side safety boundary all held in the live stack) · complete − (web `.foxe` drag/open installation and current generator/template drift required direct upstream source inspection) · lean ✓
 - [testing] fired ✓ · accurate ✓ (failure-first pure logic, DOM behavior, layout contract, packaged-bundle runtime, and live ROS data-flow checks caught real integration issues) · complete ✓ · lean ✓
+
+- [foxglove] figured-out-from-scratch <!-- id: lrn-0812-03 -->
+  symptom: A bundled Lichtblick layout references a custom panel before a clean web-browser profile has installed its `.foxe`, so the default right rail renders `Unknown panel type` even though the extension artifact is valid.
+  root-cause: Lichtblick Web enumerates `IdbExtensionLoader("local")` during startup and has no image-level extension directory equivalent to the desktop filesystem loader; the local IndexedDB database must contain both synchronized `metadata` and `extensions` records before `ExtensionCatalogProvider` performs its first refresh.
+  fix: Package the shared extension in a Docker builder stage, serve the `.foxe` plus package/readme/changelog metadata under the viewer origin, replace the deferred Lichtblick main script with a small module bootstrap that stores the extension in `lichtblick-extensions-local`, and only then start the original main bundle. (check: fake-indexeddb clean-install and upgrade tests pass; image asset/HTML contract passes; clean `http://127.0.0.1:8080` browser origin rendered Robot Control and all nine controls without manual installation; full two-goal Nav2 smoke exited 0)
+  dead-ends: Relying on a one-time drag/open step for every browser origin; rebuilding the full Lichtblick source tree merely to add one preinstalled extension; dispatching a synthetic drop event, which still travels through UI installation state.
+  anchors: foxglove#custom-panels
+  source: direct inspection of Lichtblick `WebRoot.tsx`, `IdbExtensionLoader.ts`, `IdbExtensionStorage.ts`, and `ExtensionCatalogProvider.tsx` at `64357108ce49764732f53183d89f363d57d50502`; verified in indoor-navigation image on 2026-08-12
+
+## End-of-block retro (2026-08-12, zero-install bundled control panel)
+
+- [foxglove] fired ✓ · accurate ✓ (the loader/storage architecture matched direct source and produced the expected clean-profile panel) · complete − (preinstall mechanics for bundled web viewers were absent and required source tracing) · lean ✓
+- [testing] fired ✓ · accurate ✓ (storage, bootstrap rewrite, image contract, clean-browser UI, and full Nav2 smoke formed a useful layered gate) · complete ✓ · lean ✓
