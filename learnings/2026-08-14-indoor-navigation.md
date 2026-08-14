@@ -12,6 +12,12 @@
   fix: stop/remove the mapping stack and rerun smoke with one simulator — check: goals `(3.4,0.8)` and `(5.1,1.8)` both returned `TaskResult.SUCCEEDED`, followed by `PASS: all goals reached`
   dead-ends: waiting through the first bounded run did not recover; it exited 137 as designed
 
+- [none] user-correction <!-- id: lrn-0814-03 -->
+  symptom: the first compact Robot Control design still used a 28% right rail and retained eyebrow copy, direction captions, helper paragraphs, speed/readiness badges, and fixed drive speeds
+  root-cause: the initial density pass optimized vertical fit but did not reserve enough horizontal space for the main visualization or expose operator-tunable drive speed
+  fix: changed the saved layout to 76/24, removed secondary copy and badges, and added persisted forward/turn sliders — check: the real 1024×576 Lichtblick view showed both sliders and all nine controls without clipping; extension tests and the two-goal Nav2 smoke passed
+  dead-ends: reducing only padding and control sizes did not meet the user's preferred information density
+
 ## End-of-block retro
 
 - foxglove — fired: yes; accurate: yes; complete: partial (preinstalled web-extension cache refresh behavior was not covered); lean: yes.
