@@ -77,3 +77,14 @@
 - gazebo — fired: yes; accurate: yes; complete: partial (modern system composition was accurate, while malformed legacy SDF and COLLADA path repair still required file-by-file diagnosis); lean: yes.
 - simulation — fired: yes; accurate: yes; complete: partial (the common sensor and lifecycle contract guided the smoke pass, but the map-publish/save-timeout interaction was not covered); lean: yes.
 - test-assets — fired: yes; accurate: yes; complete: yes for pinned provenance, license retention, safe acquisition, and real-runtime verification; lean: yes.
+
+- [gazebo] figured-out-from-scratch <!-- id: lrn-0814-11 -->
+  symptom: the Tugbot visible in the warehouse looks like a natural selectable robot, but it cannot replace TurtleBot3 through the existing `TURTLEBOT3_MODEL` switch
+  root-cause: the warehouse embeds MovAi Tugbot v1 as a legacy Ignition SDF with a 46.2 kg base, two planar lidars, a Velodyne, two RGB-depth cameras, old plugin identifiers, derived Gazebo topic names, and no matching ROS robot-description/Nav2 profile in this app; the Fuel asset is also CC BY-NC-ND 4.0
+  fix: treat Tugbot as a separate robot adapter with an immutable upstream model, explicit bridge/TF/sensor selection, and robot-specific Nav2 parameters; use the already-installed TurtleBot3 Waffle Pi when the requirement is only a larger stable drop-in (check: the Jazzy image contains Waffle Pi SDF and matching bridge YAML with the same `/cmd_vel`, `/odom`, `/tf`, `/imu`, `/scan`, and camera interfaces as Burger Cam)
+  dead-ends: assuming the Tugbot already present in the world inherits the app's TurtleBot ROS bridge would silently control the wrong entity and omit its sensor/TF contract
+
+## Robot-options research retro
+
+- gazebo — fired: yes; accurate: yes; complete: yes for separating model spawning, bridge configuration, frames, and sensors; lean: yes.
+- simulation — fired: yes; accurate: yes; complete: yes for preserving the sensor contract when comparing robot platforms; lean: yes.
