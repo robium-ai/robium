@@ -88,3 +88,13 @@
 
 - gazebo — fired: yes; accurate: yes; complete: yes for separating model spawning, bridge configuration, frames, and sensors; lean: yes.
 - simulation — fired: yes; accurate: yes; complete: yes for preserving the sensor contract when comparing robot platforms; lean: yes.
+
+- [gazebo] worked-as-documented <!-- id: lrn-0814-12 -->
+  symptom: the application needed a larger single robot without changing its established movement, lidar, camera, odometry, or TF interfaces
+  fix: select the installed upstream TurtleBot3 Waffle Pi model and matching bridge/URDF through `TURTLEBOT3_MODEL=waffle_pi`, reduce only its camera update rate to 10 Hz, and use the upstream 0.15 m Nav2 radius (check: the freshly built image emitted `/clock`, `/scan`, `/camera/image_raw`, and `/odom` in both Furnished House and Tugbot Warehouse; teleop changed odometry in both worlds; 57 Python tests and 28 extension/deployment tests passed)
+  dead-ends: no custom robot adapter or topic remapping was needed; the preinstalled Waffle Pi profile preserved the existing ROS contract
+
+## Waffle-Pi migration retro
+
+- gazebo — fired: yes; accurate: yes; complete: yes for selecting the upstream Waffle Pi SDF, bridge, and robot description while preserving the ROS interfaces; lean: yes.
+- simulation — fired: yes; accurate: yes; complete: yes for verifying the same sensor and control contract across House and Warehouse; lean: yes.
