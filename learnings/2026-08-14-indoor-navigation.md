@@ -53,3 +53,27 @@
 ## Restart-debug retro
 
 - gazebo — fired: yes; accurate: yes; complete: partial (the skill correctly requires sensor systems and live topic verification, but did not flag that a syntactically downloadable Fuel world can contain stale nested resource versions, invalid empty models, and omitted systems); lean: yes.
+
+- [gazebo] figured-out-from-scratch <!-- id: lrn-0814-08 -->
+  symptom: the pinned AWS RoboMaker Small House ROS 2 world failed in Gazebo Harmonic with `Error Code 19: A link named link has invalid inertia`; after it loaded, portrait textures logged `Could not resolve file [../../../../photos/PortraitA_01.jpg]`
+  root-cause: the legacy ShoeRack model declared `<ixx>`, `<iyy>`, `<ixx>` instead of `<ixx>`, `<iyy>`, `<izz>`, and its COLLADA portrait paths climbed one directory above the self-contained asset root
+  fix: prepare the pinned asset at launch by correcting the second `ixx` tag, rewriting portrait paths one level closer, and injecting Harmonic's Physics/UserCommands/SceneBroadcaster/Sensors/Imu systems (check: the real Furnished House created the TurtleBot entity without load/texture errors and emitted `/clock`, `/scan`, `/camera/image_raw`, and `/odom`; teleop advanced odometry by 0.118 m)
+  dead-ends: injecting only modern system plugins could not overcome the invalid SDF inertia; fixing inertia alone loaded the world but left visible portrait textures unresolved
+
+- [test-assets] better-method <!-- id: lrn-0814-09 -->
+  symptom: the desired home environment is about 105 MB extracted and comes from an archived upstream repository, so vendoring it would bloat robium-apps while an unpinned network fetch would be irreproducible
+  root-cause: AWS publishes Small House as a Git repository rather than a stable modern Fuel world suitable for the existing runtime
+  fix: fetch the GitHub archive at commit `ff9631ca6d1db9c1ba656498151464b5ab74aafe` during the Docker build with traversal/link rejection, retain upstream MIT `LICENSE`, and write a `SOURCE` provenance marker (check: local-fixture safety tests passed, a real fetch produced the expected commit marker, and the built image launched the asset)
+  dead-ends: Fuel house searches produced mostly exterior shells; the only furnished home candidate previously tried had invalid nested Fuel resources and poorer visuals
+
+- [simulation] figured-out-from-scratch <!-- id: lrn-0814-10 -->
+  symptom: Stop Mapping returned `saving map failed: result=255` even though `/map` had already appeared
+  root-cause: `slam_toolbox` published map updates every 5 seconds while its SaveMap helper waited about 2 seconds for a fresh map subscription, so the save outcome depended on timing
+  fix: reduce `map_update_interval` to 1 second (check: the real Furnished House mapping session saved `.pgm` and `.yaml`, returned `IDLE`, and left `/map` with zero publishers)
+  dead-ends: waiting for one earlier `/map` sample did not guarantee another sample would arrive inside the saver helper's shorter subscription window
+
+## Furnished-house retro
+
+- gazebo — fired: yes; accurate: yes; complete: partial (modern system composition was accurate, while malformed legacy SDF and COLLADA path repair still required file-by-file diagnosis); lean: yes.
+- simulation — fired: yes; accurate: yes; complete: partial (the common sensor and lifecycle contract guided the smoke pass, but the map-publish/save-timeout interaction was not covered); lean: yes.
+- test-assets — fired: yes; accurate: yes; complete: yes for pinned provenance, license retention, safe acquisition, and real-runtime verification; lean: yes.
