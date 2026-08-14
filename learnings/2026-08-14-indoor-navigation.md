@@ -43,3 +43,13 @@
 - gazebo — fired: yes; accurate: yes; complete: partial (Fuel versioned-world CLI behavior required live discovery); lean: yes.
 - simulation — fired: yes; accurate: yes; complete: yes for preserving the common robot/sensor contract across environments; lean: yes.
 - test-assets — fired: yes; accurate: yes; complete: yes for pointer, provenance, cache, and representative smoke guidance; lean: yes.
+
+- [gazebo] figured-out-from-scratch <!-- id: lrn-0814-07 -->
+  symptom: restarting into makerspet/living_room v1 killed Gazebo with `tv_65in_emissive/4 ... REST response code: 404`, then `A model must have at least one link` and `Failed to load a world`; after those were repaired the world ran but `/scan` and `/camera/image_raw` never produced messages
+  root-cause: the published world contains a stale model-material version, two empty `living_room` model records, and no modern Gazebo Sensors/IMU systems
+  fix: keep the downloaded Fuel asset immutable, generate a cached launch copy that rewrites only the stale TV URI, removes the two empty records, and injects the standard Physics/UserCommands/SceneBroadcaster/Sensors/Imu systems (check: the real dashboard restart loaded Living Room, spawned TurtleBot successfully, and delivered both `/scan` and `/camera/image_raw`; a subsequent UI restart to House also restored `/scan`)
+  dead-ends: correcting only the missing TV version removed the 404 but left the two invalid empty models; removing those models made the world run but sensors stayed silent until the missing system plugins were added
+
+## Restart-debug retro
+
+- gazebo — fired: yes; accurate: yes; complete: partial (the skill correctly requires sensor systems and live topic verification, but did not flag that a syntactically downloadable Fuel world can contain stale nested resource versions, invalid empty models, and omitted systems); lean: yes.
