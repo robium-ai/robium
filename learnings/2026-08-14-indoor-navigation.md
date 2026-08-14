@@ -21,11 +21,25 @@
 - [nav2] user-correction <!-- id: lrn-0814-04 -->
   symptom: a fresh dashboard immediately showed a map and disabled Start mapping even though the intended workflow requires an explicit Start mapping or Load map action
   root-cause: `mapping.launch.py` defaults to launch-time `mode:=mapping`, starts `slam_toolbox` immediately, and publishes `MAPPING`; the UI's Start mapping service only resets the already-running mapper, while Stop mapping only saves and keeps mapping
-  fix: pending approved app redesign to make startup `IDLE` and supervise mutually exclusive mapping/localization node sets from the control services — check: before the fix, `/mapping/state` returned `MAPPING` and `ros2 topic info /map -v` identified one transient-local publisher named `slam_toolbox`
+  fix: added a persistent session manager that starts only Gazebo, owns restartable mapping/localization child groups, and saves maps per world — check: fresh startup returned `IDLE` with `Unknown topic '/map'`; Start produced one `/map` publisher and `MAPPING`; Stop saved the map, returned `IDLE`, and reduced `/map` publishers to zero; Load started map_server + AMCL and returned `LOCALIZATION`
   dead-ends: changing button enablement or hiding `/map` in Lichtblick would mask the launch-state mismatch without stopping the underlying mapper
+
+- [gazebo] better-method <!-- id: lrn-0814-05 -->
+  symptom: Fuel display names and mutable download counts were insufficient to wire deterministic world choices, and `gz fuel download` warned that only the latest world version is supported even when given a versioned URL
+  root-cause: the web UI is client-rendered, while the Fuel REST metadata and cache layout expose the canonical owner/name/version records directly
+  fix: resolve metadata through `/1.0/<owner>/worlds/<name>`, launch explicit versioned Fuel URLs, and persist `/root/.gz/fuel` as a Docker volume — check: cached paths recorded Tugbot v2, industrial-warehouse v4, and living_room v1; each world started in Gazebo Harmonic and restored TurtleBot `/scan` and camera publishers
+  dead-ends: guessed owner/name combinations and generic Fuel search results were ambiguous; direct `.zip` and `/files` URL guesses returned 404
+
+- [test-assets] verified <!-- id: lrn-0814-06 -->
+  symptom: three large external simulation worlds needed provenance and repeatable first-use behavior without vendoring or modifying a CC BY-NC-ND asset
+  fix: kept pinned upstream pointers, added curated spawn poses, cached downloads in a named volume, and smoke-tested the same TurtleBot sensor contract in all four worlds — check: House, Living Room, Tugbot Warehouse, and Industrial Warehouse each produced `/scan`; all Fuel assets remained unchanged
+  dead-ends: embedding a modified environment-only copy of Tugbot in Warehouse would conflict with its no-derivatives license
 
 ## End-of-block retro
 
 - foxglove — fired: yes; accurate: yes; complete: partial (preinstalled web-extension cache refresh behavior was not covered); lean: yes.
 - testing — fired: not loaded automatically for the final smoke failure; accurate: not scored; complete: missing guidance on avoiding concurrent local simulator stacks; lean: not scored.
 - nav2 — fired: yes; accurate: yes; complete: yes for identifying mutually exclusive SLAM/localization ownership, while the app-specific idle supervisor remains local architecture; lean: yes.
+- gazebo — fired: yes; accurate: yes; complete: partial (Fuel versioned-world CLI behavior required live discovery); lean: yes.
+- simulation — fired: yes; accurate: yes; complete: yes for preserving the common robot/sensor contract across environments; lean: yes.
+- test-assets — fired: yes; accurate: yes; complete: yes for pointer, provenance, cache, and representative smoke guidance; lean: yes.
