@@ -18,7 +18,14 @@
   fix: changed the saved layout to 76/24, removed secondary copy and badges, and added persisted forward/turn sliders — check: the real 1024×576 Lichtblick view showed both sliders and all nine controls without clipping; extension tests and the two-goal Nav2 smoke passed
   dead-ends: reducing only padding and control sizes did not meet the user's preferred information density
 
+- [nav2] user-correction <!-- id: lrn-0814-04 -->
+  symptom: a fresh dashboard immediately showed a map and disabled Start mapping even though the intended workflow requires an explicit Start mapping or Load map action
+  root-cause: `mapping.launch.py` defaults to launch-time `mode:=mapping`, starts `slam_toolbox` immediately, and publishes `MAPPING`; the UI's Start mapping service only resets the already-running mapper, while Stop mapping only saves and keeps mapping
+  fix: pending approved app redesign to make startup `IDLE` and supervise mutually exclusive mapping/localization node sets from the control services — check: before the fix, `/mapping/state` returned `MAPPING` and `ros2 topic info /map -v` identified one transient-local publisher named `slam_toolbox`
+  dead-ends: changing button enablement or hiding `/map` in Lichtblick would mask the launch-state mismatch without stopping the underlying mapper
+
 ## End-of-block retro
 
 - foxglove — fired: yes; accurate: yes; complete: partial (preinstalled web-extension cache refresh behavior was not covered); lean: yes.
 - testing — fired: not loaded automatically for the final smoke failure; accurate: not scored; complete: missing guidance on avoiding concurrent local simulator stacks; lean: not scored.
+- nav2 — fired: yes; accurate: yes; complete: yes for identifying mutually exclusive SLAM/localization ownership, while the app-specific idle supervisor remains local architecture; lean: yes.
