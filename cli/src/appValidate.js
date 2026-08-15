@@ -40,10 +40,10 @@ export function validateApp(app) {
     if (app.status !== 'archived' && !app.verbs.doctor) warn.push('no verbs.doctor: environment facts are the whole diagnosis');
   }
 
-  const scenarioNames = Object.keys(app.scenarios ?? {});
-  for (const [nameKey, s] of Object.entries(app.scenarios ?? {})) {
-    need(s && typeof s === 'object' && typeof s.command === 'string', `scenarios.${nameKey}.command is required`);
-    if (s && typeof s === 'object' && !s.summary) warn.push(`scenarios.${nameKey} has no summary`);
+  const modeNames = Object.keys(app.modes ?? {});
+  for (const [nameKey, mode] of Object.entries(app.modes ?? {})) {
+    need(mode && typeof mode === 'object' && typeof mode.command === 'string', `modes.${nameKey}.command is required`);
+    if (mode && typeof mode === 'object' && !mode.summary) warn.push(`modes.${nameKey} has no summary`);
   }
 
   need(app.requirements && typeof app.requirements === 'object', 'requirements section is required');
@@ -55,11 +55,11 @@ export function validateApp(app) {
   need(app.demo && typeof app.demo === 'object', 'demo section is required');
   if (app.demo) {
     need(typeof app.demo.hosted === 'boolean', 'demo.hosted must be true or false');
-    const ds = app.demo.default_scenario;
-    need(typeof ds === 'string', 'demo.default_scenario is required');
-    if (typeof ds === 'string') {
-      const known = ds === 'demo' || scenarioNames.includes(ds) || normalizeVerb(app.verbs?.[ds]) != null;
-      need(known, `demo.default_scenario "${ds}" matches no verb or scenario`);
+    const defaultMode = app.demo.default_mode;
+    need(typeof defaultMode === 'string', 'demo.default_mode is required');
+    if (typeof defaultMode === 'string') {
+      const known = defaultMode === 'demo' || modeNames.includes(defaultMode) || normalizeVerb(app.verbs?.[defaultMode]) != null;
+      need(known, `demo.default_mode "${defaultMode}" matches no verb or mode`);
     }
     if (app.demo.estimated_startup_seconds != null) {
       need(typeof app.demo.estimated_startup_seconds === 'number', 'demo.estimated_startup_seconds must be a number');

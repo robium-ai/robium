@@ -37,7 +37,7 @@ npx robium-ai app run indoor-navigation       # primary local experience
 npx robium-ai app status indoor-navigation    # running state and endpoints
 npx robium-ai app logs indoor-navigation      # follow process logs
 npx robium-ai app stop indoor-navigation      # stop application services
-npx robium-ai app run indoor-navigation --scenario demo
+npx robium-ai app run indoor-navigation --mode demo
 npx robium-ai app validate --json               # schema-check every app (CI)
 npx robium-ai app new my-app --from indoor-navigation   # scaffold by copy
 ```

@@ -54,9 +54,9 @@ Indoor navigation removes `make mapping`, `make down`, and `make check`. There
 are no aliases for the old names. The replacements are `make run`, `make stop`,
 and `make doctor`.
 
-Scenario-specific commands such as `sim` and `demo` remain available as
-advanced scenarios. The CLI runs them through `robium app run
-indoor-navigation --scenario <name>`.
+Mode-specific commands such as `sim` and `demo` remain available as advanced
+modes. The CLI runs them through `robium app run indoor-navigation --mode
+<name>`.
 
 ## Help output
 
@@ -69,4 +69,3 @@ learning a second vocabulary.
 Do not add, update, or run automated tests for this prototype work. Review the
 changed command mappings and source diffs only, following the user's explicit
 development preference.
-

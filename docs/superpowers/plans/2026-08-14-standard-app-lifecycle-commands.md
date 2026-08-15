@@ -43,7 +43,7 @@
 
 - [ ] Set `runtime.entrypoint` to `make run`.
 - [ ] Declare the seven standard verbs with their Make command and user-facing summary.
-- [ ] Declare `demo` as an explicit advanced scenario and keep `sim`, `slam`, and `nav` scenarios available.
+- [ ] Declare `demo` as an explicit advanced mode and keep `sim`, `slam`, and `nav` modes available.
 
 ### Task 3: Extend the generic Robium CLI dispatcher
 

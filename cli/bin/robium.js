@@ -42,8 +42,8 @@ export function parseArgs(argv) {
     else if (a === '--agent') args.flags.agent = argv[++i];
     else if (a.startsWith('--dir=')) args.flags.dir = a.slice('--dir='.length);
     else if (a === '--dir') args.flags.dir = argv[++i];
-    else if (a.startsWith('--scenario=')) args.flags.scenario = a.slice('--scenario='.length);
-    else if (a === '--scenario') args.flags.scenario = argv[++i];
+    else if (a.startsWith('--mode=')) args.flags.mode = a.slice('--mode='.length);
+    else if (a === '--mode') args.flags.mode = argv[++i];
     else if (a.startsWith('--from=')) args.flags.from = a.slice('--from='.length);
     else if (a === '--from') args.flags.from = argv[++i];
     else if (a.startsWith('-')) args.flags.unknown = a;

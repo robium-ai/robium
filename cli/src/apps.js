@@ -114,14 +114,14 @@ export function loadApps(appsDir) {
 
 // Resolve what an app lifecycle verb should execute. Commands are argv-split
 // on whitespace (the contract is plain commands like "make demo" — no shell).
-export function resolveCommand(app, { verb, scenario } = {}) {
-  if (scenario) {
-    const s = app.scenarios?.[scenario];
-    if (!s?.command) {
-      const known = Object.keys(app.scenarios ?? {});
-      return { error: `unknown scenario "${scenario}" for ${app.id}${known.length ? ` (known: ${known.join(', ')})` : ' (none declared)'}` };
+export function resolveCommand(app, { verb, mode } = {}) {
+  if (mode) {
+    const selected = app.modes?.[mode];
+    if (!selected?.command) {
+      const known = Object.keys(app.modes ?? {});
+      return { error: `unknown mode "${mode}" for ${app.id}${known.length ? ` (known: ${known.join(', ')})` : ' (none declared)'}` };
     }
-    return { command: s.command };
+    return { command: selected.command };
   }
   const resolved = getAppVerb(app, verb);
   if (!resolved) return { error: `${app.id} declares no "${verb}" verb in robium-app.yaml` };
@@ -146,11 +146,11 @@ function appHelp(app) {
     `${'CLI command'.padEnd(cliWidth)}  ${'Make equivalent'.padEnd(makeWidth)}  Description`,
     ...rows.map((row) => `${row.cli.padEnd(cliWidth)}  ${row.make.padEnd(makeWidth)}  ${row.summary}`),
   ];
-  const scenarios = Object.entries(app.scenarios ?? {});
-  if (scenarios.length > 0) {
-    lines.push('', 'Advanced scenarios:');
-    for (const [name, scenario] of scenarios) {
-      lines.push(`  robium app run ${app.id} --scenario ${name}  ${scenario.summary ?? ''}`.trimEnd());
+  const modes = Object.entries(app.modes ?? {});
+  if (modes.length > 0) {
+    lines.push('', 'Modes:');
+    for (const [name, mode] of modes) {
+      lines.push(`  robium app run ${app.id} --mode ${name}  ${mode.summary ?? ''}`.trimEnd());
     }
   }
   return lines.join('\n');
@@ -180,7 +180,7 @@ Usage:
   npx robium-ai app help <id>                      Show lifecycle commands and Make equivalents
   npx robium-ai app doctor <id>                    Diagnose the environment and app prerequisites
   npx robium-ai app build <id>                     Build application artifacts
-  npx robium-ai app run <id> [--scenario NAME]     Run the primary experience or a scenario
+  npx robium-ai app run <id> [--mode NAME]         Run the primary experience or a mode
   npx robium-ai app status <id>                    Show whether the app is running
   npx robium-ai app logs <id>                      Follow application logs
   npx robium-ai app stop <id>                      Stop the application
@@ -277,11 +277,11 @@ export async function appCmd({ args = [], flags = {}, log = console.log, exec = 
     case 'stop': {
       const app = requireApp(apps, id, log);
       if (!app) return 1;
-      if (flags.scenario && sub !== 'run') {
-        log(`--scenario is only valid with "app run"`);
+      if (flags.mode && sub !== 'run') {
+        log(`--mode is only valid with "app run"`);
         return 1;
       }
-      const resolved = resolveCommand(app, { verb: sub, scenario: flags.scenario });
+      const resolved = resolveCommand(app, { verb: sub, mode: flags.mode });
       if (resolved.error) { log(resolved.error); return 1; }
       log(`→ ${resolved.command}  (in ${app.dir})`);
       return exec(resolved.command, app.dir);

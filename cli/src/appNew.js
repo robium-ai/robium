@@ -50,7 +50,7 @@ export function scaffoldApp({ appsDir, id, from, log = console.log }) {
   log(`Scaffolded ${id} from ${from} at ${dst}\n`);
   log('Next steps (an app is not done until these are done):');
   log('  1. Run the robium-architect agent to write docs/architecture-brief.md for the NEW problem');
-  log('  2. Rewrite robium-app.yaml summary/tags/scenarios as the app diverges');
+  log('  2. Rewrite robium-app.yaml summary/tags/modes as the app diverges');
   log(`  3. Rename source packages/modules copied from ${from}`);
   log('  4. Make `make smoke` mean something for this app, then keep it green');
   log('  5. Add the REGISTRY.md quick-index row + card IN THE SAME COMMIT as the app');
