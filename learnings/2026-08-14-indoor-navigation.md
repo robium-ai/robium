@@ -161,3 +161,14 @@
 ## Dashboard-layout retro
 
 - foxglove — fired: yes; accurate: yes for layout-tree composition; complete: partial because the Logs panel's compatibility identifier required current source inspection; lean: yes.
+
+- [foxglove] figured-out-from-scratch <!-- id: lrn-0814-19 -->
+  symptom: a tabbed Logs layout needed grouped views for selected ROS 2 nodes, but Lichtblick's `nameFilter` does not provide an allow-list mode
+  root-cause: unspecified node names default to visible and `nameFilter` only suppresses entries explicitly configured with `visible: false`; maintaining a complete blacklist would break whenever runtime nodes change
+  fix: give each grouped `RosOut` tab search terms matching its node names; terms use OR semantics across the log name and message text, while the All tab retains an empty search list (check: current Lichtblick `filterMessages.ts`, Log panel config, and this app's launch-defined node names were inspected on 2026-08-14)
+  dead-ends: using `nameFilter` as a partial whitelist would silently allow every unlisted or newly discovered node
+  source: https://github.com/lichtblick-suite/lichtblick/blob/main/packages/suite-base/src/panels/Log/filterMessages.ts
+
+## Tabbed-node-logs retro
+
+- foxglove — fired: yes; accurate: yes for composing child `RosOut` panels inside a `Tab` panel; complete: partial because node-filter allow-list behavior required source inspection; lean: yes.
