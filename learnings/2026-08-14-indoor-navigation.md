@@ -123,3 +123,14 @@
 
 - nav2 — fired: yes; accurate: yes for identifying `/plan` and `/local_plan` as the global and controller path surfaces; complete: not runtime-scored by explicit user direction; lean: yes.
 - foxglove — fired: yes; accurate: yes for configuring both path topics in the committed 3D layout; complete: not runtime-scored by explicit user direction; lean: yes.
+
+- [foxglove] figured-out-from-scratch <!-- id: lrn-0814-15 -->
+  symptom: the served Lichtblick default layout contained cyan `/plan` and orange `/local_plan`, but the open browser subscribed only to `/plan` and showed neither line
+  root-cause: Lichtblick retained the origin's previously persisted 3D layout, so a reload did not adopt the newly added `/local_plan`; additionally Nav2's volatile `/plan` had not emitted because no navigation goal was active
+  fix: open the dashboard on a fresh browser origin/private window to load the new default layout, then send a waypoint goal while localized (check: live ROS graph showed `/plan` and `/local_plan` publishers, the served HTML contained both styles, current `/plan` rate reported no publication before a goal, and the live `map -> base_footprint` TF resolved)
+  dead-ends: the screenshot's `Frame map not found` entries were startup transients; the current TF chain was healthy and was not the continuing cause
+
+## Navigation-plan visibility retro
+
+- nav2 — fired: yes; accurate: yes for distinguishing topic existence from an emitted active plan and verifying the TF chain first; complete: yes; lean: yes.
+- foxglove — fired: yes; accurate: yes for tracing the discrepancy to origin-persisted layout state; complete: partial because default-layout refresh behavior still required live source/runtime diagnosis; lean: yes.
