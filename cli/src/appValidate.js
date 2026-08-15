@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { loadApps } from './apps.js';
+import { normalizeVerb } from './appVerbs.js';
 
 // robium-app.yaml schema "1" validation (reference-apps spec section 5).
 // Precise, per-field errors; JSON output for CI.
@@ -32,11 +33,11 @@ export function validateApp(app) {
 
   need(app.verbs && typeof app.verbs === 'object', 'verbs section is required');
   if (app.verbs) {
-    need(typeof app.verbs.smoke === 'string', 'verbs.smoke is required (the pass bar)');
+    need(normalizeVerb(app.verbs.smoke) != null, 'verbs.smoke is required (the pass bar)');
     for (const [k, v] of Object.entries(app.verbs)) {
-      need(typeof v === 'string' && v.length > 0, `verbs.${k} must be a command string`);
+      need(normalizeVerb(v) != null, `verbs.${k} must be a command string or command/summary object`);
     }
-    if (app.status !== 'archived' && !app.verbs.check) warn.push('no verbs.check: preflight is doctor-facts only');
+    if (app.status !== 'archived' && !app.verbs.doctor) warn.push('no verbs.doctor: environment facts are the whole diagnosis');
   }
 
   const scenarioNames = Object.keys(app.scenarios ?? {});
@@ -57,7 +58,7 @@ export function validateApp(app) {
     const ds = app.demo.default_scenario;
     need(typeof ds === 'string', 'demo.default_scenario is required');
     if (typeof ds === 'string') {
-      const known = ds === 'demo' || scenarioNames.includes(ds) || typeof app.verbs?.[ds] === 'string';
+      const known = ds === 'demo' || scenarioNames.includes(ds) || normalizeVerb(app.verbs?.[ds]) != null;
       need(known, `demo.default_scenario "${ds}" matches no verb or scenario`);
     }
     if (app.demo.estimated_startup_seconds != null) {

@@ -30,9 +30,14 @@ npx robium-ai skills nav      # filter
 # Work with reference applications (robium-app.yaml contract)
 npx robium-ai app list                        # catalog of apps in the apps repo
 npx robium-ai app describe indoor-navigation  # one app's metadata (JSON)
-npx robium-ai app check indoor-navigation     # preflight: doctor facts + make check
-npx robium-ai app run indoor-navigation       # the default demo
-npx robium-ai app run indoor-navigation --scenario slam
+npx robium-ai app help indoor-navigation      # commands + equivalent Make targets
+npx robium-ai app doctor indoor-navigation    # environment + app diagnosis
+npx robium-ai app build indoor-navigation     # build application artifacts
+npx robium-ai app run indoor-navigation       # primary local experience
+npx robium-ai app status indoor-navigation    # running state and endpoints
+npx robium-ai app logs indoor-navigation      # follow process logs
+npx robium-ai app stop indoor-navigation      # stop application services
+npx robium-ai app run indoor-navigation --scenario demo
 npx robium-ai app validate --json               # schema-check every app (CI)
 npx robium-ai app new my-app --from indoor-navigation   # scaffold by copy
 ```
@@ -40,7 +45,9 @@ npx robium-ai app new my-app --from indoor-navigation   # scaffold by copy
 `app` commands find the apps repo via `--dir <path>`, else `$ROBIUM_APPS_DIR`,
 else by walking up from the current directory to the first repo containing
 `REGISTRY.md` plus `robium-app.yaml` files. They exec each app's declared
-commands (Make verbs); nothing is reimplemented in the CLI. See the
+commands (usually Make targets); nothing app-specific is reimplemented in the
+CLI. A verb may be a command string or a `command`/`summary` object; the latter
+lets `app help` display both the CLI spelling and Make equivalent. See the
 reference-apps spec: `docs/superpowers/specs/2026-08-05-reference-applications-design.md`.
 
 ## How setup works

@@ -48,6 +48,7 @@
 ### Task 3: Extend the generic Robium CLI dispatcher
 
 **Files:**
+- Create: `/Users/mdemirst/repos/robium/cli/src/appVerbs.js`
 - Modify: `/Users/mdemirst/repos/robium/cli/src/apps.js`
 - Modify: `/Users/mdemirst/repos/robium/cli/src/appValidate.js`
 - Modify: `/Users/mdemirst/repos/robium/cli/bin/robium.js`
@@ -73,4 +74,3 @@
 - [ ] Review source diffs without running automated tests.
 - [ ] Commit and push the app branch while excluding saved map directories.
 - [ ] Commit the CLI changes without modifying skill content.
-

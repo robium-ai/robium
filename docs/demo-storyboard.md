@@ -103,7 +103,7 @@ robot drives the route on its own while you capture Foxglove, no manual goal
 clicks. Bound the run with `SMOKE_TIMEOUT` (default 180s) if needed. This is the
 same green pass bar in REGISTRY.md, so the footage is guaranteed-reproducible.
 
-Reset / teardown between takes: `make down` (tears down all profiles).
+Reset / teardown between takes: `make stop` (tears down all profiles).
 
 Map-frame gotcha for framing goals: the SLAM map origin is the robot's start
 pose, so world `(-2.0, -0.5)` = map `(0, 0)` (README "Visualization" note).

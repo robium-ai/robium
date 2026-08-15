@@ -5,6 +5,7 @@ import os from 'node:os';
 import { runChecks } from './doctor.js';
 import { appValidate } from './appValidate.js';
 import { scaffoldApp } from './appNew.js';
+import { getAppVerb, STANDARD_APP_VERBS } from './appVerbs.js';
 
 // ---------------------------------------------------------------------------
 // robium-app.yaml parser. Deliberately a YAML *subset* so the CLI stays
@@ -111,7 +112,7 @@ export function loadApps(appsDir) {
   return apps.sort((a, b) => String(a.id).localeCompare(String(b.id)));
 }
 
-// Resolve what `app run`/`app check` should execute. Commands are argv-split
+// Resolve what an app lifecycle verb should execute. Commands are argv-split
 // on whitespace (the contract is plain commands like "make demo" — no shell).
 export function resolveCommand(app, { verb, scenario } = {}) {
   if (scenario) {
@@ -122,9 +123,37 @@ export function resolveCommand(app, { verb, scenario } = {}) {
     }
     return { command: s.command };
   }
-  const cmd = app.verbs?.[verb] ?? (verb === 'demo' ? app.runtime?.entrypoint : undefined);
-  if (!cmd) return { error: `${app.id} declares no "${verb}" verb in robium-app.yaml` };
-  return { command: cmd };
+  const resolved = getAppVerb(app, verb);
+  if (!resolved) return { error: `${app.id} declares no "${verb}" verb in robium-app.yaml` };
+  return { command: resolved.command };
+}
+
+function appHelp(app) {
+  const rows = STANDARD_APP_VERBS.map(([name, defaultSummary]) => {
+    const resolved = getAppVerb(app, name);
+    if (!resolved && name !== 'help') return null;
+    return {
+      cli: `robium app ${name} ${app.id}`,
+      make: resolved?.command ?? 'make help',
+      summary: resolved?.summary ?? defaultSummary,
+    };
+  }).filter(Boolean);
+  const cliWidth = Math.max(...rows.map((row) => row.cli.length));
+  const makeWidth = Math.max(...rows.map((row) => row.make.length));
+  const lines = [
+    `${app.name ?? app.id} commands`,
+    '',
+    `${'CLI command'.padEnd(cliWidth)}  ${'Make equivalent'.padEnd(makeWidth)}  Description`,
+    ...rows.map((row) => `${row.cli.padEnd(cliWidth)}  ${row.make.padEnd(makeWidth)}  ${row.summary}`),
+  ];
+  const scenarios = Object.entries(app.scenarios ?? {});
+  if (scenarios.length > 0) {
+    lines.push('', 'Advanced scenarios:');
+    for (const [name, scenario] of scenarios) {
+      lines.push(`  robium app run ${app.id} --scenario ${name}  ${scenario.summary ?? ''}`.trimEnd());
+    }
+  }
+  return lines.join('\n');
 }
 
 function execInApp(command, dir, { spawnFn = spawn } = {}) {
@@ -148,8 +177,13 @@ const APP_USAGE = `robium app: work with reference applications (robium-app.yaml
 Usage:
   npx robium-ai app list [--json]                  List apps in the apps repo
   npx robium-ai app describe <id> [--json]         Show one app's metadata
-  npx robium-ai app check <id>                     Preflight: doctor facts + the app's own make check
-  npx robium-ai app run <id> [--scenario NAME]     Run the app's demo (or a declared scenario)
+  npx robium-ai app help <id>                      Show lifecycle commands and Make equivalents
+  npx robium-ai app doctor <id>                    Diagnose the environment and app prerequisites
+  npx robium-ai app build <id>                     Build application artifacts
+  npx robium-ai app run <id> [--scenario NAME]     Run the primary experience or a scenario
+  npx robium-ai app status <id>                    Show whether the app is running
+  npx robium-ai app logs <id>                      Follow application logs
+  npx robium-ai app stop <id>                      Stop the application
   npx robium-ai app validate [--json]              Validate every robium-app.yaml (CI-friendly)
   npx robium-ai app new <id> --from <existing-id>  Scaffold by copying the closest shipped app
 
@@ -211,7 +245,13 @@ export async function appCmd({ args = [], flags = {}, log = console.log, exec = 
       log(JSON.stringify(app, null, 2));
       return 0;
     }
-    case 'check': {
+    case 'help': {
+      const app = requireApp(apps, id, log);
+      if (!app) return 1;
+      log(appHelp(app));
+      return 0;
+    }
+    case 'doctor': {
       const app = requireApp(apps, id, log);
       if (!app) return 1;
       // Environment facts relevant to the app's declared runtime/requirements.
@@ -223,17 +263,25 @@ export async function appCmd({ args = [], flags = {}, log = console.log, exec = 
         (app.runtime?.kind === 'hardware' && ['platform'].includes(r.id)));
       for (const r of relevant) log(`  doctor: ${r.label} — ${r.detail}`);
       if (app.requirements?.gpu === 'remote') log('  note: GPU work runs remotely for this app; nothing local to verify');
-      const resolved = resolveCommand(app, { verb: 'check' });
+      const resolved = resolveCommand(app, { verb: 'doctor' });
       if (resolved.error) {
-        log(`  ${resolved.error} — doctor facts above are the whole preflight`);
+        log(`  ${resolved.error} — environment facts above are the whole diagnosis`);
         return 0;
       }
       return exec(resolved.command, app.dir);
     }
-    case 'run': {
+    case 'build':
+    case 'run':
+    case 'status':
+    case 'logs':
+    case 'stop': {
       const app = requireApp(apps, id, log);
       if (!app) return 1;
-      const resolved = resolveCommand(app, { verb: 'demo', scenario: flags.scenario });
+      if (flags.scenario && sub !== 'run') {
+        log(`--scenario is only valid with "app run"`);
+        return 1;
+      }
+      const resolved = resolveCommand(app, { verb: sub, scenario: flags.scenario });
       if (resolved.error) { log(resolved.error); return 1; }
       log(`→ ${resolved.command}  (in ${app.dir})`);
       return exec(resolved.command, app.dir);

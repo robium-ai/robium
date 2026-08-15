@@ -15,7 +15,8 @@ Usage:
   npx robium-ai doctor [--json]          Check your environment
   npx robium-ai skills [query]           Browse the skill catalog
   npx robium-ai app <subcommand>         Work with reference applications
-                                         (list | describe | check | run |
+                                         (list | describe | help | doctor |
+                                          build | run | status | logs | stop |
                                           validate | new)
 
 Setup options:
