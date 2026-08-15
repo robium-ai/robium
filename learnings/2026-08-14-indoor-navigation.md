@@ -172,3 +172,10 @@
 ## Tabbed-node-logs retro
 
 - foxglove — fired: yes; accurate: yes for composing child `RosOut` panels inside a `Tab` panel; complete: partial because node-filter allow-list behavior required source inspection; lean: yes.
+
+- [foxglove] user-corrected-approach <!-- id: lrn-0814-20 -->
+  symptom: the Navigation log tab displayed errors published by `/foxglove_bridge` because their message text mentioned `bt_navigator`, even though the intended view was grouped by publishing node
+  root-cause: Lichtblick log `searchTerms` match both the log's node name and its message text, so they cannot provide a true node-name allow-list; the earlier grouped-tab design treated them as an allow-list substitute
+  fix: use `nameFilter` to explicitly suppress known non-group publishers such as `/foxglove_bridge` in grouped tabs, or build a custom log panel if a strict positive node allow-list is required (check: live graph confirmed `/bt_navigator` was active with parameter services and both navigation action servers, while its two internal `*_rclcpp_node` helpers had no parameter services and the bridge ignored them after its first failed probe)
+  dead-ends: interpreting the bridge's ERROR severity as a Nav2 failure was ruled out by the active lifecycle state and live action endpoints; search terms alone cannot isolate publisher identity
+  source: user pasted the leaking `/foxglove_bridge` messages immediately after the grouped Navigation tab was introduced
