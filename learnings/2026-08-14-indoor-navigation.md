@@ -98,3 +98,9 @@
 
 - gazebo — fired: yes; accurate: yes; complete: yes for selecting the upstream Waffle Pi SDF, bridge, and robot description while preserving the ROS interfaces; lean: yes.
 - simulation — fired: yes; accurate: yes; complete: yes for verifying the same sensor and control contract across House and Warehouse; lean: yes.
+
+- [testing] user-correction <!-- id: lrn-0814-13 -->
+  symptom: `make mapping` still exported the removed `house` identifier even though Compose defaulted to `furnished_house`; the initial response added a permanent regression test for the resolved Make variable
+  root-cause: `WORLD ?= house` lived in the later RTF section but Make variables are global, so it overrode Compose for every target
+  fix: change the single Makefile default to `furnished_house`, update the RTF example, and verify through the real `make mapping` path without retaining a narrow implementation test (check: launch logged `world:=furnished_house`, Waffle Pi spawned, state was `IDLE`, and `/map` was absent)
+  dead-ends: checking Compose configuration alone missed the value exported by Make; the user explicitly corrected the approach: “please don't add the test. You don't need to add test for everything”
