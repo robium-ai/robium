@@ -118,3 +118,8 @@
 - ros2 — fired: yes; accurate: yes; complete: yes for the parameter, service, TF, and goal-publisher boundaries; lean: yes.
 - testing — fired: yes; accurate: no for this work block because its test-first/completion flow conflicted with the user's explicit no-testing direction; complete: not scored; lean: no.
 - foxglove — fired: yes during the immediately preceding control-toolbar investigation; accurate: yes; complete: partial because Lichtblick's inherited long-press UI and extension-API boundary required source inspection; lean: yes.
+
+## Navigation-plan display retro
+
+- nav2 — fired: yes; accurate: yes for identifying `/plan` and `/local_plan` as the global and controller path surfaces; complete: not runtime-scored by explicit user direction; lean: yes.
+- foxglove — fired: yes; accurate: yes for configuring both path topics in the committed 3D layout; complete: not runtime-scored by explicit user direction; lean: yes.
