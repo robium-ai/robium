@@ -99,8 +99,22 @@
 - gazebo — fired: yes; accurate: yes; complete: yes for selecting the upstream Waffle Pi SDF, bridge, and robot description while preserving the ROS interfaces; lean: yes.
 - simulation — fired: yes; accurate: yes; complete: yes for verifying the same sensor and control contract across House and Warehouse; lean: yes.
 
-- [testing] user-correction <!-- id: lrn-0814-13 -->
+- [testing] user-correction (seen 2x) <!-- id: lrn-0814-13 -->
   symptom: `make mapping` still exported the removed `house` identifier even though Compose defaulted to `furnished_house`; the initial response added a permanent regression test for the resolved Make variable
   root-cause: `WORLD ?= house` lived in the later RTF section but Make variables are global, so it overrode Compose for every target
   fix: change the single Makefile default to `furnished_house`, update the RTF example, and verify through the real `make mapping` path without retaining a narrow implementation test (check: launch logged `world:=furnished_house`, Waffle Pi spawned, state was `IDLE`, and `/map` was absent)
   dead-ends: checking Compose configuration alone missed the value exported by Make; the user explicitly corrected the approach: “please don't add the test. You don't need to add test for everything”
+  source: the preference recurred during named-waypoint implementation as “Don't run any tests. remove all the tests.. don't do any unit testing,” then was clarified as “no even remove the old tests ... this is not a production code”; the entire indoor-navigation and Robot Control automated test/smoke surface was removed, while runtime workflows remain
+
+- [foxglove] figured-out-from-scratch <!-- id: lrn-0814-14 -->
+  symptom: Lichtblick's 3D Publish control hides Publish pose estimate, Publish pose, and Publish point behind a 300 ms press, unlike RViz's separate 2D Pose Estimate and 2D Nav Goal toolbar buttons; operators could not discover how to initialize AMCL or send a goal
+  root-cause: Lichtblick still carries the combined Foxglove Studio control introduced in 2023; `RendererOverlay.tsx` uses `react-use`'s `useLongPress` and the 3D panel's only implemented keyboard shortcut is `3`, while `PanelExtensionContext` exposes no API for selecting or starting another panel's publish tool
+  fix: upstream a small Lichtblick 3D-toolbar change that exposes pose estimate and goal as visible actions and adds RViz-familiar `p` / `g` shortcuts; until that lands, carry the same source patch in a pinned viewer build rather than driving the toolbar through DOM selectors (check: current Lichtblick commit `64357108ce49764732f53183d89f363d57d50502`, its file history, Foxglove 3D docs, and RViz docs/source were inspected on 2026-08-14)
+  dead-ends: saved layout state can select only one default publish type; Robot Control cannot arm the built-in 3D cursor through the supported extension SDK; no existing Lichtblick issue, customization setting, or `p` / `g` shortcut was found
+  anchors: foxglove#nav2-goal-topic-fix
+
+## Named-waypoints retro
+
+- ros2 — fired: yes; accurate: yes; complete: yes for the parameter, service, TF, and goal-publisher boundaries; lean: yes.
+- testing — fired: yes; accurate: no for this work block because its test-first/completion flow conflicted with the user's explicit no-testing direction; complete: not scored; lean: no.
+- foxglove — fired: yes during the immediately preceding control-toolbar investigation; accurate: yes; complete: partial because Lichtblick's inherited long-press UI and extension-API boundary required source inspection; lean: yes.
