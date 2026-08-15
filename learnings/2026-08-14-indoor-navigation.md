@@ -179,3 +179,9 @@
   fix: use `nameFilter` to explicitly suppress known non-group publishers such as `/foxglove_bridge` in grouped tabs, or build a custom log panel if a strict positive node allow-list is required (check: live graph confirmed `/bt_navigator` was active with parameter services and both navigation action servers, while its two internal `*_rclcpp_node` helpers had no parameter services and the bridge ignored them after its first failed probe)
   dead-ends: interpreting the bridge's ERROR severity as a Nav2 failure was ruled out by the active lifecycle state and live action endpoints; search terms alone cannot isolate publisher identity
   source: user pasted the leaking `/foxglove_bridge` messages immediately after the grouped Navigation tab was introduced
+
+- [none] user-corrected-approach <!-- id: lrn-0814-21 -->
+  symptom: the handoff suggested `npx robium-ai app ...` immediately after pushing CLI source, but npm still served version 0.4.0 without any `app` command; the user received `Unknown command: app`, and the uninstalled `robium` binary was also unavailable
+  root-cause: implementation/push, npm publication, and global installation were treated as one availability state even though they are separate release boundaries
+  fix: state the published and local CLI versions explicitly; before publication, demonstrate the exact local `node cli/bin/robium.js ...` invocation, and never claim an `npx` command is available until `npm view robium-ai version` confirms the release (check: local package/source reported 0.5.0, npm reported 0.4.0, and the local help invocation succeeded on 2026-08-14)
+  dead-ends: changing command ordering cannot fix `Unknown command: app` because the published executable rejects the top-level command before parsing app arguments
