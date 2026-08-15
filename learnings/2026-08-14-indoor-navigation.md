@@ -134,3 +134,14 @@
 
 - nav2 — fired: yes; accurate: yes for distinguishing topic existence from an emitted active plan and verifying the TF chain first; complete: yes; lean: yes.
 - foxglove — fired: yes; accurate: yes for tracing the discrepancy to origin-persisted layout state; complete: partial because default-layout refresh behavior still required live source/runtime diagnosis; lean: yes.
+
+- [ros2] figured-out-from-scratch <!-- id: lrn-0814-16 -->
+  symptom: ordinary `ros2 topic list -t` and `ros2 service list -t` did not show Nav2's navigation status or cancel endpoint even though `bt_navigator` was active
+  root-cause: ROS 2 action transport topics and services are hidden names beneath `/navigate_to_pose/_action/`
+  fix: inspect with `ros2 topic list --include-hidden-topics -t` and `ros2 service list --include-hidden-services -t`; adapt `GoalStatusArray` plus the zero-ID/zero-stamp `CancelGoal` cancel-all policy into public `/navigation/state` and `/navigation/stop` interfaces (check: the live Jazzy graph exposed the status, feedback, and cancel_goal endpoints with their exact types)
+  dead-ends: grepping the default topic/service listing incorrectly suggested the endpoints did not exist
+
+## Navigation-status controls retro
+
+- ros2 — fired: yes; accurate: yes for action transport, QoS, and service-adapter mechanics; complete: partial because hidden action endpoint discovery required the explicit include-hidden flags; lean: yes.
+- nav2 — fired: yes; accurate: yes for treating NavigateToPose action status as authoritative instead of inferring activity from velocity; complete: yes; lean: yes.
