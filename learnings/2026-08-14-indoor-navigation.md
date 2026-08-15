@@ -145,3 +145,9 @@
 
 - ros2 — fired: yes; accurate: yes for action transport, QoS, and service-adapter mechanics; complete: partial because hidden action endpoint discovery required the explicit include-hidden flags; lean: yes.
 - nav2 — fired: yes; accurate: yes for treating NavigateToPose action status as authoritative instead of inferring activity from velocity; complete: yes; lean: yes.
+
+- [foxglove] figured-out-from-scratch <!-- id: lrn-0814-17 -->
+  symptom: the new Stop navigation button stayed disabled while the backend published `NAVIGATING` and the bridge subscribed successfully
+  root-cause: Lichtblick restored the browser's version-2 panel state containing `navigationStopService: ""`; the version-3 normalizer copied that legacy empty string over the new `/navigation/stop` default
+  fix: migrate only a pre-version-3 empty stop-service value to the version-3 default, while preserving an explicit empty value saved by version 3 (check: live ROS state and service boundaries were healthy, and source tracing isolated the remaining disable predicate to the persisted empty config)
+  dead-ends: action-status parsing, transient-local QoS, bridge subscription, and service availability were all verified healthy before changing the panel
