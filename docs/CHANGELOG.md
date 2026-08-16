@@ -7,6 +7,14 @@ Forward-looking work is tracked in **GitHub Issues**, not here — see
 This file is the history the old `docs/BACKLOG.md` "Done" section held, migrated
 verbatim on 2026-07-22.
 
+## 2026-08-16: Standard application lifecycle CLI
+
+Published `robium-ai` CLI 0.6.0 with standard `app help`, `doctor`, `build`,
+`run`, `status`, `logs`, and `stop` commands. Application manifests can attach
+summaries to lifecycle verbs, and named run variants now use `--mode` instead
+of `--scenario`. Runtime-validated prototypes no longer need to declare an
+automated smoke command just to pass manifest validation.
+
 ## 2026-08-07 — Codex-native maintainer and installation support
 
 Added canonical `AGENTS.md` guidance across every Robium repository, kept
