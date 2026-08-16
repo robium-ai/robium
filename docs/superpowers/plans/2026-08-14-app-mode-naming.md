@@ -58,4 +58,3 @@
 - [ ] Review diffs without running automated tests.
 - [ ] Commit and push the app branch while excluding saved maps.
 - [ ] Commit and push `codex/standard-app-lifecycle-cli`.
-

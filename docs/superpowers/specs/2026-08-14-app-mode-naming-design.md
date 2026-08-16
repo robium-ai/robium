@@ -42,4 +42,3 @@ manifest vocabulary only.
 Do not add, update, or run automated tests. Review the changed CLI, manifest,
 and documentation diffs only, following the user's prototype-development
 preference.
-
