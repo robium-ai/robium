@@ -33,7 +33,6 @@ export function validateApp(app) {
 
   need(app.verbs && typeof app.verbs === 'object', 'verbs section is required');
   if (app.verbs) {
-    need(normalizeVerb(app.verbs.smoke) != null, 'verbs.smoke is required (the pass bar)');
     for (const [k, v] of Object.entries(app.verbs)) {
       need(normalizeVerb(v) != null, `verbs.${k} must be a command string or command/summary object`);
     }
