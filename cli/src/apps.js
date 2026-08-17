@@ -134,17 +134,17 @@ function appHelp(app) {
     if (!resolved && name !== 'help') return null;
     return {
       cli: `robium app ${name} ${app.id}`,
-      make: resolved?.command ?? 'make help',
+      local: resolved?.command ?? './app help',
       summary: resolved?.summary ?? defaultSummary,
     };
   }).filter(Boolean);
   const cliWidth = Math.max(...rows.map((row) => row.cli.length));
-  const makeWidth = Math.max(...rows.map((row) => row.make.length));
+  const localWidth = Math.max(...rows.map((row) => row.local.length));
   const lines = [
     `${app.name ?? app.id} commands`,
     '',
-    `${'CLI command'.padEnd(cliWidth)}  ${'Make equivalent'.padEnd(makeWidth)}  Description`,
-    ...rows.map((row) => `${row.cli.padEnd(cliWidth)}  ${row.make.padEnd(makeWidth)}  ${row.summary}`),
+    `${'CLI command'.padEnd(cliWidth)}  ${'Local command'.padEnd(localWidth)}  Description`,
+    ...rows.map((row) => `${row.cli.padEnd(cliWidth)}  ${row.local.padEnd(localWidth)}  ${row.summary}`),
   ];
   const modes = Object.entries(app.modes ?? {});
   if (modes.length > 0) {
@@ -177,7 +177,7 @@ const APP_USAGE = `robium app: work with reference applications (robium-app.yaml
 Usage:
   npx robium-ai app list [--json]                  List apps in the apps repo
   npx robium-ai app describe <id> [--json]         Show one app's metadata
-  npx robium-ai app help <id>                      Show lifecycle commands and Make equivalents
+  npx robium-ai app help <id>                      Show lifecycle commands and local equivalents
   npx robium-ai app doctor <id>                    Diagnose the environment and app prerequisites
   npx robium-ai app build <id>                     Build application artifacts
   npx robium-ai app run <id> [--mode NAME]         Run the primary experience or a mode

@@ -17,21 +17,20 @@ status: stable
 license: MIT
 runtime:
   kind: docker
-  entrypoint: make demo
+  entrypoint: ./app run
 verbs:
-  demo: make demo
-  smoke: make smoke
-  check: make check
-scenarios:
+  run: ./app run
+  doctor: ./app doctor
+modes:
   alt:
-    command: make alt
+    command: ./app alt
     summary: alternative flow
 requirements:
   hardware: []
   gpu: none
   network: optional
 demo:
-  default_scenario: demo
+  default_mode: run
   hosted: false
   estimated_startup_seconds: 30
 `;
@@ -51,12 +50,12 @@ test('validateApp: precise per-field errors', () => {
     .replace('status: stable', 'status: shiny')
     .replace('version: 1.0.0', 'version: v1')
     .replace('kind: docker', 'kind: bare-metal')
-    .replace('  smoke: make smoke\n', ''), 'good-app'));
+    .replace('  run: ./app run\n', '  run: {}\n'), 'good-app'));
   assert.ok(!r.ok);
   assert.ok(r.errors.some((e) => e.includes('status must be one of')));
   assert.ok(r.errors.some((e) => e.includes('version must be MAJOR.MINOR.PATCH')));
   assert.ok(r.errors.some((e) => e.includes('runtime.kind must be one of')));
-  assert.ok(r.errors.some((e) => e.includes('verbs.smoke is required')));
+  assert.ok(r.errors.some((e) => e.includes('verbs.run must be a command string')));
 });
 
 test('validateApp: id must match directory name', () => {
@@ -64,9 +63,9 @@ test('validateApp: id must match directory name', () => {
   assert.ok(r.errors.some((e) => e.includes('must equal the directory name')));
 });
 
-test('validateApp: default_scenario must resolve; hosted without orchestrator warns', () => {
-  const r = validateApp(app(GOOD.replace('default_scenario: demo', 'default_scenario: ghost')));
-  assert.ok(r.errors.some((e) => e.includes('matches no verb or scenario')));
+test('validateApp: default_mode must resolve; hosted without orchestrator warns', () => {
+  const r = validateApp(app(GOOD.replace('default_mode: run', 'default_mode: ghost')));
+  assert.ok(r.errors.some((e) => e.includes('matches no verb or mode')));
 
   const hosted = validateApp(app(GOOD.replace('hosted: false', 'hosted: true')));
   assert.ok(hosted.ok);
@@ -77,7 +76,7 @@ test('validateApp: orchestrator section field checks', () => {
   const y = GOOD.replace('hosted: false', `hosted: true
   orchestrator:
     image: good-app:latest
-    command: [/entrypoint.sh, make, demo]
+    command: [/entrypoint.sh, ./app, run]
     gateway_port: 8765`);
   const r = validateApp(app(y));
   assert.ok(r.ok, JSON.stringify(r.errors));

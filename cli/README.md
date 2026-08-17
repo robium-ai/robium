@@ -29,17 +29,17 @@ npx robium-ai skills nav      # filter
 
 # Work with reference applications (robium-app.yaml contract)
 npx robium-ai app list                        # catalog of apps in the apps repo
-npx robium-ai app describe indoor-navigation  # one app's metadata (JSON)
-npx robium-ai app help indoor-navigation      # commands + equivalent Make targets
-npx robium-ai app doctor indoor-navigation    # environment + app diagnosis
-npx robium-ai app build indoor-navigation     # build application artifacts
-npx robium-ai app run indoor-navigation       # primary local experience
-npx robium-ai app status indoor-navigation    # running state and endpoints
-npx robium-ai app logs indoor-navigation      # follow process logs
-npx robium-ai app stop indoor-navigation      # stop application services
-npx robium-ai app run indoor-navigation --mode demo
+npx robium-ai app describe robot-navigation  # one app's metadata (JSON)
+npx robium-ai app help robot-navigation      # commands + equivalent local commands
+npx robium-ai app doctor robot-navigation    # environment + app diagnosis
+npx robium-ai app build robot-navigation     # build application artifacts
+npx robium-ai app run robot-navigation       # primary local experience
+npx robium-ai app status robot-navigation    # running state and endpoints
+npx robium-ai app logs robot-navigation      # follow process logs
+npx robium-ai app stop robot-navigation      # stop application services
+npx robium-ai app run robot-navigation --mode demo
 npx robium-ai app validate --json               # schema-check every app (CI)
-npx robium-ai app new my-app --from indoor-navigation   # scaffold by copy
+npx robium-ai app new my-app --from robot-navigation   # scaffold by copy
 ```
 
 `app` commands find the apps repo via `--dir <path>`, else `$ROBIUM_APPS_DIR`,

@@ -185,3 +185,7 @@
   root-cause: implementation/push, npm publication, and global installation were treated as one availability state even though they are separate release boundaries
   fix: state the published and local CLI versions explicitly; before publication, demonstrate the exact local `node cli/bin/robium.js ...` invocation, and never claim an `npx` command is available until `npm view robium-ai version` confirms the release (check: local package/source reported 0.5.0, npm reported 0.4.0, and the local help invocation succeeded on 2026-08-14)
   dead-ends: changing command ordering cannot fix `Unknown command: app` because the published executable rejects the top-level command before parsing app arguments
+
+## Reusable-dashboard retro
+
+- foxglove — fired: yes; accurate: yes for keeping the installable extension separate from the app-owned layout and robot-side adapter; complete: yes for this packaging/configuration design; lean: yes.
