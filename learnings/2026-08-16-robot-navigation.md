@@ -75,3 +75,5 @@
   anchors: live-demo#mission-control-page
 
 - live-demo — fired: yes; accurate: yes for separating onboarding from the active visualizer; complete: improved by treating catalog, demo detail, and live workspace as distinct reusable page levels; lean: yes after the user's correction.
+
+- cloud-run — fired: yes during release; accurate: yes for the build-to-Artifact-Registry and Cloud Run deployment sequence; complete: yes for this website revision, which reached `robium-site-00023-knz` at 100% traffic; lean: yes.
