@@ -63,8 +63,8 @@
 - [lerobot] figured-out-from-scratch <!-- id: lrn-0822-01 -->
   symptom: The official `lerobot/diffusion_pusht` 175k repository contains `model.safetensors` and `config.json` but not the `policy_preprocessor.json` / `policy_postprocessor.json` files required by LeRobot 0.6; direct loading is therefore incomplete, and converted loading reports legacy normalization buffers as unexpected model keys.
   root-cause: The published checkpoint predates LeRobot's processor split: normalization statistics were stored as model buffers, while the current runtime owns normalization in standalone processors.
-  fix: Pin revision `84a7c23178445c6bbf7e1a884ff497017910f653`, create current processors deterministically from `LeRobotDatasetMetadata("lerobot/pusht").stats`, preserve the original weights, and write a provenance sidecar — check: the official checkpoint loaded on MPS and completed a 300-step fast rollout; `make smoke` passed 2/2 in 23.56 seconds.
-  dead-ends: Loading the Hub repo directly under LeRobot 0.6 without processors; treating the legacy buffer warnings as corrupted weights; retraining only to obtain a current checkpoint layout.
+  fix: Pin revision `84a7c23178445c6bbf7e1a884ff497017910f653`, transplant the checkpoint's embedded image/state/action buffers into current processors, preserve the original weights, and write a provenance sidecar — check: processor tensors match the legacy model tensor-for-tensor and a 100-denoise MPS rollout solved official seed 1000 at 0.955 raw coverage in 231 steps.
+  dead-ends: Loading the Hub repo directly under LeRobot 0.6 without processors; treating the legacy buffer warnings as corrupted weights; using current `lerobot/pusht` image statistics, which are about `[0.972, 0.981, 0.977]` rather than the checkpoint's ImageNet mean `[0.485, 0.456, 0.406]`; retraining only to obtain a current checkpoint layout.
   anchors: lerobot#load-evaluate-a-pretrained-policy
   source: official Hub revision and local LeRobot 0.6 MPS smoke, 2026-08-22
 
@@ -97,6 +97,22 @@
   dead-ends: CSS-only opacity/animation suppression; `gr.Image(streaming=True)`, which still exposed empty/unloaded replacement windows in Gradio 6.20.
   source: user correction, local Gradio source inspection, and browser rollout probes, 2026-08-22
 
+- [lerobot] user-correction <!-- id: lrn-0822-06 -->
+  symptom: The user reported that the official 175k policy still performed poorly at 100 denoising steps even though the published policy reports 65.4% success.
+  root-cause: The compatibility converter incorrectly generated processors from current dataset image statistics while the legacy checkpoint's embedded buffers specify ImageNet normalization; the current runtime ignored those legacy model keys after loading them as unexpected. The custom T builder also produced moment of inertia 7875 versus upstream gym-pusht's historical 3000.
+  fix: Build current processors from the embedded legacy buffers and route benchmark T to untouched `gym_pusht/PushT-v0`; reserve the generalized builder for L/I/Z — check: exact tensor assertions and inertia assertions pass, and the corrected 100-denoise MPS seed-1000 rollout succeeded at 0.955 raw coverage / 1.0 normalized reward in 164 seconds.
+  dead-ends: Increasing denoising beyond the checkpoint's trained 100-step diffusion schedule; assuming identical visible T geometry implies identical dynamics; treating unexpected legacy normalization keys as harmless without relocating their values.
+  anchors: lerobot#load-evaluate-a-pretrained-policy
+  source: checkpoint tensors, upstream gym-pusht source, user correction, and local MPS reference rollout, 2026-08-22
+
+- [testing] figured-out-from-scratch <!-- id: lrn-0822-07 -->
+  symptom: The demo chart called official `avg_max_reward` and local raw `avg_max_coverage` the same “avg max overlap,” and initial schema-v4 smoke failed because `EpisodeRunner` still required schema 3.
+  root-cause: gym-pusht normalizes coverage by the 0.95 success threshold before exposing reward, so published average max reward and local raw coverage are different quantities; the manifest consumer's schema guard was not advanced with its producer.
+  fix: Chart only the comparable success rate, show normalized reward and raw coverage in separate table/status fields, use the official 1000–1499 seed range by default, and advance producer/consumer together — check: the first `make demo-smoke` exposed the stale schema guard; after correction `make smoke` passed 2/2 and `make demo-smoke` passed 3/3.
+  dead-ends: Comparing the two values as one metric; claiming per-seed bit parity between published CUDA batch evaluation and sequential MPS stochastic inference.
+  anchors: testing#policy-evaluation
+  source: official eval_info, gym-pusht reward source, failed and passing local smoke runs, 2026-08-22
+
 ## End-of-block retro
 
 - environments — fired: yes; accurate: yes, the preflight confirmed macOS arm64 + MPS and reinforced native uv for training because Docker cannot expose MPS; complete: yes for this design; lean: yes.
@@ -109,3 +125,5 @@
 - testing (official-checkpoint pivot) — fired: yes; accurate: yes, the full policy episode and launched-app API checks gave proportional evidence without another long benchmark; complete: yes; lean: yes.
 - live-demo (official-checkpoint pivot) — fired: yes; accurate: yes, the direct frame plus additive Rerun pattern survived the model/evidence change; complete: yes for local demo QA; lean: yes.
 - live-demo (frame transition fix) — fired: yes; accurate: partial, direct RGB remained the right primary surface but neither the skill nor the first browser check anticipated Gradio's unloaded replacement window; complete: yes after validating image load state and inline frame payloads; lean: yes.
+- lerobot (checkpoint parity correction) — fired: yes; accurate: partial, it correctly routed pretrained evaluation but did not surface that a legacy model's normalization buffers must be migrated rather than regenerated from current dataset metadata; complete: yes after checkpoint/upstream source inspection and a successful reference rollout; lean: yes.
+- testing (checkpoint parity correction) — fired: yes; accurate: yes, exact contract assertions caught normalization and dynamics drift while the full MPS rollout supplied proportional behavior evidence; complete: yes; lean: yes.
