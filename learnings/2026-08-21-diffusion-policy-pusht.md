@@ -113,6 +113,28 @@
   anchors: testing#policy-evaluation
   source: official eval_info, gym-pusht reward source, failed and passing local smoke runs, 2026-08-22
 
+- [environments] better-method (seen 3x) <!-- id: lrn-0822-08 -->
+  symptom: The first CPU demo-image build stalled while resolving the pinned `ghcr.io/astral-sh/uv:0.8.14` helper stage with `DeadlineExceeded: context deadline exceeded`; a later builder run selected CUDA wheels; and the first multi-stage checkpoint conversion failed with `ImportError: libxcb.so.1: cannot open shared object file`.
+  root-cause: A second container registry added an avoidable availability dependency, transitive torch resolution was not constrained to CPU on Linux, and the disposable builder needed the same OpenCV runtime libraries as the final image because it executes checkpoint conversion during the build.
+  fix: Bootstrap the exact local uv version from PyPI in the builder, use a Linux-only explicit PyTorch CPU index for direct torch pins, install the OpenCV runtime libraries in both stages, and copy only the environment/checkpoint/application into the runtime image — check: the lock removed 18 NVIDIA/CUDA packages, the multi-stage image built with `torch==2.11.0+cpu` at 1,916,474,512 bytes, and `make demo-container-smoke` solved seed 1000 in 116 steps at 0.953 raw coverage.
+  dead-ends: Retrying an extra registry indefinitely; leaving torch as an unconstrained transitive dependency; using an unpinned `pip install uv`; installing application dependencies into system Python; assuming build-time Python never imports OpenCV.
+  anchors: environments#docker-is-for-reproducibility-not-as-a-default
+  source: local Docker Desktop arm64 build, 2026-08-22
+
+- [live-demo] verified <!-- id: lrn-0822-09 -->
+  symptom: Moving the Gradio app behind a session gateway could have changed API paths, delayed status until model load, or broken real rollouts.
+  root-cause: Hosted demos need a lifecycle control plane in addition to the native single-process Gradio entry point.
+  fix: Mount Gradio at `/ui`, expose the established start/status/shutdown contract, load the real policy on a background thread, and keep native `make demo` unchanged — check: `make demo-smoke` passed 3/3 in 53.13 seconds with a real T rollout, an OOD rollout, 409/403 foreign-session guards, non-flat inline RGB frames, and cooperative cancellation.
+  dead-ends: Sharing one unclaimed Gradio process among visitors; treating a constructed UI or prerecorded video as a hosted-demo smoke.
+  source: local FastAPI + Gradio 6.20 gateway smoke, 2026-08-22
+
+- [live-demo] verified <!-- id: lrn-0822-10 -->
+  symptom: The new website path needed proof that lifecycle status, iframe readiness, the radio-state fix, real inference, and teardown worked together rather than only in isolated app tests.
+  root-cause: Static site builds and gateway API checks cannot catch a mismatched orchestrator ID, missing local image, iframe path error, invisible selected state, or stale container after Stop.
+  fix: Exercise the full local website path in the in-app browser through the real local Docker orchestrator — check: Start advanced IDLE → BOOTING → READY, `/ui` showed a non-black inline 96×96 observation and filled selected dots for policy/inference/shape, keyboard activation completed a solved rollout, and Stop deleted the container and returned the page to IDLE; website smoke and 11 orchestrator tests also passed.
+  dead-ends: Treating Astro build output, a direct gateway URL, or screenshot-only inspection as lifecycle acceptance.
+  source: local Astro + orchestrator + Docker + in-app-browser run, 2026-08-22
+
 ## End-of-block retro
 
 - environments — fired: yes; accurate: yes, the preflight confirmed macOS arm64 + MPS and reinforced native uv for training because Docker cannot expose MPS; complete: yes for this design; lean: yes.
@@ -127,3 +149,8 @@
 - live-demo (frame transition fix) — fired: yes; accurate: partial, direct RGB remained the right primary surface but neither the skill nor the first browser check anticipated Gradio's unloaded replacement window; complete: yes after validating image load state and inline frame payloads; lean: yes.
 - lerobot (checkpoint parity correction) — fired: yes; accurate: partial, it correctly routed pretrained evaluation but did not surface that a legacy model's normalization buffers must be migrated rather than regenerated from current dataset metadata; complete: yes after checkpoint/upstream source inspection and a successful reference rollout; lean: yes.
 - testing (checkpoint parity correction) — fired: yes; accurate: yes, exact contract assertions caught normalization and dynamics drift while the full MPS rollout supplied proportional behavior evidence; complete: yes; lean: yes.
+- environments (hosted demo) — fired: yes; accurate: yes on the uv-first native path and Docker parity requirement; complete: partial because transitive PyTorch initially selected large CUDA wheels until the official uv platform-index pattern was applied to direct pins; lean: yes.
+- integration (hosted demo) — fired: yes; accurate: yes, one gateway process and one mounted UI kept the module boundary small; complete: yes for local lifecycle; lean: yes.
+- cloud-run (hosted demo) — fired: yes; accurate: yes, the implementation preserved per-visitor lifecycle and deferred CPU sizing, immutable image publication, IAM, and production mutation; complete: yes for the authorized local scope; lean: yes.
+- live-demo (hosted demo) — fired: yes; accurate: yes, the start/status/stop contract and browser acceptance bar directly covered the failure modes encountered; complete: yes; lean: yes.
+- testing (hosted demo) — fired: yes; accurate: yes, the five-test app bar, container smoke, orchestrator suite, website smoke, and browser lifecycle gave proportional layered evidence; complete: yes; lean: yes.
