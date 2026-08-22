@@ -135,6 +135,13 @@
   dead-ends: Treating Astro build output, a direct gateway URL, or screenshot-only inspection as lifecycle acceptance.
   source: local Astro + orchestrator + Docker + in-app-browser run, 2026-08-22
 
+- [live-demo] user-correction <!-- id: lrn-0822-11 -->
+  symptom: The full-screen PushT live workspace showed a large blank band above its 62px control bar even though the bar's own spacing matched Robot Navigation.
+  root-cause: The workspace root is a `<section>`, so the site's global `section { padding: 60px 0; }` leaked into it; Robot Navigation already reset this inherited page-section spacing with `padding: 0`, while the PushT workspace omitted that declaration.
+  fix: Reset `.dpp-workspace` to `padding: 0` and pin the reset in the website smoke test — check: the full Astro build and website smoke passed; browser geometry measured workspace top 0px, padding top 0px, and bar top 0px with the intended 62px bar height.
+  dead-ends: Tuning `.dpp-bar` height or padding; the extra space belonged to its parent section.
+  source: user screenshot and CSS cascade inspection, 2026-08-22
+
 ## End-of-block retro
 
 - environments — fired: yes; accurate: yes, the preflight confirmed macOS arm64 + MPS and reinforced native uv for training because Docker cannot expose MPS; complete: yes for this design; lean: yes.
