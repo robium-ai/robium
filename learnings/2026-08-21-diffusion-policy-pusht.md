@@ -1,0 +1,96 @@
+- [lerobot] figured-out-from-scratch <!-- id: lrn-0821-02 -->
+  symptom: The 1k/3k/5k/10k ACT ladder reached 0% PushT success at every checkpoint; the best 10-episode average maximum normalized reward was 0.322 at 5k and regressed to 0.310 at 10k.
+  root-cause: The app used ACT's ALOHA-oriented defaults (`n_obs_steps=1`, `chunk_size=100`, `n_action_steps=100`) at 10 Hz, so it could execute roughly 80% of an average episode without observing again; the longest run was also only one tenth of LeRobot's 100k default budget.
+  fix: Replace the app with visual Diffusion Policy, make its PushT-specific config explicit, calibrate executed-action and inference horizons at 5k, and train/evaluate a 100k fixed-seed ladder — check: pending implementation; existing failure evidence is `outputs/demo/ladder.json` and each checkpoint's saved config.
+  dead-ends: Treating more ACT steps alone as the first fix would retain the task/policy mismatch and the 100-action open-loop execution contract.
+  anchors: lerobot#smoke-train-before-scale
+
+- [testing] better-method <!-- id: lrn-0821-03 -->
+  symptom: Ten seeded episodes per checkpoint produced a noisy, non-monotonic ladder and could not establish whether a policy reliably solves randomized PushT layouts.
+  root-cause: The old demo optimized for a quick illustrative ladder rather than a release-quality policy benchmark.
+  fix: Evaluate every retained checkpoint on the same 50 fixed T-layout seeds, select the default by success then coverage, and require at least 70% success before calling the new app stable — check: pending the Diffusion Policy training run.
+  dead-ends: Selecting the latest checkpoint or highest 10-episode average coverage without a success threshold.
+  anchors: testing#determinism-makes-a-test-a-test
+
+- [none] user-correction <!-- id: lrn-0821-04 -->
+  symptom: `imitation-manipulation` hid the benchmark and selected policy family, while the user wanted the app name to identify Diffusion Policy explicitly.
+  root-cause: The old capability-level name remained after the application became a concrete PushT reference demo.
+  fix: Rename the app id to `diffusion-policy-pusht` and use “PushT with Diffusion Policy” as its display title — check: name and direction approved in conversation; implementation pending written-spec review.
+  dead-ends: `pusht-diffusion-policy`, `diffusion-pusht`, and `diffusion-manipulation` were considered but not selected.
+
+- [environments] figured-out-from-scratch (seen 2x) <!-- id: lrn-0821-05 -->
+  symptom: After the application directory was renamed, `make smoke` escaped the uv environment and used system Python 3.14; the `lerobot-train` console script could not be found even though `.venv` had moved with the app.
+  root-cause: Virtualenv console-script shebangs contain the environment's absolute path, so moving an existing `.venv` leaves its executables pointing at the former application directory.
+  fix: Recreate the environment in place with `uv venv --clear --python 3.12 && uv sync` after any app-directory rename — check: the same preliminary smoke command then completed a 20-step Diffusion train, two-episode eval, and both pytest assertions; the approved 200-step smoke remains the release check.
+  dead-ends: Treating the moved `.venv` directory as portable, installing the missing CLI into system Python, or invoking bare `python` on this host (the executable is intentionally available only through uv).
+  source: local Apple M5 app run, 2026-08-21
+
+- [lerobot] worked-as-documented ✓ <!-- id: lrn-0821-06 -->
+  symptom: The full visual Diffusion Policy recipe needed an execution check on a 16 GB Apple Silicon host before committing to a long PushT run.
+  root-cause: The model has about 263 million parameters and the practical MPS memory/performance floor was not established by the prior ACT app.
+  fix: Keep the task-matched full model with batch size 8: a preliminary 20-step train and two seeded eval episodes passed, and the 5k run reached roughly 2 steps/s after warm-up on an Apple M5 — check: the probe reported `2 passed in 120.88s`; the saved checkpoint contains config, model, and both processor files. The approved 200-step smoke remains pending.
+  dead-ends: Pre-emptively shrinking the vision backbone or network before measuring the real MPS recipe.
+  source: LeRobot 0.6.0 local MPS run, 2026-08-21
+
+- [live-demo] figured-out-from-scratch <!-- id: lrn-0821-07 -->
+  symptom: The first Gradio 6 browser render kept white radio cards, inputs, and image-panel regions inside an otherwise dark navigation-themed shell; passing `theme` and `css` to `gr.Blocks` also emitted a Gradio 6 deprecation warning.
+  root-cause: Gradio 6 moved `theme`/`css` to `launch()`, and its Base theme still supplied light component variables such as `--checkbox-label-background-fill: #e4e4e7` even when outer containers were dark.
+  fix: Pass theme/CSS at launch and explicitly override the block/input/checkbox/button design variables on `.gradio-container` — check: real in-app-browser screenshots showed dark cards, teal selected outlines, readable controls, direct RGB observation, chart, and evidence table at 1280 px.
+  dead-ends: Styling only `body`, `.gradio-container`, and the app's outer panels; those rules do not change Gradio's internal theme variables.
+  source: local Gradio 6.20.0 render inspection, 2026-08-21
+
+- [environments] figured-out-from-scratch <!-- id: lrn-0821-08 -->
+  symptom: The uninterrupted portions of the 5k MPS run sustained about 2 steps/s, but the progress clock jumped forward by roughly 17, 10, and 4 minutes while no training steps completed; the run still saved normally at 1:22:26 wall time.
+  root-cause: The macOS host suspended or descheduled the long-running process while unattended; the optimizer and MPS execution were healthy before and after every gap.
+  fix: Report active-compute and wall-clock timings separately, and keep the Mac awake for long local policy work; for an already-running process, attach `caffeinate -w <pid>` so the assertion ends with that process — check: 5k completed with final loss 0.034 and gradient norm 0.489; about 50 minutes of active compute implies roughly 1.7 steps/s average and a 16–17-hour uninterrupted 100k build. The later 50-seed evaluator reached only 14 saved seeds in 8h45 wall time before `caffeinate -w 99250` was attached.
+  dead-ends: Attributing the gaps to thermal throttling or optimizer instability; throughput immediately returned to about 2 steps/s and no NaNs or abnormal gradients appeared.
+  source: local Apple M5 LeRobot Diffusion run, 2026-08-21
+
+- [environments] figured-out-from-scratch <!-- id: lrn-0821-09 -->
+  symptom: Every evaluation process on macOS warns that AVFFrameReceiver/AVFAudioReceiver are implemented by both OpenCV's and PyAV's bundled FFmpeg libraries, and SDL classes are implemented by both OpenCV and Pygame.
+  root-cause: The LeRobot/PushT demo environment loads wheels that bundle overlapping Objective-C AVFoundation and SDL implementations in one process.
+  fix: Treat the messages as a known warning while seeded headless rollouts remain stable, but keep rollout and video smoke tests as the check for actual casting/crash regressions — check: direct CPU rollouts and the MPS calibration process continued successfully after the warnings.
+  dead-ends: Removing or renaming wheel-bundled dylibs ad hoc; that would make the uv environment non-reproducible and can break video or simulator dependencies.
+  source: local macOS arm64 evaluation process, 2026-08-21
+
+- [testing] better-method <!-- id: lrn-0821-10 -->
+  symptom: A 300-step PushT rollout with 8 executed actions and 100 diffusion inference steps averaged 145.6 seconds on the Apple M5 versus 11.9 seconds at 10 inference steps, making the six-candidate, ten-seed calibration sweep long and interruption-sensitive; host sleep gaps made provisional wall-clock estimates even noisier.
+  root-cause: The slowest candidate replans about 38 times per episode and performs 100 denoising iterations per replan; the original evaluator wrote calibration JSON only after all 60 episodes completed.
+  fix: Persist metrics and episode records after every seed, reuse completed candidates, verify that resumed seed records are an exact prefix of the configured set, reject partial calibration files in benchmark evaluation, and compare the rollout-recorded `elapsed_s` field rather than outer wall time — check: the full pre-change compatibility sweep completed all 60 episodes and selected 8 actions / 100 denoising steps by raw coverage; source compilation and diff checks pass.
+  dead-ends: Dropping the agreed 100-step candidate mid-run, selecting by training loss, or treating an incomplete calibration file as sufficient to resume training.
+  source: local 5k Diffusion checkpoint calibration, 2026-08-21
+
+- [lerobot] figured-out-from-scratch <!-- id: lrn-0822-01 -->
+  symptom: The official `lerobot/diffusion_pusht` 175k repository contains `model.safetensors` and `config.json` but not the `policy_preprocessor.json` / `policy_postprocessor.json` files required by LeRobot 0.6; direct loading is therefore incomplete, and converted loading reports legacy normalization buffers as unexpected model keys.
+  root-cause: The published checkpoint predates LeRobot's processor split: normalization statistics were stored as model buffers, while the current runtime owns normalization in standalone processors.
+  fix: Pin revision `84a7c23178445c6bbf7e1a884ff497017910f653`, create current processors deterministically from `LeRobotDatasetMetadata("lerobot/pusht").stats`, preserve the original weights, and write a provenance sidecar — check: the official checkpoint loaded on MPS and completed a 300-step fast rollout; `make smoke` passed 2/2 in 23.56 seconds.
+  dead-ends: Loading the Hub repo directly under LeRobot 0.6 without processors; treating the legacy buffer warnings as corrupted weights; retraining only to obtain a current checkpoint layout.
+  anchors: lerobot#load-evaluate-a-pretrained-policy
+  source: official Hub revision and local LeRobot 0.6 MPS smoke, 2026-08-22
+
+- [testing] user-correction <!-- id: lrn-0822-02 -->
+  symptom: The locally trained 5k checkpoint's sequential 50-seed macOS benchmark remained expensive and was stopped at 30/50 episodes after the user said the workflow was taking too long; it had 1 success and 0.376 average maximum raw coverage at interruption.
+  root-cause: Reproducing long evaluation evidence locally was being treated as a prerequisite for a demonstration even though a task-matched official checkpoint already publishes a 500-episode evaluation.
+  fix: Make the pinned official 175k policy and its attributed 500-episode result the primary reference, use a single full rollout as the local platform smoke, and preserve the 5k result only as explicitly incomplete, separate evidence — check: `make smoke` passed 2/2 and `make demo-smoke` passed 3/3 on macOS without training or completing the local benchmark.
+  dead-ends: Continuing the interrupted benchmark, moving training to RunPod before checking for a published model, or plotting the unlike local and official runs as one learning curve.
+  anchors: testing#policy-evaluation
+  source: user correction and local pass-bar runs, 2026-08-22
+
+- [live-demo] verified <!-- id: lrn-0822-03 -->
+  symptom: The official-checkpoint pivot needed proof that the browser app still streamed visible policy frames and remained controllable on native MPS.
+  root-cause: Replacing the evidence schema and adding inference mode changed the Gradio API from three to four inputs and could have broken the existing demo contract.
+  fix: Exercise the launched application through its public API with official fast-mode T and L rollouts, verify a direct non-flat 96×96 RGB frame, deterministic Z preview, cooperative cancellation, and lock release — check: `make demo-smoke` passed 3/3 in 43.11 seconds.
+  dead-ends: Treating UI construction or a prerecorded replay as sufficient proof of an interactive live policy.
+  source: local Gradio 6 / MPS demo smoke, 2026-08-22
+
+## End-of-block retro
+
+- environments — fired: yes; accurate: yes, the preflight confirmed macOS arm64 + MPS and reinforced native uv for training because Docker cannot expose MPS; complete: yes for this design; lean: yes.
+- lerobot — fired: yes; accurate: partial, its general smoke-first guidance was useful but the existing ACT-first default produced a poor task-specific baseline; live upstream/local config inspection was still required to select and pin the Diffusion recipe; complete: partial until the MPS training run measures memory and speed; lean: yes.
+- rerun — fired: yes; accurate: partial, the documented Gradio streaming pattern does not protect against a visually black embedded canvas observed in the sibling app; the design therefore makes direct RGB frames primary and Rerun additive; complete: no for browser-visible acceptance; lean: yes.
+- testing — fired: yes; accurate: yes, especially the separation between a pipeline smoke and a known-good regression threshold; complete: yes for the design; lean: yes.
+- live-demo — fired: yes; accurate: yes for demo lifecycle and honest readiness, with the non-ROS Gradio/FastAPI path relevant here; complete: yes for local design, while hosting remains deliberately out of scope; lean: yes.
+- environments (official-checkpoint pivot) — fired: yes; accurate: yes, native uv + MPS ran the published model without a server; complete: yes for local use; lean: yes.
+- lerobot (official-checkpoint pivot) — fired: yes; accurate: yes, including its warning that older Hub checkpoints may lack current processor files; complete: partial because the exact legacy-to-0.6 conversion still required source inspection and an execution check; lean: yes.
+- testing (official-checkpoint pivot) — fired: yes; accurate: yes, the full policy episode and launched-app API checks gave proportional evidence without another long benchmark; complete: yes; lean: yes.
+- live-demo (official-checkpoint pivot) — fired: yes; accurate: yes, the direct frame plus additive Rerun pattern survived the model/evidence change; complete: yes for local demo QA; lean: yes.
