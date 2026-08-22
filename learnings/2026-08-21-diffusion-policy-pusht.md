@@ -142,6 +142,14 @@
   dead-ends: Tuning `.dpp-bar` height or padding; the extra space belonged to its parent section.
   source: user screenshot and CSS cascade inspection, 2026-08-22
 
+- [integration] user-correction <!-- id: lrn-0822-12 -->
+  symptom: PushT exposed a Make-target command list while the Robot Navigation reference app used a repository-local `./app` interface, so two Robium demos required different operator habits for help, prerequisites, launch, status, logs, and shutdown.
+  root-cause: The PushT build preserved implementation-oriented Make targets as its public interface instead of applying the established reference-app launcher contract.
+  fix: Add the same six public verbs (`doctor`, `build`, `run`, `status`, `logs`, `stop`), keep native MPS as the default, make `run` prepare the uv environment/checkpoint when missing, and leave smoke/research targets maintainer-facing — check: the isolated launcher test passed every verb, the real app reached `DEMO READY` on MPS, `status` reported the PID/URL/log, `stop` ended it cleanly, and `make smoke` passed the launcher plus both real-checkpoint tests.
+  dead-ends: Exposing `./app smoke` when Robot Navigation does not; making Docker the default and silently losing MPS; documenting `build` as mandatory even though `run` can prepare automatically.
+  anchors: integration#neither-applies-keep-together, environments#pure-python-uv-choice, testing#confirm-smoke-passes-before-done
+  source: user correction and local launcher lifecycle, 2026-08-22
+
 ## End-of-block retro
 
 - environments — fired: yes; accurate: yes, the preflight confirmed macOS arm64 + MPS and reinforced native uv for training because Docker cannot expose MPS; complete: yes for this design; lean: yes.
@@ -161,3 +169,7 @@
 - cloud-run (hosted demo) — fired: yes; accurate: yes, the implementation preserved per-visitor lifecycle and deferred CPU sizing, immutable image publication, IAM, and production mutation; complete: yes for the authorized local scope; lean: yes.
 - live-demo (hosted demo) — fired: yes; accurate: yes, the start/status/stop contract and browser acceptance bar directly covered the failure modes encountered; complete: yes; lean: yes.
 - testing (hosted demo) — fired: yes; accurate: yes, the five-test app bar, container smoke, orchestrator suite, website smoke, and browser lifecycle gave proportional layered evidence; complete: yes; lean: yes.
+- integration (launcher/tutorial) — fired: yes; accurate: yes, a thin repository-local wrapper preserved the single native process while standardizing the operator boundary; complete: yes; lean: yes.
+- environments (launcher/tutorial) — fired: yes; accurate: yes, uv remained the default for native MPS and Docker stayed an explicit CPU delivery path; complete: yes; lean: yes.
+- lerobot (launcher/tutorial) — fired: yes; accurate: yes for ACT-first guidance, policy-family distinctions, and current SmolVLA positioning, with primary sources rechecked for publication; complete: yes for this task; lean: yes.
+- testing (launcher/tutorial) — fired: yes; accurate: yes, the launcher contract test and real policy smoke separated command behavior from expensive model behavior; complete: yes; lean: yes.
