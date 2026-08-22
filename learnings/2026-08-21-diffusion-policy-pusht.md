@@ -83,6 +83,13 @@
   dead-ends: Treating UI construction or a prerecorded replay as sufficient proof of an interactive live policy.
   source: local Gradio 6 / MPS demo smoke, 2026-08-22
 
+- [live-demo] user-correction <!-- id: lrn-0822-04 -->
+  symptom: The direct `gr.Image` policy view visibly faded out and back in as each streamed rollout frame replaced the previous Gradio file URL, making continuous motion look like display instability.
+  root-cause: Gradio applies frontend transition/animation behavior to output-image updates; a generator-driven simulator stream needs immediate, continuously opaque replacement instead.
+  fix: Give the live frame a dedicated element id and disable transition/animation while forcing image/canvas opacity to one only within that component — check: a real browser rollout sampled 14 distinct frame URLs with one image at every sample, zero missing samples, opacity always `1`, and transition/animation always `none`; all 5 policy/demo tests passed.
+  dead-ends: Treating the fade as Diffusion Policy denoising, simulator rendering, or image content; disabling animation globally would unnecessarily affect the rest of Gradio.
+  source: user screenshot and local Gradio browser probe, 2026-08-22
+
 ## End-of-block retro
 
 - environments — fired: yes; accurate: yes, the preflight confirmed macOS arm64 + MPS and reinforced native uv for training because Docker cannot expose MPS; complete: yes for this design; lean: yes.
@@ -94,3 +101,4 @@
 - lerobot (official-checkpoint pivot) — fired: yes; accurate: yes, including its warning that older Hub checkpoints may lack current processor files; complete: partial because the exact legacy-to-0.6 conversion still required source inspection and an execution check; lean: yes.
 - testing (official-checkpoint pivot) — fired: yes; accurate: yes, the full policy episode and launched-app API checks gave proportional evidence without another long benchmark; complete: yes; lean: yes.
 - live-demo (official-checkpoint pivot) — fired: yes; accurate: yes, the direct frame plus additive Rerun pattern survived the model/evidence change; complete: yes for local demo QA; lean: yes.
+- live-demo (frame transition fix) — fired: yes; accurate: partial, direct RGB remained the right primary surface but the skill did not anticipate Gradio's output-image crossfade; complete: yes after scoped browser verification; lean: yes.
