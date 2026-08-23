@@ -20,3 +20,11 @@ evidence: symptom verbatim ✓ (user: "this is your second time terminating
   that's the mistake you caught") · dead-end named ✓ (inferring hang from
   log-timing + console Jupyter-init message). signal=user-correction alone
   clears the ready bar; the 3-part evidence also holds.
+
+## verify first-run setup with explicitly cold caches <!-- id: obs-environments-002 -->
+status: ready
+proof: 1
+signal: better-method
+sources: [lrn-0817-15]
+target: environments#clean-room-cache-caveat (update) — copy the project into a clean directory, empty the relevant package/model caches, and run the complete setup path before claiming first-run reproducibility
+evidence: the warm development machine could pass while hiding broken fetch and setup behavior ✓ · an rsync clean copy with empty HF_HOME passed doctor, build, contract, dataset, tests, demo smoke, simulation, and playback including the first pinned-revision pull ✓ · rerunning only in the cached working tree was ruled out ✓

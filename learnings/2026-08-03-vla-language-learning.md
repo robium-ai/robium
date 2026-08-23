@@ -1,6 +1,6 @@
 # 2026-08-03 — vla-language-learning (polish pass)
 
-- [lerobot] figured-out-from-scratch <!-- id: lrn-0803-01 -->
+- [lerobot] figured-out-from-scratch <!-- id: lrn-0803-05 -->
   symptom: `make record` (75-episode oracle dataset, LeRobot 0.6.0 `LeRobotDataset.create` defaults) died at episode 60/75 on macOS with `concurrent.futures.process.BrokenProcessPool: A process in the process pool was terminated abruptly` raised from `dataset.save_episode()` → `dataset_writer.py` ProcessPoolExecutor.
   root-cause: LeRobot's default video codec is software SVT-AV1 (`vcodec="libsvtav1"`), and SVT-AV1's encoder-handle teardown intermittently crashes on macOS — the macOS crash report shows `SIGTRAP`/`EXC_BREAKPOINT` in `svt_av1_enc_deinit_handle → svt_destroy_semaphore → _dispatch_semaphore_dispose` (libdispatch aborts when a semaphore is disposed while still in use), reached via PyAV `Stream` dealloc inside the encode worker. The writer spins a fresh 2-worker pool per episode (one per camera), so a 75-episode run is ~150 encoder create/teardown cycles — plenty of dice rolls for the race. The killed worker surfaces as BrokenProcessPool in the parent; the recording is unrecoverable mid-run.
   fix: pass `rgb_encoder=RGBEncoderConfig(vcodec="auto")` to `LeRobotDataset.create` — "auto" picks a hardware encoder when available (`h264_videotoolbox` on macOS, nvenc/vaapi/qsv on Linux) and only falls back to libsvtav1 where no hardware encoder exists. VideoToolbox sidesteps the crashing library on the only platform where it crashes, and h264 decodes everywhere torchcodec runs with no AV1-specific ffmpeg requirement. (check: `uv run pytest tests/test_dataset.py -m slow -o addopts=""` records 2 episodes through the new path and reloads them.)
@@ -8,6 +8,6 @@
   anchors: lerobot 0.6.0 `lerobot/configs/video.py` (`vcodec: str = "libsvtav1"`, `HW_VIDEO_CODECS`, `resolve_vcodec`), `lerobot/datasets/dataset_writer.py::save_episode` (per-episode ProcessPoolExecutor).
   source: vla-language-learning polish pass; crash report `python3.12-2026-08-03-213833.ips`.
 
-- [none] no-skill-fired <!-- id: lrn-0803-02 -->
+- [none] no-skill-fired <!-- id: lrn-0803-06 -->
   symptom: background `make record 2>&1 | tail -30` reported exit 0 on a run that actually failed — the pipe made `tail`'s exit status the command's, and truncated the progress log to 30 lines, losing the episode count at failure.
   fix: never pipe a pass/fail make target through `tail`/`grep` when the exit code matters; redirect full output to a file and inspect it instead. (check: re-run used bare `make record` with the harness capturing output.)
