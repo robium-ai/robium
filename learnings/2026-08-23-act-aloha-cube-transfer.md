@@ -77,11 +77,11 @@
 - testing — fired: yes; accurate: yes, especially deterministic fixtures plus real-policy smoke; complete: yes after adding actual browser, terminal-event, session-guard, readiness-inference, and lazy-download checks; lean: yes.
 - rerun — fired: yes; accurate: yes for additive telemetry and typed timelines; complete: partial because component compatibility required using the sibling app's proven version trio; lean: yes.
 
-- [none] error <!-- id: lrn-0823-12 -->
+- [none] error (seen 2x) <!-- id: lrn-0823-12 -->
   symptom: The first verification command reported `public/articles/act-aloha-cube-transfer/live-workspace.png: No such file or directory` even though the captured image existed.
   root-cause: The command ran from the robium plugin repository while the generated public asset belongs to the sibling robium-website repository.
-  fix: Run repository-owned asset checks with the website repository as the working directory — check: the 168,012-byte real workspace image was found, ingested, built, and rendered on the ACT demo page.
-  dead-ends: Re-capturing the browser screenshot; assuming article ingestion deleted the source image.
+  fix: Run repository-owned asset checks and file-mode changes with the owning sibling repository as the working directory — check: the 168,012-byte real workspace image was found, ingested, built, and rendered on the ACT demo page; the capture script was made executable from `robium-apps` and the controller scripts from `robium-website`.
+  dead-ends: Re-capturing the browser screenshot; assuming article ingestion deleted the source image; using one combined `chmod` command from the website repository for scripts split across two repositories.
   source: captured command error and successful website build, 2026-08-23
 
 - [live-demo] verified <!-- id: lrn-0823-13 -->
@@ -95,3 +95,31 @@
 
 - live-demo — fired: yes; accurate: yes for the private session gateway, real-inference readiness, and lifecycle smoke; complete: yes for local Start/READY/Stop and cleanup; lean: yes.
 - testing — fired: yes; accurate: yes for exact route, article, media, registry, sitemap, and lifecycle assertions; complete: yes; lean: yes.
+
+- [live-demo] figured-out-from-scratch <!-- id: lrn-0823-14 -->
+  symptom: The first website smoke after adding per-demo Cloud Run resources failed because the checked-in controller registry JSON did not match its generated source.
+  root-cause: Cloud resource settings were added directly to generated controller files instead of to each application's canonical `robium-app.yaml`, and the sync generator did not yet project the `cloud` block.
+  fix: Store CPU, memory, CPU-idle, and startup-boost settings in each app manifest and extend `sync-demos.mjs` to copy them into the controller registry — check: sync verification, 20 controller tests, site build, and site smoke all passed from clean committed snapshots.
+  dead-ends: Treating generated demo JSON as independently maintained production configuration.
+  source: ACT/Navigation multi-demo controller integration, 2026-08-23
+
+- [cloud-run] error <!-- id: lrn-0823-15 -->
+  symptom: Digest lookup returned `Image not found` after a successful controller Cloud Build.
+  root-cause: The lookup guessed an image name from the package directory (`demo-orchestrator`) while the Cloud Build config deliberately retained the compatibility repository name `demo-robot-navigation-control`.
+  fix: Resolve the exact repository/tag declared by the submitted Cloud Build config, then deploy that immutable digest — check: digest `sha256:33b7cb1e…b73e2` deployed as zero-traffic controller revision `00004-nal`.
+  dead-ends: Inferring Artifact Registry image names from local directory names.
+  source: production controller build and canary deployment, 2026-08-23
+
+- [live-demo] verified <!-- id: lrn-0823-16 -->
+  symptom: A multi-demo release needed production evidence without risking the existing Navigation service or exposing policy containers to credentials.
+  root-cause: Unit tests cannot establish that Cloud Run resource propagation, cold-start policy loading, private session ownership, browser embedding, terminal rollout delivery, and cleanup work together.
+  fix: Deploy immutable ACT/controller/site images as no-traffic tagged revisions; run ACT seed 1001 and Navigation readiness through the controller canary; promote only after both temporary services delete; then repeat ACT Start, real-inference READY, seed-1001 transfer, and Stop through `robium.ai` — check: ACT completed at step 231, Navigation reported seven nodes and READY, foreign-session access returned 409, both services deleted, and no `robium-demo-*` services remained.
+  dead-ends: Promoting after health-only checks; using a static UI render as policy readiness; rebuilding from a dirty worktree instead of committed `git archive` snapshots.
+  source: production Cloud Run release, 2026-08-23
+
+## Production-release retro
+
+- live-demo — fired: yes; accurate: yes for the private gateway, per-demo fleet limits, lifecycle states, and tagged-canary release shape; complete: yes after adding unavailable-demo semantics and real browser acceptance; lean: yes.
+- cloud-run — fired: yes; accurate: yes for immutable digests, no-traffic revisions, scale-to-zero controller/site services, and explicit traffic promotion; complete: yes for this CPU-only release; lean: yes.
+- lerobot — fired: yes; accurate: yes for pinned checkpoint use, action-chunk semantics, and keeping published evaluation separate from local evidence; complete: yes; lean: yes.
+- testing — fired: yes; accurate: yes for deterministic media checks, real inference readiness, API status codes, cross-demo regression, cleanup, and production acceptance; complete: yes; lean: yes.
