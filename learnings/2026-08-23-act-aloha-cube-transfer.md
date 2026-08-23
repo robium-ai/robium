@@ -76,3 +76,22 @@
 - environments — fired: yes; accurate: yes for the uv/native-MPS and separate CPU-image split; complete: partial because the GLFW worker-thread failure and missing Docker context exclusion required app-specific fixes; lean: yes.
 - testing — fired: yes; accurate: yes, especially deterministic fixtures plus real-policy smoke; complete: yes after adding actual browser, terminal-event, session-guard, readiness-inference, and lazy-download checks; lean: yes.
 - rerun — fired: yes; accurate: yes for additive telemetry and typed timelines; complete: partial because component compatibility required using the sibling app's proven version trio; lean: yes.
+
+- [none] error <!-- id: lrn-0823-12 -->
+  symptom: The first verification command reported `public/articles/act-aloha-cube-transfer/live-workspace.png: No such file or directory` even though the captured image existed.
+  root-cause: The command ran from the robium plugin repository while the generated public asset belongs to the sibling robium-website repository.
+  fix: Run repository-owned asset checks with the website repository as the working directory — check: the 168,012-byte real workspace image was found, ingested, built, and rendered on the ACT demo page.
+  dead-ends: Re-capturing the browser screenshot; assuming article ingestion deleted the source image.
+  source: captured command error and successful website build, 2026-08-23
+
+- [live-demo] verified <!-- id: lrn-0823-13 -->
+  symptom: The ACT app needed proof that the website lifecycle represented a private real-policy session rather than a static iframe or UI-only health check.
+  root-cause: A passing app smoke does not verify orchestrator registration, browser lifecycle state, session cleanup, or the website handoff.
+  fix: Run the complete local website flow: Start a private instance, wait for real-inference READY, confirm the ACT workspace iframe loads, press Stop, and verify no container remains — check: orchestrator tests (12 passed), site smoke, build, and the browser Start/READY/Stop lifecycle all passed on 2026-08-23.
+  dead-ends: Treating the choice page render as a lifecycle test; deploying before verifying local cleanup.
+  source: local robium-website and demo-orchestrator verification, 2026-08-23
+
+## Site-integration retro
+
+- live-demo — fired: yes; accurate: yes for the private session gateway, real-inference readiness, and lifecycle smoke; complete: yes for local Start/READY/Stop and cleanup; lean: yes.
+- testing — fired: yes; accurate: yes for exact route, article, media, registry, sitemap, and lifecycle assertions; complete: yes; lean: yes.
