@@ -107,3 +107,17 @@
 
 - environments — fired: yes; accurate: yes, it kept provider capacity, storage locality, and no-Pod ground truth explicit; complete: no, the three-way datacenter intersection and large-file S3 throughput gate required live discovery captured above; lean: yes.
 - lerobot — fired: yes; accurate: yes, the exact checkpoint, required processor files, CUDA floor, and offline-load requirement remained intact while hardware changed; complete: yes for resource selection and snapshot validation; lean: yes.
+
+- [environments] figured-out-from-scratch <!-- id: lrn-0823-17 -->
+  symptom: RunPod's live availability surface reported Secure Cloud A100 SXM 80 GB stock `Low` in `US-KS-2`, but the single immediate `POST /v1/pods` request failed with HTTP 500: `create pod: There are no instances currently available`.
+  root-cause: A nonzero/`Low` catalog stock indication is advisory and does not reserve capacity or guarantee that an exact Secure Cloud/datacenter/volume allocation will succeed moments later.
+  fix: Treat the Pod-create response as the allocation ground truth, persist an attempt record without secrets, re-list Pods after any ambiguous or failed response, and stop the paid gate without a fallback when no Pod ID exists — check: Pods were empty before and after the rejected request, so zero GPU compute was allocated and no deletion was required.
+  dead-ends: Retrying immediately (violates the approved one-attempt/no-fallback feasibility gate); interpreting catalog `Low` as reserved capacity; attempting another GPU or datacenter that cannot attach the accepted volume.
+  anchors: environments#runpod-verify-before-terminating
+  source: authenticated RunPod REST create/list responses during issue #69 Task 5 on 2026-08-23.
+
+- brainstorming — fired: yes; accurate: yes, it preserved the explicitly approved A100-only design and no-fallback boundary; complete: yes for the resumed paid gate; lean: yes.
+- environments — fired: yes; accurate: yes, its fail-closed capacity and post-request lifecycle verification prevented duplicate or orphaned Pods; complete: no, catalog stock versus allocation-ground-truth behavior required live discovery captured above; lean: yes.
+- integration — fired: yes; accurate: yes, immutable image, private template, volume, and secret boundaries remained intact in the create request; complete: yes for the allocation attempt; lean: yes.
+- lerobot — fired: yes; accurate: yes, exact checkpoint bootstrap stayed behind successful allocation and therefore did not run under a false capacity assumption; complete: yes for this blocked gate; lean: yes.
+- testing — fired: yes; accurate: yes, the paid feasibility gate failed on provider allocation before runtime checks and later gates remained closed; complete: yes for the observable failure path; lean: yes.
