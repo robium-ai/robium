@@ -67,3 +67,11 @@
 
 - huggingface — fired: yes; accurate: yes, it required live revision/license access checks and correctly delegated Hub mechanics; complete: no, its required upstream `hf-cli` skill plugin was unavailable in this session, so the installed official `hf` CLI was used as the documented fallback; lean: yes.
 - data — fired: yes; accurate: yes, immutable public evidence versioning matched the approved publication plan; complete: yes for preflight, while upload remained correctly blocked behind paid evaluation; lean: yes.
+
+- [environments] figured-out-from-scratch <!-- id: lrn-0823-13 -->
+  symptom: The pinned GPU image failed during `uv sync --extra gpu` while building `egl-probe==1.0.2` with `FileNotFoundError: [Errno 2] No such file or directory: 'cmake'` followed by `RuntimeError: CMake must be installed.`
+  root-cause: `hf-libero==0.1.4` pulls `robomimic==0.2.0`, which pulls the source-built `egl-probe`; the lock's Python `cmake` package is not available inside uv's isolated build environment when `egl-probe` runs.
+  fix: Install the system `cmake` package in the CUDA builder before the frozen uv sync — check: the Linux/amd64 GPU image completed all 25 BuildKit steps and exported manifest `sha256:96fb679a510e1f2791b640b96a516e10cb497a6116d29ff2435f3cf4315821bc`.
+  dead-ends: Assuming the resolved Python `cmake` wheel would be on PATH for an isolated transitive-package build; relying on Cloud Build's default log bucket, which the deployer can submit to but cannot read.
+  anchors: environments#local-remote-parity-acceptance-test
+  source: issue #69 Cloud Build `30944977-14e9-4dfe-875f-9ac4ab0875ca` and local Linux/amd64 BuildKit reproduction on 2026-08-23.
