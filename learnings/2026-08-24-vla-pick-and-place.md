@@ -209,7 +209,7 @@
 - [environments] figured-out-from-scratch <!-- id: lrn-0824-21 -->
   symptom: The fixed model reached its first real action, then `torch._inductor` failed with `RuntimeError: Failed to find C compiler. Please specify via CC environment variable or set triton.knobs.build.impl.`
   root-cause: Pinned Pi0.5 decorates action sampling with `torch.compile`; Triton generates a small runtime extension, but the multi-stage image left `gcc` and Python development headers in the builder and omitted them from the CUDA runtime.
-  fix: Install `gcc` and `python3.10-dev` in the immutable GPU runtime and enforce that contract in the container test — check: diagnostic eager execution on the same exact GPU completed a successful real episode, proving model/GPU compatibility independently; final default-compile immutable-image revalidation remains required.
+  fix: Install `gcc` and `python3.10-dev` in the immutable GPU runtime and enforce that contract in the container test — check: diagnostic eager execution on the same exact GPU completed a successful real episode, proving model/GPU compatibility independently; Cloud Build `3829dc62-c144-4956-a8a0-0d2eb14c02c3` published the correction as immutable digest `sha256:0bc3bae587da9c175f8bce667009bfb3103251e75b11898ae8666c58ec61f083`, while default-compile exact-image revalidation remains required.
   dead-ends: Classifying this compiler lookup as unsupported Blackwell hardware or model OOM; shipping `TORCHDYNAMO_DISABLE=1` as the production correction; adding an unpinned compiler at Pod startup.
   anchors: environments#local-remote-parity-acceptance-test, testing#gate-paid-remote-run-behind-free-dry-run
   source: exact RunPod traceback from interactive Pod `ania2yd8fdkasy` and the app's builder/runtime Docker stages on 2026-08-24.
@@ -226,3 +226,5 @@
 - environments — fired: yes; accurate: yes for exact GPU/image/volume identity, direct Pod iteration, immutable runtime correction, bounded lifetime, and cleanup; complete: no, the Triton runtime compiler dependency required live discovery captured above; lean: yes.
 - lerobot — fired: yes; accurate: yes for preserving the pinned dependency and placing batch correction at the app boundary; complete: no, the pinned policy's implicit compile-time system dependency required runtime discovery; lean: yes.
 - testing — fired: yes; accurate: yes, both new defects were reproduced before correction and the real episode, proxy, cancellation, artifacts, and zero-Pod cleanup were verified independently; complete: yes for the interactive validation block; lean: yes.
+
+- environments — fired: yes; accurate: yes, the global immutable build produced an independently resolved digest and the private template was re-read with the digest plus `VLA_LIVE_ENABLED=false` while the Pod count stayed zero; complete: yes for disabled deployment, with exact-image GPU validation still correctly gated; lean: yes.
