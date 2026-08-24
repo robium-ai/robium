@@ -48,3 +48,22 @@
 - environments — fired: yes; accurate: yes, the uv-first local environment and pinned Docker path reproduced; complete: no, exact uv extra syntax needed runtime verification, captured above; lean: yes.
 - lerobot — fired: yes; accurate: yes, official Pi0.5 preprocessing, fixed-state LIBERO mechanics, EGL, and action chunking matched pinned source; complete: yes at the free gate, with real CUDA load intentionally deferred; lean: yes.
 - integration — fired: yes; accurate: yes, one-process rollout and capability-scoped gateway boundaries passed; complete: no, cross-version Gradio/LeRobot lock compatibility required solver-driven pinning, captured above; lean: yes.
+
+- [environments] figured-out-from-scratch <!-- id: lrn-0823-11 -->
+  symptom: `https://rest.runpod.io/openapi.json` returned the documentation site's HTML with HTTP 200, causing JSON decode failure; the machine-readable schema is at `/v1/openapi.json`.
+  root-cause: The REST documentation root and versioned API serve different representations while both answer successfully.
+  fix: Fetch `https://rest.runpod.io/v1/openapi.json` and verify `Content-Type: application/json` before parsing — check: the schema exposed Pod GET/POST/DELETE, billing, templates, and network-volume paths used by the paid preflight.
+  dead-ends: Falling back only on HTTP failure, because the HTML endpoint returns 200.
+  anchors: environments#runpod-verify-before-terminating
+  source: RunPod REST endpoints inspected during issue #69 paid preflight.
+
+- [environments] figured-out-from-scratch <!-- id: lrn-0823-12 -->
+  symptom: RunPod GraphQL schema introspection returned HTTP 403 while documented concrete `gpuTypes` queries with the same credential succeeded; `myself.clientBalance` also returned 403.
+  root-cause: API authorization is field/query-specific, so successful GPU discovery does not imply balance or introspection access.
+  fix: Use documented concrete availability queries and fail the paid gate closed when the balance query is forbidden — check: A40 48 GB returned `High`, RTX A6000 48 GB returned `Low`, and no Pod was created because positive balance remained unverifiable.
+  dead-ends: Treating general GraphQL authentication as proof that all fields are authorized; inferring remaining credit from historical billing records.
+  anchors: environments#runpod-verify-before-terminating
+  source: RunPod GraphQL and REST preflight on 2026-08-23.
+
+- huggingface — fired: yes; accurate: yes, it required live revision/license access checks and correctly delegated Hub mechanics; complete: no, its required upstream `hf-cli` skill plugin was unavailable in this session, so the installed official `hf` CLI was used as the documented fallback; lean: yes.
+- data — fired: yes; accurate: yes, immutable public evidence versioning matched the approved publication plan; complete: yes for preflight, while upload remained correctly blocked behind paid evaluation; lean: yes.
