@@ -201,7 +201,28 @@
 - [lerobot] figured-out-from-scratch <!-- id: lrn-0824-20 -->
   symptom: The tokenizer-enabled immutable image passed CUDA, bootstrap, local checkpoint staging, and real model loading, then the first measured rollout failed with `ValueError: _quat2axisangle expected shape (B, 4), got (4,)`.
   root-cause: The application owns one direct, non-vectorized pinned `LiberoEnv`, whose nested robot-state arrays are unbatched; LeRobot's pinned `preprocess_observation` adds a batch dimension to images but not nested `robot_state`, while `LiberoProcessorStep` requires batched quaternions.
-  fix: Batch a copied nested LIBERO robot-state mapping at the application adapter boundary before invoking the pinned LeRobot preprocessors, leaving image batching and the immutable dependency untouched — check: implementation and free regression remain pending the required bounded-design approval; real revalidation requires a separately approved paid gate.
+  fix: Batch a copied nested LIBERO robot-state mapping at the application adapter boundary before invoking the pinned LeRobot preprocessors, leaving image batching and the immutable dependency untouched — check: the regression failed before implementation, then all 34 free tests passed; on interactive Pod `ania2yd8fdkasy`, raw quaternion `(4,)` became `(1, 4)`, pinned processing produced state `(1, 8)`, and a complete real episode succeeded in 75 steps.
   dead-ends: Treating this as a model-load, CUDA, tokenizer, or simulator-reset failure; changing the pinned LeRobot dependency; switching the whole application to a vector environment for a batch-size-one benchmark.
   anchors: lerobot#no-cli-facts-from-memory, testing#test-at-right-layer-not-everything-in-sim, testing#gate-paid-remote-run-behind-free-dry-run
   source: Pod `17h7vt1fjf9fzr` durable phase/failure/CUDA evidence and pinned LeRobot sources at `8fff0fde7c79f23a93d845d1a50e985de01f8b8a` on 2026-08-24.
+
+- [environments] figured-out-from-scratch <!-- id: lrn-0824-21 -->
+  symptom: The fixed model reached its first real action, then `torch._inductor` failed with `RuntimeError: Failed to find C compiler. Please specify via CC environment variable or set triton.knobs.build.impl.`
+  root-cause: Pinned Pi0.5 decorates action sampling with `torch.compile`; Triton generates a small runtime extension, but the multi-stage image left `gcc` and Python development headers in the builder and omitted them from the CUDA runtime.
+  fix: Install `gcc` and `python3.10-dev` in the immutable GPU runtime and enforce that contract in the container test — check: diagnostic eager execution on the same exact GPU completed a successful real episode, proving model/GPU compatibility independently; final default-compile immutable-image revalidation remains required.
+  dead-ends: Classifying this compiler lookup as unsupported Blackwell hardware or model OOM; shipping `TORCHDYNAMO_DISABLE=1` as the production correction; adding an unpinned compiler at Pod startup.
+  anchors: environments#local-remote-parity-acceptance-test, testing#gate-paid-remote-run-behind-free-dry-run
+  source: exact RunPod traceback from interactive Pod `ania2yd8fdkasy` and the app's builder/runtime Docker stages on 2026-08-24.
+
+- [testing] figured-out-from-scratch <!-- id: lrn-0824-22 -->
+  symptom: A successful 75-step real rollout failed afterward at `artifact_write` with `ValueError: append_data requires ndarray as first arg`.
+  root-cause: The rollout stream intentionally exposes Pillow images, while ImageIO's ffmpeg writer requires NumPy arrays; fake tests checked frame content but never exercised the feasibility video boundary.
+  fix: Convert each frame with `numpy.asarray` at the video-writer boundary and add a focused Pillow-to-array regression — check: the test failed before the fix, all 35 free tests passed afterward, and the same Pod wrote a 113,024-byte MP4 whose SHA-256 matched the feasibility JSON.
+  dead-ends: Converting every streamed frame earlier in the rollout stack; treating successful simulator completion as sufficient when the mandatory evidence artifact failed; weakening ImageIO validation.
+  anchors: testing#test-at-right-layer-not-everything-in-sim
+  source: interactive Pod `ania2yd8fdkasy` real artifact failure and subsequent hashed feasibility artifact on 2026-08-24.
+
+- brainstorming — fired: yes; accurate: yes, it kept the fixes limited to the demonstrated adapter, artifact, and runtime-package seams inside one approved interactive allocation; complete: yes; lean: yes.
+- environments — fired: yes; accurate: yes for exact GPU/image/volume identity, direct Pod iteration, immutable runtime correction, bounded lifetime, and cleanup; complete: no, the Triton runtime compiler dependency required live discovery captured above; lean: yes.
+- lerobot — fired: yes; accurate: yes for preserving the pinned dependency and placing batch correction at the app boundary; complete: no, the pinned policy's implicit compile-time system dependency required runtime discovery; lean: yes.
+- testing — fired: yes; accurate: yes, both new defects were reproduced before correction and the real episode, proxy, cancellation, artifacts, and zero-Pod cleanup were verified independently; complete: yes for the interactive validation block; lean: yes.
