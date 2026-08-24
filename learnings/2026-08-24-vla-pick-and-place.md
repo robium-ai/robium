@@ -37,3 +37,5 @@
 - brainstorming — fired: yes; accurate: yes, it kept the resource search read-only and separated the inference-memory question from the durable-storage design; complete: yes; lean: yes.
 - environments — fired: yes; accurate: yes, it required authenticated current stock plus exact runtime compatibility before recommending a cheaper GPU; complete: yes; lean: yes.
 - lerobot — fired: yes; accurate: yes for exact checkpoint/runtime inspection; complete: no, its compute-sizing table is training-oriented and did not explicitly distinguish batch-1 Pi0.5 inference, captured above; lean: yes.
+
+- environments — fired: yes; accurate: yes, its authenticated provider-ground-truth rule produced a current US-only comparison and identified the one candidate colocated with the existing checkpoint volume; complete: yes; lean: yes.
