@@ -39,3 +39,33 @@
 - lerobot — fired: yes; accurate: yes for exact checkpoint/runtime inspection; complete: no, its compute-sizing table is training-oriented and did not explicitly distinguish batch-1 Pi0.5 inference, captured above; lean: yes.
 
 - environments — fired: yes; accurate: yes, its authenticated provider-ground-truth rule produced a current US-only comparison and identified the one candidate colocated with the existing checkpoint volume; complete: yes; lean: yes.
+
+- [environments] figured-out-from-scratch <!-- id: lrn-0824-04 -->
+  symptom: The approved RunPod Pod allocated and extracted the immutable image, but the application restarted before its first CUDA check with `KeyError: 'getpwuid(): uid not found: 65532'` from PyTorch Inductor via `getpass.getuser()`.
+  root-cause: Both runtime stages declared numeric `USER 65532:65532` without creating a matching passwd/group entry or setting a writable home.
+  fix: Create a non-login `robium` user/group at UID/GID 65532 in both runtime stages and set `HOME=/tmp`, `USER=robium`, and `LOGNAME=robium` — check: the old image's `getent passwd 65532` exited 2; the rebuilt image resolved the user and Python identity, all 17 tests and fake smoke passed, the protected container lifecycle passed, and the same creation command succeeded on the pinned CUDA runtime base.
+  dead-ends: Assuming a numeric Docker `USER` is sufficient for Python/ML libraries; investigating GPU compatibility before resolving the pre-CUDA traceback.
+  anchors: environments#local-remote-parity-acceptance-test
+  source: RunPod Pod `1m8xyqandczzdb` logs and local container regression during issue #69 on 2026-08-24.
+
+- [environments] figured-out-from-scratch <!-- id: lrn-0824-05 -->
+  symptom: An authenticated RunPod Pod-detail diagnostic returned injected environment values, including the Hub credential, in command output while diagnosing the startup failure.
+  root-cause: Full provider resource objects are unsafe diagnostic output when deployment secrets are materialized as Pod environment variables.
+  fix: Query and record only an explicit safe-field allowlist for Pod diagnostics, remove transient response/capability files immediately, and rotate any credential exposed to logs before reuse — check: the Pod was deleted, the sensitive temporary files were absent after cleanup, and credential rotation remains a required gate before another attempt.
+  dead-ends: Treating an authenticated infrastructure `get` response as metadata-only; printing the complete Pod object during troubleshooting.
+  anchors: environments#runpod-verify-before-terminating
+  source: authenticated RunPod Pod-detail response and cleanup checks during issue #69 on 2026-08-24.
+
+- [environments] figured-out-from-scratch <!-- id: lrn-0824-06 -->
+  symptom: The create request supplied a compatibility-first command override, but the returned Pod details did not show the override and the image's gateway entrypoint ran directly.
+  root-cause: The chosen RunPod template/create path did not apply the request-time Docker arguments as expected.
+  fix: Bake compatibility-first startup behavior into the reviewed immutable image/template rather than depending on a per-request override — check: pending a corrected GPU image build and separately approved one-shot retry.
+  dead-ends: Assuming create-time Docker arguments override a template/image entrypoint without verifying the resulting Pod specification.
+  anchors: environments#runpod-verify-before-terminating
+  source: RunPod create response, Pod details, and application logs during issue #69 on 2026-08-24.
+
+- brainstorming — fired: yes; accurate: yes, it constrained the RTX PRO 4500 change to the approved one-shot feasibility scope; complete: yes; lean: yes.
+- architect — fired: yes; accurate: yes, it preserved the issue-authorized production hardware and disabled state while documenting the feasibility amendment; complete: yes; lean: yes.
+- environments — fired: yes; accurate: yes, it enforced exact-stock, funding, locality, immutable-image, lifetime, deletion, and zero-Pod checks; complete: no, numeric-user and provider-secret-output hazards required live discovery captured above; lean: yes.
+- lerobot — fired: yes; accurate: yes, it preserved the exact checkpoint revision, processor set, offline-load requirement, and batch-one workload; complete: yes for the work reached before CUDA; lean: yes.
+- testing — fired: yes; accurate: yes, it required a reproducible red check and full free regression after the runtime-user fix; complete: yes; lean: yes.
