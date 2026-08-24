@@ -114,3 +114,14 @@
 - environments — fired: yes; accurate: yes for immutable image, funding, volume locality, exact inventory, lifetime, and deletion gates; complete: no, provider alias drift, misleading runtime fields, and log authorization required live discovery captured above; lean: yes.
 - lerobot — fired: yes; accurate: yes for exact revision, token-free offline child, and CUDA-only load boundary; complete: no, the post-bootstrap model-load failure remains undiagnosed without logs; lean: yes.
 - testing — fired: yes; accurate: yes, startup ordering and same-Pod transition were developed red-green and the full 20-test/fake-smoke suite passed; complete: yes for free gates; lean: yes.
+
+- [testing] better-method <!-- id: lrn-0824-12 -->
+  symptom: A restart-safe diagnostics test failed because an existing `failure.json` caused the outer feasibility launcher to preserve stale evidence instead of recording the current subprocess failure (`assert "current failure" in failure` saw only `{"message": "stale failure"}`).
+  root-cause: Testing only for file existence cannot distinguish a child-process failure written during the current attempt from a marker left by a previous container restart.
+  fix: Snapshot the failure-marker bytes before startup and preserve the child marker only when its contents change; otherwise atomically replace it with the current outer failure — check: the regression failed before the change, then all 26 tests, doctor, fake smoke, and the rebuilt protected Linux/amd64 container lifecycle passed.
+  dead-ends: Never overwriting any existing failure marker; unconditionally overwriting the child's more precise `model_loading` failure with the generic outer subprocess exception; deleting prior evidence at startup.
+  anchors: testing#test-at-right-layer-not-everything-in-sim, testing#gate-paid-remote-run-behind-free-dry-run
+  source: issue #69 persistent startup diagnostics red-green tests on 2026-08-24.
+
+- brainstorming — fired: yes; accurate: yes, it classified the diagnostics change as bounded and the previously approved phase/failure design was sufficient to proceed without expanding the architecture; complete: yes; lean: yes.
+- testing — fired: yes; accurate: yes, it put atomicity, redaction, exact failure stage, stale-marker replacement, full fake rollout, and container lifecycle at the free test layers before any paid image build; complete: yes; lean: yes.
