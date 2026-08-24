@@ -121,3 +121,5 @@
 - integration — fired: yes; accurate: yes, immutable image, private template, volume, and secret boundaries remained intact in the create request; complete: yes for the allocation attempt; lean: yes.
 - lerobot — fired: yes; accurate: yes, exact checkpoint bootstrap stayed behind successful allocation and therefore did not run under a false capacity assumption; complete: yes for this blocked gate; lean: yes.
 - testing — fired: yes; accurate: yes, the paid feasibility gate failed on provider allocation before runtime checks and later gates remained closed; complete: yes for the observable failure path; lean: yes.
+
+- environments — fired: yes; accurate: yes, its per-datacenter inventory and volume-locality guidance separated same-volume H100 NVL from alternatives requiring a new volume; complete: yes for the read-only RunPod alternative-instance review; lean: yes.
