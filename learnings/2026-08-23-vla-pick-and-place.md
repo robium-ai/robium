@@ -88,3 +88,22 @@
 - integration — fired: yes; accurate: yes, immutable image and private-registry boundaries stayed explicit; complete: yes for the resumed image/preflight block; lean: yes.
 - lerobot — fired: yes; accurate: yes, the exact checkpoint and processor snapshot remained pinned and offline-loadable by design; complete: yes for the resumed preflight; lean: yes.
 - testing — fired: yes; accurate: yes, it kept the paid gate fail-closed on independently verified prerequisites; complete: yes for the resumed preflight; lean: yes.
+
+- [environments] wrong-stale-guidance <!-- id: lrn-0823-15 -->
+  symptom: RunPod's published S3 API table listed `US-MO-1`, and live inventory showed L40S 48 GB stock there, but `POST /v1/networkvolumes` failed with `Data center "US-MO-1" not found or does not support network volumes` and returned the currently accepted volume-datacenter list.
+  root-cause: S3 endpoint availability, GPU inventory, and the live network-volume provisioning allowlist are three independently changing provider surfaces; intersecting only the first two can select a location that cannot provision storage.
+  fix: Before selecting a GPU/volume location, perform a zero-Pod live volume-create capability check or consume the provisioning API's current allowlist, then intersect that result with S3 endpoint support and GPU stock — check: `US-KS-2` accepted volume `68s0bxbv7p` and had A100 SXM 80 GB Secure Cloud stock `Low` at $1.59/hour.
+  dead-ends: Selecting `US-MO-1` from the official S3 table plus live L40S stock; assuming the general datacenter inventory implied network-volume provisioning support.
+  anchors: environments#runpod-verify-before-terminating
+  source: RunPod official S3 documentation, authenticated `runpodctl gpu list`, and live `/v1/networkvolumes` responses on 2026-08-23.
+
+- [environments] figured-out-from-scratch <!-- id: lrn-0823-16 -->
+  symptom: Direct upload of the 7,473,096,344-byte Pi0.5 weight to RunPod's S3-compatible volume failed with HTTP 524 using AWS CLI and the official large-file helper at 50 MB/10 MB parts; 5 MB parts completed but measured about 0.24 MB/s, projecting many hours.
+  root-cause: The local-to-RunPod S3 path's bandwidth and proxy timeout made large multipart transfer operationally unsuitable even though authentication and small-object uploads worked.
+  fix: Measure several parts before committing to the whole transfer, abort every failed multipart session, verify no open uploads remain, and require an explicit design amendment before switching to same-Pod volume bootstrap — check: all three upload IDs were aborted, `list-multipart-uploads` returned `null`, six small files plus `REVISION` remained intact, and no Pod was created.
+  dead-ends: AWS CLI retry mode with ten attempts; official helper defaults at 50 MB; 10 MB parts; 5 MB parts as a technically successful but multi-hour path.
+  anchors: environments#runpod-verify-before-terminating
+  source: RunPod S3 endpoint `US-KS-2`, official `runpod/runpod-s3-examples` helper, and issue #69 preload attempts on 2026-08-23.
+
+- environments — fired: yes; accurate: yes, it kept provider capacity, storage locality, and no-Pod ground truth explicit; complete: no, the three-way datacenter intersection and large-file S3 throughput gate required live discovery captured above; lean: yes.
+- lerobot — fired: yes; accurate: yes, the exact checkpoint, required processor files, CUDA floor, and offline-load requirement remained intact while hardware changed; complete: yes for resource selection and snapshot validation; lean: yes.
