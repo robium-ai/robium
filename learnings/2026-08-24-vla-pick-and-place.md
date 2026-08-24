@@ -157,3 +157,41 @@
 - brainstorming — fired: yes; accurate: yes, it kept the paid operation to one immutable build and one bounded Pod and stopped when the runtime exposed a distinct packaging defect; complete: yes; lean: yes.
 - environments — fired: yes; accurate: yes for exact digest, pool-location diagnosis, GPU/volume/template parity, durable evidence, and immediate deletion; complete: no, copied-versus-imported LIBERO source identity required real runtime discovery captured above; lean: yes.
 - testing — fired: yes; accurate: yes, all free gates preceded the paid run and the failure was classified only from a precise persisted marker; complete: no, the prior image import test checked config/resource values but not the imported module origin used by scene construction; lean: yes.
+
+- [environments] better-method <!-- id: lrn-0824-16 -->
+  symptom: Making `/opt/libero` first on `PYTHONPATH` still imported `hf-libero` from `site-packages`; using the checkout's inner project directory instead made `libero.libero` unavailable, and a source overlay then failed on undeclared legacy `gym`.
+  root-cause: The pinned checkout uses a namespace-package outer layout, while the installed wheel is a regular package and therefore wins Python import resolution; the checkout and locked wheel also target different Gym APIs.
+  fix: Keep the locked Gymnasium-compatible `hf-libero==0.1.4` code and hydrate its incomplete asset directory from the pinned checkout during the privileged image build — check: a disposable hydrated-wheel overlay imported the modern module, found `libero_tabletop_base_style.xml`, preserved CUDA, and reset exact LIBERO-Goal task 8 to a 256×256 observation; the final local Linux/amd64 GPU image repeated the module/asset/reset checks with closed stdin.
+  dead-ends: `PYTHONPATH=/opt/libero`; `PYTHONPATH=/opt/libero/libero`; replacing the wheel with the older checkout; relying on config paths for a module-relative asset lookup.
+  anchors: environments#local-remote-parity-acceptance-test, testing#test-at-right-layer-not-everything-in-sim
+  source: interactive RunPod Pod `kvt2gz619xym9s` during issue #69 on 2026-08-24; corrects the pending fix in `lrn-0824-15`.
+
+- [lerobot] figured-out-from-scratch <!-- id: lrn-0824-17 -->
+  symptom: Pi0.5 printed `Loaded state dict from model.safetensors` from the RunPod network volume but remained in key remapping for several minutes with no CUDA completion or error; the same load progressed immediately after a sequential copy to container-local `/tmp`.
+  root-cause: Safetensors memory mapping plus LeRobot's tensor-by-tensor remapping produced non-sequential reads against the 7,473,096,344-byte network-volume object.
+  fix: Validate the persistent snapshot, copy it sequentially to transient container disk, validate the staged snapshot, and point offline child processes at the staged path — check: the local-path run advanced past state-dict remapping to processor construction; episode validation remains gated.
+  dead-ends: Repeating the network-volume mmap load; inferring OOM without an exception; baking the private checkpoint into the public application image.
+  anchors: lerobot#pre-06-checkpoints-unloadable, environments#local-remote-parity-acceptance-test
+  source: interactive RunPod Pod `kvt2gz619xym9s` and exact 7.47 GB S3 object metadata during issue #69 on 2026-08-24.
+
+- [lerobot] figured-out-from-scratch <!-- id: lrn-0824-18 -->
+  symptom: Offline processor construction failed because `policy_preprocessor.json` names `google/paligemma-3b-pt-224`, but the exact Pi0.5 checkpoint snapshot contains no tokenizer files; a direct authenticated tokenizer download returned HTTP 403.
+  root-cause: Processor-era checkpoint completeness is transitive: the processor JSON can reference a separately hosted, manually gated tokenizer that is not included beside the weights. Metadata access does not prove gated file access.
+  fix: Preflight a direct file download, pin tokenizer revision `35e4f46485b4d07967e7e9935bc3786aad50687c`, persist and validate its five files plus revision marker with the checkpoint, and override the processor to that local path — check: free bootstrap/validation/override tests pass; real download and episode remain blocked until the operator's Hugging Face account is granted PaliGemma access.
+  dead-ends: Treating checkpoint dry-run access as proof of all transitive model licensing; enabling general network access during production inference; relying on an unspecified Hub cache.
+  anchors: lerobot#pre-06-checkpoints-unloadable, lerobot#no-cli-facts-from-memory
+  source: pinned processor JSON, Hugging Face model metadata, direct HTTP 403, and interactive RunPod failure during issue #69 on 2026-08-24.
+
+- [lerobot] figured-out-from-scratch <!-- id: lrn-0824-19 -->
+  symptom: Pinned LeRobot revision `8fff0fde7c79f23a93d845d1a50e985de01f8b8a` raised a strict state-dict error for missing `model.paligemma_with_expert.paligemma.model.language_model.embed_tokens.weight` even though the safetensors header contains the corresponding `paligemma.lm_head.weight` tensor.
+  root-cause: The pinned loader does not remap the tied language-head alias before `strict=True` loading.
+  fix: Load with `strict=False` and immediately fail closed unless the runtime embedding and language-head parameters share storage — check: safetensors range-header inspection proved the head tensor exists and free unit tests cover accepted and rejected storage identity; real GPU verification remains gated.
+  dead-ends: Accepting the loader's caught warning and continuing with an unverified model; duplicating a 1+ GB tensor in application code; editing the pinned LeRobot dependency.
+  anchors: lerobot#no-cli-facts-from-memory
+  source: interactive RunPod output, official pinned LeRobot source, and the exact checkpoint safetensors header during issue #69 on 2026-08-24.
+
+- brainstorming — fired: yes; accurate: yes, it constrained interactive diagnosis to one approved Pod, one hour, and the existing GPU/volume/image; complete: yes; lean: yes.
+- browser — fired: yes; accurate: yes, it confirmed the in-app RunPod console lacked an authenticated session without mutating provider state; complete: yes; lean: yes.
+- environments — fired: yes; accurate: yes for immutable identity, one-Pod budget, durable-volume diagnostics, provider cleanup, and zero-Pod verification; complete: no, namespace-package precedence and network-volume mmap behavior required live discovery captured above; lean: yes.
+- lerobot — fired: yes; accurate: yes for exact revision, processor-file scrutiny, offline loading, and CUDA-only evaluation boundaries; complete: no, transitive gated tokenizer completeness and the pinned loader's tied-key defect required source/runtime discovery captured above; lean: yes.
+- testing — fired: yes; accurate: yes, each discovered defect became a free contract before implementation and no episode success was claimed without the real gate; complete: yes for the reached free gates; lean: yes.
