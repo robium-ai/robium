@@ -248,7 +248,7 @@ evidence: ✓ ✓ ✓
 def _seed_obs(tmp_path):
     d = tmp_path / "learnings" / "observations"
     d.mkdir(parents=True)
-    (d / "nav2.md").write_text(OBS_READY)
+    (d / "nav2.md").write_text(OBS_READY, encoding="utf-8")
 
 
 def test_ups_injects_recall_on_match(tmp_path):

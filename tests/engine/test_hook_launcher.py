@@ -26,7 +26,7 @@ def test_manifest_routes_every_hook_through_launcher():
     assert all(not command.startswith("python3 ") for command in commands)
     for script in ("user_prompt_submit.py", "post_tool_use.py",
                    "session_start.py", "session_end.py"):
-        assert sum(command.endswith(script) for command in commands) == 1
+        assert sum(script in command for command in commands) == 1
 
 
 def test_launcher_interpreter_preference_is_python3_python_then_py3():
@@ -60,7 +60,7 @@ def test_launcher_selects_interpreters_in_preference_order(tmp_path):
         env = os.environ.copy()
         env["PATH"] = posix_bindir
         return subprocess.run(
-            [shell, str(RUNNER), "session_start.py"],
+            [shell, str(RUNNER), str(ROOT / "hooks" / "scripts" / "session_start.py")],
             input="{}", capture_output=True, text=True, timeout=10, env=env,
         )
 
@@ -77,7 +77,7 @@ def test_launcher_is_silent_and_fail_open_without_interpreter(tmp_path):
     env = os.environ.copy()
     env["PATH"] = ""
     result = subprocess.run(
-        [shell, str(RUNNER), "session_start.py"],
+        [shell, str(RUNNER), str(ROOT / "hooks" / "scripts" / "session_start.py")],
         input="{}", capture_output=True, text=True, timeout=10, env=env,
     )
     assert result.returncode == 0
@@ -91,7 +91,7 @@ def test_launcher_runs_real_hook(tmp_path):
     event = {"hook_event_name": "SessionStart", "session_id": "launcher",
              "cwd": str(tmp_path), "source": "startup"}
     result = subprocess.run(
-        [shell, str(RUNNER), "session_start.py"],
+        [shell, str(RUNNER), str(ROOT / "hooks" / "scripts" / "session_start.py")],
         input=json.dumps(event), capture_output=True, text=True, timeout=10,
     )
     assert result.returncode == 0
