@@ -110,3 +110,40 @@ def test_atomic_no_tmp_leftover(tmp_path):
     tdir = tmp_path / ".robium" / "transcripts"
     tmp_files = list(tdir.glob("*.tmp")) if tdir.exists() else []
     assert tmp_files == [], f"No .tmp files should remain, but found: {tmp_files}"
+
+
+def test_prunes_ended_and_stale_seen_files_but_preserves_fresh_concurrent(tmp_path):
+    import os
+    import session_end
+
+    d = tmp_path / ".robium"
+    d.mkdir()
+    ended = d / ".seen-ended"
+    stale = d / ".seen-abandoned"
+    concurrent = d / ".seen-concurrent"
+    unrelated = d / "queue.jsonl"
+    for path in (ended, stale, concurrent, unrelated):
+        path.write_text("marker\n")
+
+    now = 2_000_000_000.0
+    os.utime(stale, (now - 8 * 86400, now - 8 * 86400))
+    os.utime(concurrent, (now - 6 * 86400, now - 6 * 86400))
+    session_end.prune_seen_files(str(tmp_path), "ended", now=now)
+
+    assert not ended.exists()
+    assert not stale.exists()
+    assert concurrent.exists()
+    assert unrelated.exists()
+
+
+def test_session_end_prunes_seen_file_without_transcript(tmp_path):
+    d = tmp_path / ".robium"
+    d.mkdir()
+    seen = d / ".seen-no-transcript"
+    seen.write_text("signature\n")
+
+    r = run_hook({"hook_event_name": "SessionEnd", "session_id": "no-transcript",
+                  "cwd": str(tmp_path), "reason": "exit"})
+
+    assert r.returncode == 0
+    assert not seen.exists()

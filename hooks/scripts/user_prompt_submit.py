@@ -4,9 +4,10 @@
 Silent: writes queue flags only, never stdout (spec §5). Fail-open.
 Also injects recall context (spec §5) — the short loop.
 """
+import os
 import sys
 
-sys.path.insert(0, __file__.rsplit("/", 1)[0])
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 
 def main() -> None:

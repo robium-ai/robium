@@ -4,10 +4,32 @@ it (spec §4.0: transcripts are Tier −1, the engine's raw record)."""
 import os
 import shutil
 import sys
+import time
 
-sys.path.insert(0, __file__.rsplit("/", 1)[0])
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 MAX_ARCHIVE_MB = 500
+SEEN_MAX_AGE_DAYS = 7
+
+
+def prune_seen_files(cwd: str, session_id: str, now: "float | None" = None) -> None:
+    """Remove the ended session marker and abandoned markers older than 7 days."""
+    root = os.path.abspath(cwd or os.getcwd())
+    d = os.path.join(root, ".robium")
+    if not os.path.isdir(d):
+        return
+
+    current_name = f".seen-{session_id}" if session_id else ""
+    cutoff = (time.time() if now is None else now) - SEEN_MAX_AGE_DAYS * 86400
+    for name in os.listdir(d):
+        if not name.startswith(".seen-"):
+            continue
+        path = os.path.join(d, name)
+        try:
+            if name == current_name or os.path.getmtime(path) < cutoff:
+                os.remove(path)
+        except OSError:
+            pass
 
 
 def prune_archive(cwd: str) -> None:
@@ -56,6 +78,7 @@ def main() -> None:
 
     event = read_event()
     cwd = event.get("cwd") or ""
+    prune_seen_files(cwd, event.get("session_id") or "")
     archive_and_prune(event, cwd, robium_dir)
 
 
