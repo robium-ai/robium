@@ -11,3 +11,17 @@
 - environments — fired: yes; accurate: yes, it required live provider ground truth and stopped before compute when colocated storage failed; complete: no, S3 endpoint publication versus actual volume provisioning required live discovery captured above; lean: yes.
 
 - environments — fired: yes; accurate: yes, its storage-locality and fail-closed guidance narrowed recovery to waiting for A100 beside the proven volume, a provider-side volume fix, or an explicitly approved hardware amendment; complete: yes for recovery planning; lean: yes.
+
+- [environments] figured-out-from-scratch (seen 2x) <!-- id: lrn-0824-02 -->
+  symptom: Authenticated RunPod inventory showed H100 NVL 94 GB stock `Low` in `US-KS-2` during alternative selection, but the final paid preflight later reported `stockStatus: none`; no Pod request could safely be made.
+  root-cause: RunPod catalog availability is both advisory and highly transient: `Low` can disappear entirely between design approval and the create gate, just as an earlier `Low` A100 indication failed at allocation.
+  fix: Re-query the exact GPU/datacenter immediately before every one-shot paid request and stop before create when stock is `none` — check: the final preflight reported zero Pods, zero current-day Pod billing records, and no GPU allocation.
+  dead-ends: Treating the earlier `Low` reading as reserved capacity; sending a create request after the exact inventory changed to `none`; silently selecting another GPU.
+  anchors: environments#runpod-verify-before-terminating
+  source: authenticated RunPod CLI and REST preflight during issue #69 on 2026-08-24; recurrence of lrn-0823-17.
+
+- brainstorming — fired: yes; accurate: yes, it treated H100 as a bounded, explicitly approved hardware amendment before implementation; complete: yes; lean: yes.
+- architect — fired: yes; accurate: yes, it synchronized the active brief, design, plan, and historical evidence before the hardware gate; complete: yes; lean: yes.
+- environments — fired: yes; accurate: yes, it required an immediate exact-stock recheck and stopped before compute when H100 changed to unavailable; complete: no, the speed of `Low`-to-`none` inventory drift required repeated live evidence captured above; lean: yes.
+- lerobot — fired: yes; accurate: yes, it preserved the exact checkpoint, processor files, CUDA-only runtime, and same-Pod offline-load path while only the GPU changed; complete: yes for preflight; lean: yes.
+- testing — fired: yes; accurate: yes, the H100 evidence constant was changed red-green and the full 17-test plus fake-smoke gate passed before paid preflight; complete: yes; lean: yes.
