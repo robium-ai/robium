@@ -125,3 +125,15 @@
 
 - brainstorming — fired: yes; accurate: yes, it classified the diagnostics change as bounded and the previously approved phase/failure design was sufficient to proceed without expanding the architecture; complete: yes; lean: yes.
 - testing — fired: yes; accurate: yes, it put atomicity, redaction, exact failure stage, stale-marker replacement, full fake rollout, and container lifecycle at the free test layers before any paid image build; complete: yes; lean: yes.
+
+- [environments] figured-out-from-scratch <!-- id: lrn-0824-13 -->
+  symptom: The diagnostics-enabled RunPod retry passed CUDA and reached `model_loading`, then persisted `EOFError: EOF when reading a line` before producing an episode.
+  root-cause: At the pinned revision, LIBERO's first import creates a config file when none exists and calls `input()` to ask whether the dataset path should be customized; the headless container has closed stdin.
+  fix: Bake a deterministic config into the GPU image, set `LIBERO_CONFIG_PATH=/app/libero-config`, and point every LIBERO resource at the exact `/opt/libero` checkout — check: the container-contract test failed before the copy/env contract was added; afterward all 27 tests and fake smoke passed, the full Linux/amd64 GPU image built locally, and LIBERO imported with closed stdin while verifying its pinned asset paths.
+  dead-ends: Classifying the missing episode as OOM despite a precise persisted exception; relying on a writable home directory to initialize configuration; unit-testing only the application wrapper without importing LIBERO inside the actual GPU image.
+  anchors: environments#local-remote-parity-acceptance-test, testing#gate-paid-remote-run-behind-free-dry-run
+  source: RunPod Pod `opc5yz6isvxmfr` durable phase/failure/CUDA evidence, pinned LIBERO revision `8f1084e3132a39270c3a13ebe37270a43ece2a01`, and local GPU-image import on 2026-08-24.
+
+- brainstorming — fired: yes; accurate: yes, it kept the remediation limited to the diagnosed headless-config defect and preserved a separate paid revalidation gate; complete: yes; lean: yes.
+- environments — fired: yes; accurate: yes, its local/remote parity guidance led to an import inside the exact Linux/amd64 GPU image rather than a host-only test; complete: no, LIBERO's interactive first-import behavior required live diagnosis and is captured above; lean: yes.
+- testing — fired: yes; accurate: yes, the image contract was developed red-green and followed by the full 27-test/fake-smoke suite plus the right-layer container import; complete: yes for the free remediation; lean: yes.
