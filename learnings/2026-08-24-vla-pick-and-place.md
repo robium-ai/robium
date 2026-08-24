@@ -137,3 +137,23 @@
 - brainstorming — fired: yes; accurate: yes, it kept the remediation limited to the diagnosed headless-config defect and preserved a separate paid revalidation gate; complete: yes; lean: yes.
 - environments — fired: yes; accurate: yes, its local/remote parity guidance led to an import inside the exact Linux/amd64 GPU image rather than a host-only test; complete: no, LIBERO's interactive first-import behavior required live diagnosis and is captured above; lean: yes.
 - testing — fired: yes; accurate: yes, the image contract was developed red-green and followed by the full 27-test/fake-smoke suite plus the right-layer container import; complete: yes for the free remediation; lean: yes.
+
+- [environments] figured-out-from-scratch <!-- id: lrn-0824-14 -->
+  symptom: Cloud Build rejected an `E2_HIGHCPU_32` submission with `FAILED_PRECONDITION: due to quota restrictions, Cloud Build cannot run builds of this machine type in this region`, even though the same machine type had built successfully earlier that day.
+  root-cause: The failed command explicitly selected the `us-central1` regional pool, while the earlier successful builds used the global pool; the machine-type quota applies to the selected worker pool, not the Artifact Registry image region.
+  fix: Verify the prior build's location and submit through the same global pool while retaining the `us-central1` registry destination — check: no regional build ID was created, zero global builds were active, and global build `647c9b11-4a51-4476-a7fd-804f4f780e6b` succeeded with the expected immutable digest.
+  dead-ends: Inferring that an `us-central1` Artifact Registry destination requires a regional Cloud Build; reducing the builder size before comparing the prior successful build location; treating the rejected precondition as a billable build attempt.
+  anchors: environments#local-remote-parity-acceptance-test
+  source: GCP Cloud Build precondition response and global build metadata during issue #69 on 2026-08-24.
+
+- [environments] figured-out-from-scratch <!-- id: lrn-0824-15 -->
+  symptom: The paid revalidation passed CUDA and the previous noninteractive LIBERO boundary, then failed at `model_loading` because `/app/.venv/lib/python3.10/site-packages/libero/libero/assets/scenes/libero_tabletop_base_style.xml` did not exist.
+  root-cause: The GPU image copied the exact LIBERO checkout to `/opt/libero` but Python still imported dependency-installed `hf-libero` from `site-packages`; LIBERO's `BDDLBaseDomain` derives its scene-asset directory from the imported module's `__file__`, so the deterministic config could not redirect it.
+  fix: Make `/opt/libero` the authoritative import source and add an image-level contract that the imported LIBERO module plus required scene XML resolve under that pinned checkout — check: source inspection confirmed the checkout contains the exact XML, while the current local image reports the imported module under `site-packages`; implementation and paid revalidation remain pending.
+  dead-ends: Adding more paths to LIBERO's config file; assuming copying a source checkout makes Python import it; testing only `get_libero_path("assets")`, which passed while runtime code independently used its module-relative directory.
+  anchors: environments#local-remote-parity-acceptance-test, testing#test-at-right-layer-not-everything-in-sim, testing#gate-paid-remote-run-behind-free-dry-run
+  source: RunPod Pod `8r15u991q4duzm` durable CUDA/phase/failure evidence, pinned LIBERO source, and local GPU-image module inspection on 2026-08-24.
+
+- brainstorming — fired: yes; accurate: yes, it kept the paid operation to one immutable build and one bounded Pod and stopped when the runtime exposed a distinct packaging defect; complete: yes; lean: yes.
+- environments — fired: yes; accurate: yes for exact digest, pool-location diagnosis, GPU/volume/template parity, durable evidence, and immediate deletion; complete: no, copied-versus-imported LIBERO source identity required real runtime discovery captured above; lean: yes.
+- testing — fired: yes; accurate: yes, all free gates preceded the paid run and the failure was classified only from a precise persisted marker; complete: no, the prior image import test checked config/resource values but not the imported module origin used by scene construction; lean: yes.
