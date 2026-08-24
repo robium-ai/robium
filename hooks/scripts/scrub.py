@@ -1,11 +1,18 @@
 """Secret scrubbing for capture flags (spec §12).
 
 Two passes: (1) pattern-based for secret-shaped strings, (2) exact-value
-redaction of sensitive-named environment variables (Doppler-injected values
-land here without needing Doppler awareness). stdlib only.
+and long-line redaction of sensitive-named environment variables
+(Doppler-injected values land here without needing Doppler awareness).
+stdlib only.
 """
 import os
 import re
+
+_PRIVATE_KEY_BLOCK = re.compile(
+    r"-----BEGIN (?P<label>(?:[A-Z0-9][A-Z0-9 -]* )?PRIVATE KEY)-----"
+    r".*?(?:-----END (?P=label)-----|\Z)",
+    re.DOTALL,
+)
 
 _PATTERNS = [
     # KEY=value assignments (env-style, ≥3-char upper name, ≥6-char value)
@@ -46,6 +53,11 @@ def scrub(text: str, env: "dict | None" = None) -> str:
     if not text:
         return text
 
+    # Redact private-key blocks before KEY=value processing can consume only
+    # their BEGIN line and leave the key material behind. Matching through
+    # end-of-text also protects truncated or unterminated captured blocks.
+    text = _PRIVATE_KEY_BLOCK.sub("[REDACTED]", text)
+
     # Pattern 1: KEY=value assignments — only redact if KEY is sensitive
     pattern_1 = _PATTERNS[0]
     matches_to_replace = []
@@ -68,5 +80,13 @@ def scrub(text: str, env: "dict | None" = None) -> str:
     for name, value in env.items():
         if len(value or "") >= 8 and _is_sensitive_name(name):
             text = text.replace(value, "[REDACTED]")
+            # Captured output often contains only one line from a multiline
+            # secret, so exact whole-value matching is insufficient. Twenty
+            # characters avoids collision-prone fragments while covering PEM
+            # payload rows and pretty-printed service-account fields.
+            for line in set(value.splitlines()):
+                fragment = line.strip()
+                if len(fragment) >= 20:
+                    text = text.replace(fragment, "[REDACTED]")
 
     return text

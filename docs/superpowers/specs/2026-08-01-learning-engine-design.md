@@ -342,7 +342,7 @@ Same engine, different destination. The plugin ships capture hooks + the learnin
 ## 12. Safety & failure handling
 
 - **Hooks:** fail-open everywhere; a broken hook degrades to today's manual capture, never blocks a session. Silent by default (no per-capture confirmations — nag fatigue is a documented failure mode).
-- **Secret scrubbing:** before any queue write: regex-scrub `KEY=value`, bearer/token/password patterns, Doppler-injected env values (match against `doppler secrets --only-names` cache when available), URLs with credentials. Queue stays gitignored until consolidation re-checks on promotion. (claude-reflect's warning, sharpened for robium's Doppler usage.)
+- **Secret scrubbing:** before any queue write: regex-scrub `KEY=value`, bearer/token/password patterns, private-key PEM blocks, Doppler-injected env values, and URLs with credentials. The implementation deliberately uses sensitive environment-variable names plus exact/multiline-value matching instead of spawning `doppler secrets --only-names` or maintaining a Doppler cache. Queue stays gitignored until consolidation re-checks on promotion. (claude-reflect's warning, sharpened for robium's Doppler usage.)
 - **Delta application:** unappliable op → no-op + PR note (OAE fallback); validator red → PR blocked; flip-gate red → PR blocked with the failing case named.
 - **Reflection loops:** the consolidator never invokes capture-bearing sessions; hooks ignore engine-generated turns (marker env var); `claude -p` judge calls are timeboxed with regex fallback.
 - **Runaway growth:** absorb PRs breaching the 500-line cap are auto-split to `references/`; catalog-level growth is reported per refine cycle against the ~zero target; ADD-heavy PRs without paired prunes get flagged in the PR body.

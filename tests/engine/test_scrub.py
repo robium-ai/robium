@@ -30,6 +30,56 @@ def test_scrubs_sensitive_env_values():
     assert "/usr/bin" in scrub("looked in /usr/bin:/bin", env=env)
 
 
+def test_scrubs_complete_private_key_pem_blocks():
+    for label in ("PRIVATE KEY", "RSA PRIVATE KEY", "EC PRIVATE KEY",
+                  "OPENSSH PRIVATE KEY", "ENCRYPTED PRIVATE KEY"):
+        secret = "c2VjcmV0LWtleS1tYXRlcmlhbC0xMjM0NTY3ODkw"
+        pem = (f"-----BEGIN {label}-----\r\n{secret}\r\n"
+               f"-----END {label}-----")
+        out = scrub(f"before\n{pem}\nafter", env={})
+        assert secret not in out
+        assert "BEGIN" not in out
+        assert out == "before\n[REDACTED]\nafter"
+
+
+def test_scrubs_unterminated_private_key_block_to_end_of_text():
+    secret = "unterminated-private-key-material-1234567890"
+    out = scrub(f"prefix -----BEGIN PRIVATE KEY-----\n{secret}", env={})
+    assert out == "prefix [REDACTED]"
+    assert secret not in out
+
+
+def test_private_key_scrub_does_not_match_public_material():
+    public_key = "-----BEGIN PUBLIC KEY-----\nordinary-public-material\n-----END PUBLIC KEY-----"
+    certificate = "-----BEGIN CERTIFICATE-----\nordinary-certificate\n-----END CERTIFICATE-----"
+    text = f"{public_key}\n{certificate}\n" + "x" * 40
+    assert scrub(text, env={}) == text
+
+
+def test_scrubs_long_lines_from_sensitive_multiline_env_values():
+    first = "first-sensitive-fragment-1234567890"
+    second = "second-sensitive-fragment-0987654321"
+    env = {"GCP_SA_KEY": f"metadata\n  {first}  \n{second}\nshort"}
+
+    out = scrub(f"failure exposed {first} only", env=env)
+    assert first not in out
+    assert "[REDACTED]" in out
+
+    out = scrub(f"failure exposed {second} only", env=env)
+    assert second not in out
+    assert "[REDACTED]" in out
+
+
+def test_multiline_env_redaction_preserves_short_and_nonsensitive_lines():
+    long_line = "ordinary-long-line-that-is-not-a-secret"
+    sensitive = {"API_SECRET": f"short\n{long_line}"}
+    nonsensitive = {"ROBOT_CONFIG": f"short\n{long_line}"}
+
+    assert scrub("short", env=sensitive) == "short"
+    assert long_line not in scrub(long_line, env=sensitive)
+    assert scrub(long_line, env=nonsensitive) == long_line
+
+
 def test_short_env_values_ignored():
     env = {"API_KEY": "short"}  # <8 chars — too collision-prone to redact
     assert scrub("short circuit", env=env) == "short circuit"
