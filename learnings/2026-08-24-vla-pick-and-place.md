@@ -177,10 +177,10 @@
 - [lerobot] figured-out-from-scratch <!-- id: lrn-0824-18 -->
   symptom: Offline processor construction failed because `policy_preprocessor.json` names `google/paligemma-3b-pt-224`, but the exact Pi0.5 checkpoint snapshot contains no tokenizer files; a direct authenticated tokenizer download returned HTTP 403.
   root-cause: Processor-era checkpoint completeness is transitive: the processor JSON can reference a separately hosted, manually gated tokenizer that is not included beside the weights. Metadata access does not prove gated file access.
-  fix: Preflight a direct file download, pin tokenizer revision `35e4f46485b4d07967e7e9935bc3786aad50687c`, persist and validate its five files plus revision marker with the checkpoint, and override the processor to that local path — check: free bootstrap/validation/override tests pass; real download and episode remain blocked until the operator's Hugging Face account is granted PaliGemma access.
+  fix: Preflight a direct file download, pin tokenizer revision `35e4f46485b4d07967e7e9935bc3786aad50687c`, persist and validate its five files plus revision marker with the checkpoint, and override the processor to that local path — check: free bootstrap/validation/override tests pass, and after the operator accepted the PaliGemma terms the Doppler token downloaded all five exact-revision files successfully; real model load and episode remain gated.
   dead-ends: Treating checkpoint dry-run access as proof of all transitive model licensing; enabling general network access during production inference; relying on an unspecified Hub cache.
   anchors: lerobot#pre-06-checkpoints-unloadable, lerobot#no-cli-facts-from-memory
-  source: pinned processor JSON, Hugging Face model metadata, direct HTTP 403, and interactive RunPod failure during issue #69 on 2026-08-24.
+  source: pinned processor JSON, Hugging Face model metadata, initial direct HTTP 403, successful exact-revision `hf download` recheck, and interactive RunPod failure during issue #69 on 2026-08-24.
 
 - [lerobot] figured-out-from-scratch <!-- id: lrn-0824-19 -->
   symptom: Pinned LeRobot revision `8fff0fde7c79f23a93d845d1a50e985de01f8b8a` raised a strict state-dict error for missing `model.paligemma_with_expert.paligemma.model.language_model.embed_tokens.weight` even though the safetensors header contains the corresponding `paligemma.lm_head.weight` tensor.
@@ -195,3 +195,5 @@
 - environments — fired: yes; accurate: yes for immutable identity, one-Pod budget, durable-volume diagnostics, provider cleanup, and zero-Pod verification; complete: no, namespace-package precedence and network-volume mmap behavior required live discovery captured above; lean: yes.
 - lerobot — fired: yes; accurate: yes for exact revision, processor-file scrutiny, offline loading, and CUDA-only evaluation boundaries; complete: no, transitive gated tokenizer completeness and the pinned loader's tied-key defect required source/runtime discovery captured above; lean: yes.
 - testing — fired: yes; accurate: yes, each discovered defect became a free contract before implementation and no episode success was claimed without the real gate; complete: yes for the reached free gates; lean: yes.
+
+- huggingface — fired: yes; accurate: yes, it correctly treated authenticated file download rather than metadata visibility as the licensing proof; complete: yes for the free access recheck, while its upstream mechanics skill was unavailable in this session; lean: yes.
