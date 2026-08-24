@@ -75,3 +75,16 @@
   dead-ends: Assuming the resolved Python `cmake` wheel would be on PATH for an isolated transitive-package build; relying on Cloud Build's default log bucket, which the deployer can submit to but cannot read.
   anchors: environments#local-remote-parity-acceptance-test
   source: issue #69 Cloud Build `30944977-14e9-4dfe-875f-9ac4ab0875ca` and local Linux/amd64 BuildKit reproduction on 2026-08-23.
+
+- [environments] figured-out-from-scratch <!-- id: lrn-0823-14 -->
+  symptom: RunPod had funded A40/A6000 capacity and supports direct S3-compatible network-volume preload, but no datacenter simultaneously had stocked A40/A6000 capacity and the S3 volume API; the funded account also had only the general RunPod API key, not the separate S3 key pair.
+  root-cause: RunPod's GPU inventory and S3-compatible network-volume endpoint have independent datacenter matrices, and Pod-free volume access uses credentials created separately from `RUNPOD_API_KEY`.
+  fix: Before creating billed storage, intersect live per-datacenter GPU stock with the documented S3 datacenter list and verify `RUNPOD_S3_ACCESS_KEY` plus `RUNPOD_S3_SECRET_KEY`; fail closed if the intersection is empty — check: official `runpodctl gpu list` showed the stocked A40/A6000 locations outside the S3 list and `stockStatus: none` for those GPUs in S3-enabled candidate locations, so no volume or Pod was created.
+  dead-ends: Choosing `EU-SE-1` from GPU stock alone (no S3 endpoint); choosing `US-MO-1`, `EU-RO-1`, or `US-KS-2` from S3 support alone (allowed GPU stock `none`); preloading through a temporary Pod (violates issue #69's read-only preflight and exactly-one-feasibility-Pod sequence).
+  anchors: environments#runpod-verify-before-terminating
+  source: RunPod official S3 API datacenter table and authenticated `runpodctl gpu list` on 2026-08-23 during issue #69 Task 4.
+
+- environments — fired: yes; accurate: yes, it required provider-side balance, capacity, and lifecycle verification before allocation; complete: no, the live intersection between S3-enabled volume locations and GPU stock plus the separate S3 credential requirement needed fresh research captured above; lean: yes.
+- integration — fired: yes; accurate: yes, immutable image and private-registry boundaries stayed explicit; complete: yes for the resumed image/preflight block; lean: yes.
+- lerobot — fired: yes; accurate: yes, the exact checkpoint and processor snapshot remained pinned and offline-loadable by design; complete: yes for the resumed preflight; lean: yes.
+- testing — fired: yes; accurate: yes, it kept the paid gate fail-closed on independently verified prerequisites; complete: yes for the resumed preflight; lean: yes.
