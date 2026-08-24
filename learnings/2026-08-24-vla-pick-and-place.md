@@ -69,3 +69,48 @@
 - environments — fired: yes; accurate: yes, it enforced exact-stock, funding, locality, immutable-image, lifetime, deletion, and zero-Pod checks; complete: no, numeric-user and provider-secret-output hazards required live discovery captured above; lean: yes.
 - lerobot — fired: yes; accurate: yes, it preserved the exact checkpoint revision, processor set, offline-load requirement, and batch-one workload; complete: yes for the work reached before CUDA; lean: yes.
 - testing — fired: yes; accurate: yes, it required a reproducible red check and full free regression after the runtime-user fix; complete: yes; lean: yes.
+
+- [environments] figured-out-from-scratch <!-- id: lrn-0824-07 -->
+  symptom: RunPod's authenticated GPU inventory and datacenter output identified `NVIDIA RTX PRO 4500 Blackwell Server Edition`, while the current REST Pod-create OpenAPI enum exposed only `NVIDIA RTX PRO 4500 Blackwell`; direct REST submissions returned HTTP 400 and no Pod ID.
+  root-cause: RunPod's inventory ID and Pod-create schema use different aliases for the same RTX PRO 4500 Server Edition hardware.
+  fix: Confirm zero Pods after each rejected request and use the current official `runpodctl pod create`, which maps the inventory ID into the provider's accepted request — check: the CLI created one Pod whose allocated device reported `NVIDIA RTX PRO 4500 Blackwell Server Edition`; no fallback GPU or duplicate running Pod existed.
+  dead-ends: Sending the inventory ID directly through REST; substituting the shorter OpenAPI enum directly without provider-side alias handling.
+  anchors: environments#runpod-verify-before-terminating
+  source: RunPod v2.8.0 CLI inventory/create, current REST OpenAPI, HTTP 400 responses, and successful Pod `bzu8hoikhpaxzz` during issue #69 on 2026-08-24.
+
+- [environments] figured-out-from-scratch <!-- id: lrn-0824-08 -->
+  symptom: For the entire bounded attempt, RunPod's Pod surfaces reported `runtime: null`, uptime zero, no public IP, and no port mapping, yet the attached volume showed a successful CUDA preflight, a complete 7,473,096,344-byte model, and the exact revision marker written after hash validation.
+  root-cause: RunPod control-plane runtime/readiness fields can lag or disagree with actual container execution and durable network-volume side effects.
+  fix: Treat control-plane status as one signal, and independently poll expected durable evidence markers or application health before classifying a Pod as pre-runtime — check: S3 timestamps proved model write at `16:18:00Z`, revision marker at `16:18:32Z`, and CUDA evidence rewritten at `16:33:21Z` while the API still reported no runtime.
+  dead-ends: Inferring that the image was still pulling solely from `runtime: null`; waiting only for port mapping before checking durable evidence.
+  anchors: environments#runpod-verify-before-terminating, environments#local-remote-parity-acceptance-test
+  source: RunPod REST/CLI safe-field responses and authenticated network-volume S3 objects from Pod `bzu8hoikhpaxzz` during issue #69 on 2026-08-24.
+
+- [environments] figured-out-from-scratch <!-- id: lrn-0824-09 -->
+  symptom: The documented v2 Pod-log endpoint returned HTTP 403 to the same account credential that could create, inspect, bill, and delete the Pod, leaving the post-bootstrap restart cause unavailable.
+  root-cause: Pod-log authorization is not guaranteed by general Pod API authorization for this account/path, despite the provider source guidance describing the same key.
+  fix: Make persisted phase/error markers part of the application evidence contract and verify log access during preflight; fail the diagnosis as unknown when neither provider logs nor an application error marker exists — check: CUDA and checkpoint phase markers survived, but no measured episode/error marker existed, so OOM versus application/library failure was not claimed.
+  dead-ends: Assuming control-plane access implies v2 log access; classifying the restart as OOM from absence of `feasibility.json`.
+  anchors: environments#runpod-verify-before-terminating
+  source: authenticated HTTP 403 from `v2-rest.runpod.io/v2/pods/bzu8hoikhpaxzz/logs` and persisted S3 evidence during issue #69 on 2026-08-24.
+
+- [lerobot] verified <!-- id: lrn-0824-10 -->
+  symptom: Blackwell/CUDA and exact Pi0.5 checkpoint bootstrap needed real paid verification before model inference could be claimed.
+  fix: Run compatibility before download and persist exact device/runtime/tensor evidence, then write the checkpoint revision only after required files, byte size, and SHA-256 pass — check: RTX PRO 4500 SE reported driver `580.178.04`, PyTorch `2.10.0+cu128`, CUDA `12.8`, compute capability `12.0`, `sm_120`, tensor result `6.0`; the 7,473,096,344-byte model and exact revision marker persisted. The measured model episode remains unverified.
+  dead-ends: Applying the first container's pre-CUDA UID failure to GPU compatibility; claiming end-to-end model success from checkpoint bootstrap alone.
+  anchors: lerobot#gpu-mps-cpu-training-speed
+  source: persisted CUDA/checkpoint objects from RunPod Pod `bzu8hoikhpaxzz` during issue #69 on 2026-08-24.
+
+- [environments] user-correction <!-- id: lrn-0824-11 -->
+  symptom: The agent made Hub-token rotation a prerequisite after a diagnostic exposed an injected environment value; the operator explicitly said to continue without rotation for this bounded attempt.
+  root-cause: The security recommendation was valid, but it was elevated into a mandatory infrastructure blocker beyond the operator's accepted risk decision.
+  fix: Record the accepted exception, avoid printing full secret-bearing Pod objects, keep credentials in process memory, and continue only the already bounded feasibility scope — check: subsequent diagnostics emitted safe-field allowlists, transient secret/capability files were not used, and production remained disabled.
+  dead-ends: Repeating token rotation as a hard blocker after the operator explicitly accepted the risk; weakening unrelated lifetime, funding, or production gates.
+  anchors: environments#runpod-verify-before-terminating
+  source: operator correction and the corrected RunPod retry workflow during issue #69 on 2026-08-24.
+
+- brainstorming — fired: yes; accurate: yes, it kept each startup correction inside the approved single-Pod design and preserved production disablement; complete: yes; lean: yes.
+- architect — fired: yes; accurate: yes, the living brief now reflects compatibility-first bootstrap and same-Pod measured-to-gateway sequencing; complete: yes; lean: yes.
+- environments — fired: yes; accurate: yes for immutable image, funding, volume locality, exact inventory, lifetime, and deletion gates; complete: no, provider alias drift, misleading runtime fields, and log authorization required live discovery captured above; lean: yes.
+- lerobot — fired: yes; accurate: yes for exact revision, token-free offline child, and CUDA-only load boundary; complete: no, the post-bootstrap model-load failure remains undiagnosed without logs; lean: yes.
+- testing — fired: yes; accurate: yes, startup ordering and same-Pod transition were developed red-green and the full 20-test/fake-smoke suite passed; complete: yes for free gates; lean: yes.
