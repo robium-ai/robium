@@ -197,3 +197,11 @@
 - testing — fired: yes; accurate: yes, each discovered defect became a free contract before implementation and no episode success was claimed without the real gate; complete: yes for the reached free gates; lean: yes.
 
 - huggingface — fired: yes; accurate: yes, it correctly treated authenticated file download rather than metadata visibility as the licensing proof; complete: yes for the free access recheck, while its upstream mechanics skill was unavailable in this session; lean: yes.
+
+- [lerobot] figured-out-from-scratch <!-- id: lrn-0824-20 -->
+  symptom: The tokenizer-enabled immutable image passed CUDA, bootstrap, local checkpoint staging, and real model loading, then the first measured rollout failed with `ValueError: _quat2axisangle expected shape (B, 4), got (4,)`.
+  root-cause: The application owns one direct, non-vectorized pinned `LiberoEnv`, whose nested robot-state arrays are unbatched; LeRobot's pinned `preprocess_observation` adds a batch dimension to images but not nested `robot_state`, while `LiberoProcessorStep` requires batched quaternions.
+  fix: Batch a copied nested LIBERO robot-state mapping at the application adapter boundary before invoking the pinned LeRobot preprocessors, leaving image batching and the immutable dependency untouched — check: implementation and free regression remain pending the required bounded-design approval; real revalidation requires a separately approved paid gate.
+  dead-ends: Treating this as a model-load, CUDA, tokenizer, or simulator-reset failure; changing the pinned LeRobot dependency; switching the whole application to a vector environment for a batch-size-one benchmark.
+  anchors: lerobot#no-cli-facts-from-memory, testing#test-at-right-layer-not-everything-in-sim, testing#gate-paid-remote-run-behind-free-dry-run
+  source: Pod `17h7vt1fjf9fzr` durable phase/failure/CUDA evidence and pinned LeRobot sources at `8fff0fde7c79f23a93d845d1a50e985de01f8b8a` on 2026-08-24.
