@@ -248,3 +248,37 @@
 - environments — fired: yes; accurate: yes for immutable identity, exact GPU, funding, bounded lifetime, durable evidence, deletion, and disabled deployment; complete: no, the CLI's silently omitted network volume and REST/GraphQL schema mismatch required live discovery captured above; lean: yes.
 - lerobot — fired: yes; accurate: yes, the final exact checkpoint and default compile path completed a real simulator episode without changing the pinned dependency; complete: yes for the one-episode feasibility gate; lean: yes.
 - testing — fired: yes; accurate: yes, checksum, proxy isolation, cancellation, cleanup, and the full free suite independently guarded the real-model claim; complete: yes for final immutable-image validation; lean: yes.
+
+- [none] no-skill-fired (seen 4x) <!-- id: lrn-0824-25 -->
+  symptom: Requests including “check alternative resources in RunPod,” “try A100,” “try H100,” “maybe 4090,” and “check US regions” required a provider-specific capacity and locality workflow, but no dedicated RunPod skill fired.
+  root-cause: The catalog's `environments` skill owns general remote-GPU reproducibility but does not expose a RunPod-specific decision path for live inventory, exact provider GPU IDs, Secure versus Community Cloud, network-volume locality, price, VRAM, and fallback ordering.
+  fix: A future RunPod skill should perform read-only balance, spend, Pod, volume, datacenter, and GPU-stock inventory first; filter candidates by model VRAM/architecture and volume locality; present exact IDs, regions, prices, and tradeoffs; and allocate only after the paid-compute gate — check: this process ruled out unavailable A40/A100/H100 options and selected the colocated 32 GB RTX PRO 4500 Blackwell Server Edition in `US-KS-2`, which passed the real workload.
+  dead-ends: Repeatedly trying headline GPU families without checking exact regional stock; treating nominal GPU availability as usable when the persistent volume is in another datacenter; assuming the REST GPU enum is the live inventory vocabulary.
+  source: operator phrasing, authenticated RunPod inventory, and issue #69 allocation history on 2026-08-24.
+
+- [none] no-skill-fired <!-- id: lrn-0824-26 -->
+  symptom: The operator asked to “interactively connect to that RunPod” and make bug-fix iteration faster, but no RunPod-specific skill described a safe single-Pod development loop.
+  root-cause: Rebuilding an immutable multi-gigabyte CUDA image after every application-layer discovery adds paid time and long pull latency; provider SSH can also be unreliable, while the attached network volume remains available as a durable control/evidence channel.
+  fix: After explicit approval, create one time-bounded Pod from the closest immutable image, verify exact GPU/image/volume identity, overlay only reviewed local source changes, run focused diagnostics and real gates in place, persist sanitized commands/results on the private volume when SSH is unreliable, then rebuild the immutable image once and revalidate that exact digest — check: Pod `ania2yd8fdkasy` diagnosed the LIBERO batch seam, missing compiler, and Pillow/ImageIO boundary in one allocation; the resulting immutable digest later passed without overlays.
+  dead-ends: One Cloud Build and Pod allocation per application exception; treating a source overlay as deployable evidence; leaving the interactive Pod alive after the diagnostic block.
+  source: operator correction and interactive issue #69 workflow on 2026-08-24.
+
+- [none] better-method (seen 2x) <!-- id: lrn-0824-27 -->
+  symptom: RunPod CLI/template creation accepted network-volume flags yet returned `networkVolume: null`; the container then failed at `/models`, while direct REST could not accept the exact Server Edition GPU inventory ID.
+  root-cause: RunPod's CLI/template, REST schema, GraphQL schema, and live inventory were not behaviorally equivalent for this Pod shape. A default Pod volume also needed to be disabled when the network volume owned `/models`.
+  fix: For this contract, use official GraphQL `podFindAndDeployOnDemand` with the exact live inventory GPU ID, `networkVolumeId`, `volumeInGb: 0`, and `volumeMountPath`; immediately re-read safe fields and refuse startup monitoring unless GPU, image, datacenter, and network-volume identity all match — check: Pod `aujvvs0earwm5l` reported volume `68s0bxbv7p` and completed CUDA, exact-model episode, proxy, and cancellation gates.
+  dead-ends: Retrying `runpodctl` with more explicit volume flags; waiting through a restart loop without verifying `networkVolume`; using the stale REST enum for the exact Server Edition GPU.
+  source: [RunPod Pod create REST API](https://docs.runpod.io/api-reference/pods/POST/pods), [GraphQL Pod management](https://docs.runpod.io/sdks/graphql/manage-pods), [RunPod GraphQL schema](https://graphql-spec.dev.runpod.io/), and Pods `0qnawrzk6nzb63`, `q52n2195u9a1ed`, and `aujvvs0earwm5l` on 2026-08-24.
+
+- [none] better-method <!-- id: lrn-0824-28 -->
+  symptom: Repeated `start container ...: begin`, `runtime: null`, absent ports, and a long private-image cold pull made it unclear whether a paid Pod lacked GPU capacity, was still pulling, or was crash-looping.
+  root-cause: RunPod control-plane readiness fields and image-start events are insufficient to classify application startup; the first failing final-image Pod took roughly 31 minutes to expose its actual `/models` permission loop.
+  fix: Set a provider termination timestamp and local orchestration deadline, but before manual termination check safe Pod fields, system/application logs, attached-volume identity, durable phase/failure markers, and object timestamps; distinguish pull latency from restart behavior and preserve exact errors — check: the operator-supplied logs exposed `PermissionError: [Errno 13] Permission denied: '/models'`, which led directly to the corrected allocation rather than another GPU change.
+  dead-ends: Declaring the GPU unavailable from `runtime: null`; waiting longer without checking logs or storage; terminating at the first deadline without capturing the provider's most recent evidence.
+  source: operator correction, `/Users/mdemirst/Desktop/logs.txt`, safe-field Pod reads, and durable evidence from issue #69 on 2026-08-24.
+
+- [none] verified <!-- id: lrn-0824-29 -->
+  symptom: A final RunPod deployment claim needed proof that the immutable image—not an interactive source overlay or eager-mode diagnostic—worked with the real checkpoint and provider proxy.
+  fix: Pin the private template to the Artifact Registry digest with `VLA_LIVE_ENABLED=false`, allocate the exact digest/GPU/volume, run CUDA preflight and one canonical real episode with default compilation, independently hash the video, switch the same Pod to gateway mode, test root/foreign-capability isolation and cooperative cancellation, then delete the Pod and temporary S3 prefixes — check: digest `sha256:0bc3bae587da9c175f8bce667009bfb3103251e75b11898ae8666c58ec61f083` succeeded in 75 steps with 76 frames and 7,691,964,928 peak VRAM bytes; proxy and cancellation passed; authoritative Pod count returned zero; production remained disabled.
+  dead-ends: Promoting the overlay result as immutable-image proof; using `TORCHDYNAMO_DISABLE=1` in the final validation; enabling live sessions as a side effect of a passing feasibility gate.
+  source: Cloud Build `3829dc62-c144-4956-a8a0-0d2eb14c02c3`, Pod `aujvvs0earwm5l`, downloaded feasibility JSON/video checksum, proxy/cancellation responses, and cleanup checks on 2026-08-24.
