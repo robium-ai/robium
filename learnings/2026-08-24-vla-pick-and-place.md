@@ -282,3 +282,33 @@
   fix: Pin the private template to the Artifact Registry digest with `VLA_LIVE_ENABLED=false`, allocate the exact digest/GPU/volume, run CUDA preflight and one canonical real episode with default compilation, independently hash the video, switch the same Pod to gateway mode, test root/foreign-capability isolation and cooperative cancellation, then delete the Pod and temporary S3 prefixes — check: digest `sha256:0bc3bae587da9c175f8bce667009bfb3103251e75b11898ae8666c58ec61f083` succeeded in 75 steps with 76 frames and 7,691,964,928 peak VRAM bytes; proxy and cancellation passed; authoritative Pod count returned zero; production remained disabled.
   dead-ends: Promoting the overlay result as immutable-image proof; using `TORCHDYNAMO_DISABLE=1` in the final validation; enabling live sessions as a side effect of a passing feasibility gate.
   source: Cloud Build `3829dc62-c144-4956-a8a0-0d2eb14c02c3`, Pod `aujvvs0earwm5l`, downloaded feasibility JSON/video checksum, proxy/cancellation responses, and cleanup checks on 2026-08-24.
+
+- [runpod] user-correction <!-- id: lrn-0824-32 -->
+  symptom: The operator opened the supplied private RunPod UI URL and received `{"detail":"Not Found"}`; container access logs showed that URL used capability `bfab…`, while the gateway was mounted under the different capability generated for the live Pod.
+  root-cause: The final handoff URL was manually transcribed instead of being rendered mechanically from the same stored Pod ID and capability value used in the create request.
+  fix: Build the handoff URL only from stored session state, probe that exact `/c/<capability>/ui/` URL, and compare its route with the live gateway mount before sending it — check: the stored-capability status and UI routes returned HTTP 200 while the originally supplied capability returned HTTP 404.
+  dead-ends: Treating the screenshot as a Gradio mount failure; debugging trailing-slash redirects against a different capability token.
+  anchors: runpod#verify-created-pod-contract
+  source: operator screenshot plus secret-redacted RunPod container access logs and exact-route probes on 2026-08-24.
+
+- [live-demo] user-correction <!-- id: lrn-0824-33 -->
+  symptom: After clicking `Run one rollout`, the real RunPod UI appeared unresponsive for several minutes; the operator clicked again and the second request surfaced `RolloutBusyError: one rollout is already running` while the first request was still healthy.
+  root-cause: The first policy action performs multi-minute `torch.compile`/Triton autotuning before the rollout generator yields its first visible frame or status update, and the Gradio button remains available without an explicit compiling/busy phase.
+  fix: Use eager policy execution for interactive gateway sessions while preserving compiled feasibility/evaluation, show an immediate starting message, disable Run while the lock is held, and surface busy as a friendly status instead of a traceback — check: protected status stayed `running` while continuous autotune logs advanced, then returned `ready` about 3 minutes 13 seconds after the first click with no first-run exception; the correction is covered by execution-profile and UI busy-state regressions, all 41 free tests pass, and the rebuilt Linux/amd64 fake container passed capability, rollout, shutdown, and process-exit checks.
+  dead-ends: Treating the silent interval as a crashed Pod; restarting or cancelling during active compiler progress; accepting a raw busy traceback as adequate visitor feedback.
+  anchors: live-demo#honest-cold-boot-copy-on-page
+  source: operator correction plus protected status polling and secret-redacted RunPod container logs from Pod `rw23jisldqt4mx` on 2026-08-24.
+
+- [none] figured-out-from-scratch <!-- id: lrn-0824-34 -->
+  symptom: The paid evaluation CLI required the final immutable Hugging Face dataset revision before it could create the manifest, but that revision does not exist until after the manifest and evidence are committed to the dataset.
+  root-cause: A content-addressed Git commit cannot contain its own hash; embedding the final dataset revision in the manifest that determines that revision creates an impossible self-reference.
+  fix: Keep the validated manifest free of its own dataset revision, upload the complete evidence bundle, resolve the resulting immutable revision, then commit a separate `publication.json` pointer containing repository ID, revision, and manifest SHA-256 — check: regressions reject mutable revisions and changed manifests, exercise the evaluate/finalize/record command split, and all 41 free tests pass.
+  dead-ends: Supplying `main`; guessing a future commit; rewriting and uploading the manifest repeatedly; claiming the artifact commit while silently publishing a different manifest commit.
+  source: issue #69 publication contract, Git content-addressing semantics, and the app's corrected publication-schema tests on 2026-08-24.
+
+- brainstorming — fired: yes; accurate: yes, it classified the cross-repository provider/UI work as architectural and kept the newly discovered publication/runtime decisions in the approved design before code; complete: yes; lean: yes.
+- live-demo — fired: yes; accurate: yes, honest startup feedback, direct capability handoff, readable busy state, and recorded-evidence fallback all matched the observed visitor failure mode; complete: yes for the free gateway correction, with website lifecycle work still gated after publication; lean: yes.
+- integration — fired: yes; accurate: yes, it preserved the existing gateway/orchestrator boundary and immutable container contract; complete: yes for app packaging, while the provider implementation has not started because Task 6 remains gated; lean: yes.
+- lerobot — fired: yes; accurate: yes, it kept the benchmark on the pinned compiled path and isolated eager execution to the interactive adapter boundary; complete: no, the first-action compile UX cost was learned only from the real Pod and is captured above; lean: yes.
+- runpod — fired: yes; accurate: yes, it enforced zero-Pod cleanup and prevented the free remediation from silently crossing another paid allocation gate; complete: yes for this block; lean: yes.
+- testing — fired: yes; accurate: yes, publication ordering, immutable pointers, runtime profiles, immediate feedback, busy handling, both container targets, and the protected fake lifecycle were checked at their owning layers; complete: yes for the free gate; lean: yes.
