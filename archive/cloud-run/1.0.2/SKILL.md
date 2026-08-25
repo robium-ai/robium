@@ -1,6 +1,6 @@
 ---
 name: cloud-run
-version: 1.0.3
+version: 1.0.2
 description: >
   Deploy headless robotics / sim / demo containers to Google Cloud Run: the
   build → Artifact Registry → Cloud Run path plus the gotchas that bite sim
@@ -12,9 +12,9 @@ description: >
   affinity', '--no-cpu-throttling', 'GZ_RELAY / GZ_IP on Cloud Run', deploy auth
   from CI with a GCP service-account key. Owns the Cloud Run deploy mechanics
   that live-demo and environments point at. Not for: the demo orchestrator,
-  session gateway, or mission-control page (live-demo); RunPod operations
-  (runpod); uv-vs-Docker choice (environments); general non-robotics gcloud/GCP
-  basics (upstream Google docs).
+  session gateway, or mission-control page (live-demo); GPU-cloud/RunPod or
+  uv-vs-Docker choice (environments); general non-robotics gcloud/GCP basics
+  (upstream Google docs).
 ---
 
 # cloud-run
@@ -45,10 +45,9 @@ web service never does.
   - The demo orchestrator, session gateway (claim/status/shutdown + ws tunnel),
     mission-control page, or viewer handoff → `live-demo` (it *uses* this skill's
     deploy mechanics but owns everything demo-shaped above the container).
-  - Whether to use uv vs Docker, local↔remote reproducibility, or GPU
-    passthrough → `environments`.
-  - RunPod GPU inventory, provisioning, storage, proxy, diagnostics, billing,
-    or cleanup → `runpod`.
+  - Whether to use uv vs Docker, local↔remote reproducibility, GPU passthrough,
+    or GPU-cloud/RunPod provisioning → `environments` (Cloud Run is CPU-only and
+    is one deploy target it points at; RunPod is the GPU one).
   - `foxglove_bridge` mechanics, the `foxglove.sdk.v1` subprotocol, MCAP → the
     `foxglove` skill (this skill only covers reaching the bridge through Cloud
     Run's proxy).
@@ -247,8 +246,7 @@ unless dated otherwise. Sources: robium's cloud-run-tuning notes / nav-trial.
   egress (for egress control or reaching private resources). A plain public demo
   needs none of it.
 - **GPU workloads:** Cloud Run is CPU-only for robium's purposes; a policy that
-  needs a GPU goes to a GPU host; use `runpod` when RunPod is the selected
-  provider, not this skill.
+  needs a GPU goes to a GPU host (RunPod, per the environments skill), not here.
 
 ## References
 
@@ -269,17 +267,15 @@ unless dated otherwise. Sources: robium's cloud-run-tuning notes / nav-trial.
 - Sibling skills: `live-demo` (the demo orchestrator, session gateway,
   mission-control page, and viewer handoff that consume this deploy target;
   its cloud-run-tuning notes are the origin of the facts here), `environments`
-  (uv-vs-Docker and local↔remote parity), `runpod` (the RunPod compute target),
-  `foxglove` (bridge/subprotocol mechanics for the ws this skill routes through
-  Cloud Run), `architect` (routes here for the deploy phase). robium's secrets
-  doc (docs/secrets.md) has the `GCP_SA_KEY` Doppler wiring.
+  (uv-vs-Docker, local↔remote parity, and GPU-cloud/RunPod, the GPU deploy
+  target alongside this CPU one), `foxglove` (bridge/subprotocol mechanics for
+  the ws this skill routes through Cloud Run), `architect` (routes here for the
+  deploy phase). robium's secrets doc (docs/secrets.md) has the `GCP_SA_KEY`
+  Doppler wiring.
 
 ## Changelog
 
 <!-- One dated line per battle-tested change, added by skill-author hardening sessions. -->
-
-- 1.0.3 (2026-08-24): route RunPod provider operations to the new `runpod`
-  skill while retaining environment strategy in `environments`.
 
 - 1.0.2 (2026-08-03): style pass; removed em dashes throughout (no content changes).
 

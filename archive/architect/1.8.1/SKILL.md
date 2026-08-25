@@ -1,6 +1,6 @@
 ---
 name: architect
-version: 1.9.0
+version: 1.8.1
 description: >
   Entry-point skill for designing robotics applications with AI agents. Turns requirements (robot type, task, hardware, sim-vs-real, GPU/budget) into a full stack decision (middleware, simulation, data, visualization, training frameworks) plus a scaffold plan and a written architecture brief. Use when: starting any new robotics app; 'build a robot app', 'which robotics stack', 'scaffold a robotics project', 'mobile robot', 'robot arm', 'manipulation policy', 'navigation stack', backlog-driven kickoffs like 'let's do demo 1', 'do demo N', 'build the next demo'; or when requirements exist but the stack is unchosen. This is the entry-point skill of the robium plugin: load it first; it routes to every other robium skill per build phase. Not for: debugging an existing stack (use the matching tool skill) or authoring robium skills (skill-author).
 ---
@@ -165,7 +165,6 @@ hands each build phase to the skill below. Grouped by phase.
 | `test-assets` | Sourcing the data tests run against: canonical worlds/models/datasets, fixture layout, goldens. Load with `testing` when planning the test setup. |
 | `live-demo` | Publishing a finished app as a public interactive web demo: mission-control demo page, per-visitor Cloud Run sim instances, viewer handoff. Entry bar: the app's smoke test is green. |
 | `cloud-run` | Deploying a headless robotics/sim/demo container to Google Cloud Run: build → Artifact Registry → `gcloud run deploy`, and the sim-on-Cloud-Run gotchas (no multicast, CPU-on-request, session affinity, ws timeout). The CPU deploy target live-demo builds on. |
-| `runpod` | Operating generic RunPod compute after the workload/image contract is chosen: live GPU/region/volume selection, immutable Pod provisioning, diagnostics, paid gates, proxy validation, cost, and cleanup. |
 | `mining` | Learning from external example repos: registry-driven survey/deep/comparative runs over learnings/SOURCES.md, distilling evidence-cited observations. Not an app-building skill. |
 | `skill-author` | Authoring new robium skills and enforcing the catalog quality bar; absorption/refining lives in `learning-loop`, external-repo mining in `mining`. Not an app-building skill. |
 | `learning-loop` | Consolidating captured learnings into observations and absorbing them into skill-edit PRs; the engine's session-side pipeline. Not an app-building skill. |
@@ -238,9 +237,6 @@ hand-offs (middleware yes/no, simulator gazebo-vs-isaac, training framework).
 ## Changelog
 
 <!-- One dated line per battle-tested change, added by skill-author hardening sessions. -->
-
-- 1.9.0 (2026-08-24): route RunPod inventory, provisioning, diagnostics,
-  validation, billing, and cleanup to the new generic `runpod` skill.
 
 - 1.8.1 (2026-08-03): style pass; removed em dashes throughout (no content changes).
 - 1.8.0 (2026-08-02): routing: learning-loop added; skill-updater row

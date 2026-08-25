@@ -1,6 +1,6 @@
 ---
 name: isaac-lab
-version: 1.1.3
+version: 1.1.2
 description: >
   NVIDIA Isaac Lab: reinforcement-learning and imitation-learning workflows on
   top of Isaac Sim: prebuilt environments and tasks, training runs, and
@@ -75,8 +75,8 @@ installing rather than assuming the two always track together.
   route in Quick start remains valid for a workstation you own. See
   `references/prebuilt-image-runpod.md` for the provisioning specifics
   (NGC auth, EULA env vars, the `/workspace` volume-shadow gotcha, and the
-  entrypoint override), and the `runpod` skill for the general Pod inventory,
-  networking, diagnostics, and lifecycle mechanics this builds on.
+  entrypoint override), and the `environments` skill's GPU-and-remote
+  reference for the general pod networking/SSH mechanics this builds on.
 - **The GPU/driver floor is `isaac-sim`'s, not restated here.** <!-- id: gpu-floor-inherited-from-isaac-sim --> Isaac Lab
   runs inside Isaac Sim, so it inherits that skill's GPU requirement
   verbatim; check the exact minimum/recommended GPU and VRAM numbers there,
@@ -249,8 +249,7 @@ eval-and-sim reference for that specific invocation.
   isaac-lab` image (observed tag 3.0.0-beta2-post1) and its RunPod
   provisioning specifics: NGC auth, EULA env vars, the `/workspace`
   volume-shadow gotcha, and the entrypoint override + stop→start. Points to
-  the `runpod` skill for general Pod inventory, networking, diagnostics, and
-  lifecycle mechanics.
+  the `environments` skill for the general pod networking/SSH mechanics.
 - `references/go2-rl-workflow.md`: the verified Unitree Go2 RSL-RL run:
   task IDs, smoke and full-training profile, the experiment-name log-path
   trap, reward/cost-in-config layout and 3-layer override chain, the
@@ -275,9 +274,6 @@ eval-and-sim reference for that specific invocation.
 ## Changelog
 
 <!-- One dated line per battle-tested change, added by skill-author hardening sessions. -->
-
-- 1.1.3 (2026-08-24): route general RunPod mechanics from the
-  workload-specific prebuilt-image reference to the new `runpod` skill.
 
 - 1.1.2 (2026-08-03): style pass; removed em dashes throughout (no content changes).
 - 1.1.1 (2026-08-01): anchor IDs added to claim-bearing items (learning-engine Phase 1); no content changes.

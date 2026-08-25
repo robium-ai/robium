@@ -1,0 +1,11 @@
+triggers:
+  positive:
+    - phrase: should this Python robotics project use uv or Docker
+    - phrase: this works locally but not on the remote GPU server
+    - phrase: make the local and remote CUDA environments reproducible
+  negative:
+    - phrase: find an available RunPod GPU in the same region as my volume
+      expect: runpod
+    - phrase: runpodctl created my Pod without the network volume
+      expect: runpod
+tasks: []

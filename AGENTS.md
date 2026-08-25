@@ -26,7 +26,7 @@ The sibling repos are `robium-ai/robium-apps` (canonical applications + REGISTRY
 ## Repo layout
 
 ```
-skills/            24 robium skills (the plugin's core deliverable)
+skills/            25 robium skills (the plugin's core deliverable)
 agents/            robium-architect subagent
 archive/           frozen snapshots of prior skill versions
 .claude-plugin/    plugin.json + marketplace.json
@@ -49,7 +49,7 @@ notes/             working notes
 ./scripts/bootstrap.sh --secrets      # or: DOPPLER_TOKEN=… ./scripts/bootstrap.sh (server)
 doppler run -- <command>
 
-# The skill test suite. Run after ANY change under skills/. Must print "Checked 24 skills: PASS", exit 0.
+# The skill test suite. Run after ANY change under skills/. Must print "Checked 25 skills: PASS", exit 0.
 uv run skills/skill-author/scripts/validate_skills.py
 
 # Manifest sanity checks
@@ -63,7 +63,7 @@ codex plugin add robium@robium
 
 ## Plugin architecture
 
-- `skills/<name>/SKILL.md` — 24 skills. Two axes: **umbrellas** (selection + cross-cutting practice: architect, integration, environments, skill-author, learning-loop, mining, data, visualization, simulation, testing, test-assets, live-demo) vs **tool skills** (mechanics of one library: ros2, nav2, gazebo, mujoco, lerobot, isaac-sim, rviz2, foxglove, rerun, isaac-lab, huggingface, cloud-run); and **deep** (has `references/` and `examples/`) vs **thin** (SKILL.md only, deepened later via the learnings loop).
+- `skills/<name>/SKILL.md` — 25 skills. Two axes: **umbrellas** (selection + cross-cutting practice: architect, integration, environments, skill-author, learning-loop, mining, data, visualization, simulation, testing, test-assets, live-demo) vs **tool skills** (mechanics of one library: ros2, nav2, gazebo, mujoco, lerobot, isaac-sim, rviz2, foxglove, rerun, isaac-lab, huggingface, cloud-run, runpod); and **deep** (has `references/` and `examples/`) vs **thin** (SKILL.md only, deepened later via the learnings loop).
 - Routing: only `architect` knows the whole catalog (its body has the routing table); every other skill cross-references just its direct collaborators. Cross-references must stay **bidirectional and consistent** — if you change what a skill owns, check both sides.
 - `templates/skill/SKILL.template.md` — the authoring skeleton. It lives outside `skills/` so native plugin validators see only installable skills. Copy it into `skills/<name>/` and rename it to `SKILL.md` when authoring.
 - `skills/skill-author/` — the meta-skill: authoring workflow, quality bar (`references/quality-bar.md`), and the validator script. The validator, template skeleton, and quality-bar doc must never drift apart — update all three together.

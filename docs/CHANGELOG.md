@@ -7,6 +7,17 @@ Forward-looking work is tracked in **GitHub Issues**, not here — see
 This file is the history the old `docs/BACKLOG.md` "Done" section held, migrated
 verbatim on 2026-07-22.
 
+## 2026-08-24: Generic RunPod operations skill
+
+Added `runpod` as the provider-specific owner for safe inventory, GPU/region
+and network-volume selection, immutable Pod provisioning, multi-signal startup
+diagnostics, bounded interactive iteration, proxy/cancellation validation,
+billing, and cleanup. The skill embeds the battle-tested evidence from issue
+#69 while treating current RunPod CLI, REST, and GraphQL shapes as upstream
+facts to re-verify. `environments` now owns only environment/image parity and
+routes provider operations to `runpod`; architect, cloud-run, and Isaac Lab
+cross-references were updated with archived prior versions.
+
 ## 2026-08-16: Standard application lifecycle CLI
 
 Published `robium-ai` CLI 0.6.0 with standard `app help`, `doctor`, `build`,

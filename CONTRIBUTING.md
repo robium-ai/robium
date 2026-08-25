@@ -104,7 +104,7 @@ uv run skills/skill-author/scripts/validate_skills.py
 Expected output:
 
 ```
-Checked 24 skills: PASS
+Checked 25 skills: PASS
 ```
 
 (The count goes up by one when you add a skill.) The validator enforces the

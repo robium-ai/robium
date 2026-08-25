@@ -1,0 +1,26 @@
+triggers:
+  positive:
+    - phrase: can you check alternative resources in runpod that we can utilize, we do not need to use A40
+      source: learnings/2026-08-24-vla-pick-and-place.md#lrn-0824-25
+    - phrase: can you check US regions for an available GPU near my RunPod network volume
+      source: learnings/2026-08-24-vla-pick-and-place.md#lrn-0824-25
+    - phrase: find an available RunPod GPU in the same region as my volume
+      source: learnings/2026-08-24-vla-pick-and-place.md#lrn-0824-25
+    - phrase: runpodctl accepted my network volume flags but the Pod says networkVolume is null
+      source: learnings/2026-08-24-vla-pick-and-place.md#lrn-0824-27
+    - phrase: interactively connect to that RunPod and make the bug-fixing iteration faster
+      source: learnings/2026-08-24-vla-pick-and-place.md#lrn-0824-26
+    - phrase: the RunPod keeps saying start container begin, check the logs before terminating it
+      source: learnings/2026-08-24-vla-pick-and-place.md#lrn-0824-28
+    - phrase: validate the immutable image through the RunPod proxy and then clean up every Pod
+      source: learnings/2026-08-24-vla-pick-and-place.md#lrn-0824-29
+  negative:
+    - phrase: should this Python robotics project use uv or Docker
+      expect: environments
+    - phrase: deploy this CPU simulator container to Google Cloud Run
+      expect: cloud-run
+    - phrase: write a Docker Compose file for these three robotics services
+      expect: integration
+    - phrase: train an ACT policy using LeRobot
+      expect: lerobot
+tasks: []

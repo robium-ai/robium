@@ -1,7 +1,7 @@
 # Generic RunPod skill design
 
 **Date:** 2026-08-24  
-**Status:** Approved in conversation; implementation pending written-spec review
+**Status:** Approved and implemented
 
 ## Goal
 

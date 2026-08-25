@@ -1,11 +1,11 @@
-# GPU-cloud environments (RunPod first, hyperscalers behind a quota gate)
+# Cloud-GPU environment boundary and hyperscaler quota gates
 
 When a project needs a real NVIDIA GPU that the dev machine doesn't have
 (Isaac Sim / Isaac Lab, GR00T, heavy CUDA training), the environment is a
-cloud GPU that you drive as a thin client. This reference owns the
-cross-cutting GPU-cloud / RunPod networking facts for robium; other skills
-cite environments for them. Battle-tested on go2-locomotion (Isaac Lab,
-2026-07-26..28).
+cloud GPU that you drive as a thin client. This reference owns the environment
+boundary and hyperscaler quota context. Use the `runpod` skill for RunPod
+inventory, provisioning, storage, networking, diagnostics, billing, and
+cleanup. Battle-tested on go2-locomotion (Isaac Lab, 2026-07-26..28).
 
 ## The one genuine exception to virtual-first local==remote
 
@@ -22,12 +22,12 @@ runs entirely on a cloud GPU. State this explicitly in the architecture
 brief; it's the sanctioned exception to the local==remote rule, not a
 parity failure to fix.
 
-## Provider choice: RunPod first
+## Choose a provider after defining the environment contract
 
-For a reference app that only needs a few GPU-hours, **RunPod is the default
-low-friction provider**: no quota gate, and a pod is live in ~1 minute.
-Keep GCP / AWS as ecosystem alternatives, but flag their quota gate; for a
-short job they lose to RunPod on time-to-first-GPU.
+First pin the image/CUDA contract, GPU floor, storage, network exposure,
+budget, and acceptance test. Then compare live provider capacity and quota.
+Do not state stock, price, or time-to-first-GPU from memory. RunPod-specific
+selection and paid-compute gates live in the `runpod` skill.
 
 ### GCP GPU quota gotchas (if you must use GCP)
 
@@ -37,65 +37,20 @@ short job they lose to RunPod on time-to-first-GPU.
 - A well-formed `GPUS-ALL-REGIONS` increase request can be **auto-denied in
   under a second** on a young project with no billing history; Google
   Support confirmed this is account-standing, not a malformed request.
-  Budget 2+ days of lead time, or use a no-quota provider (RunPod).
+  Budget 2+ days of lead time or choose a provider whose current account and
+  capacity checks satisfy the workload.
 - Diagnose current quota programmatically via the Cloud Quotas API
   (`quotaPreferences`).
 
-## RunPod networking (the important part)
+## Provider handoff
 
-RunPod's convenience hides several sharp edges. Expose things correctly up
-front and you avoid a day of dead-end debugging.
+- RunPod inventory, exact GPU/datacenter selection, network volumes, Pod
+  creation, proxy/SSH behavior, interactive diagnostics, billing, and cleanup:
+  use the `runpod` skill and verify its current official sources.
+- Google Cloud Run deployment: use the `cloud-run` skill.
+- Framework-specific cloud-image and runtime mechanics stay with the framework
+  skill, such as `isaac-lab` or `lerobot`.
 
-### The HTTP proxy can be silently dead
-
-`{podId}-{port}.proxy.runpod.net` will complete a TLS handshake but the
-backend never answers: `curl` returns **HTTP 000** while the same service
-on the pod's localhost returns 200. Don't trust the proxy as proof the
-service is down; test on localhost inside the pod first.
-
-### Real exposure = public IP + a directly-exposed TCP port
-
-- SSH `-L` port-forwarding does **NOT** work: RunPod's SSH is `docker exec`,
-  not a real `sshd`, so there's no forwarding channel.
-- The working exposure is the **pod's public IP + a directly-exposed TCP
-  port**. Non-root processes can only bind ports **>1024**, so port 22 is
-  out for a non-root service.
-- Reading the failure: **"connection refused"** = the mapping is fine but
-  nothing is listening; **timeout** = there's no route to that port at all.
-- **Ports are FIXED at pod creation**; you cannot add one to a running pod.
-  Expose everything you might need (SSH-alt, app port, an 8888 http port for
-  file pulls) *up front*.
-
-### Driving the pod over proxy SSH
-
-- Proxy SSH **ignores a command passed as an argument** (it just looks like
-  a hang). Pipe the command to stdin instead:
-
-  ```bash
-  printf 'cmd\nexit\n' | ssh -tt <podHostId>@ssh.runpod.io -i key
-  ```
-
-  The `podHostId` is the proxy SSH username.
-- The container only needs to be **RUNNING**; no sshd install required.
-  Keep it alive with `dockerEntrypoint: ["/bin/sleep"]` and
-  `dockerStartCmd: ["infinity"]`.
-
-### Data-center selection (REST vs GraphQL mismatch)
-
-- `dataCenterIds` in the REST API are a **subset** of the GraphQL list:
-  `US-CA-1` / `US-OR-*` are **invalid in REST**; `US-CA-2` / `US-WA-1` are
-  valid.
-- L4 + public-IP capacity is scarce in US-west, so a request there often
-  returns **500 "could not find any pods with required specifications"**.
-  Pass a **west-first array** of data centers so RunPod can fall through.
-
-### File transfer
-
-- Use `runpodctl send` / `runpodctl receive` (~2-3 MB/s). SCP is
-  **unsupported** over proxy SSH.
-- Alternatively pull artifacts over HTTP: run `python3 -m http.server 8888`
-  **in the foreground** on an 8888/http proxy port and fetch from your
-  machine. It must be foreground; `nohup` / `disown` / `setsid` all fail
-  because session teardown SIGKILLs the whole process tree. Because the
-  server has to stay foreground, that's another reason to expose the 8888
-  port at pod creation.
+The environment contract remains provider-independent: a pinned image or lock,
+explicit CUDA/architecture floor, no host-only paths, headless operation,
+durable evidence, and a documented exception when no local mirror exists.

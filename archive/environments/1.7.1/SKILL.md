@@ -1,17 +1,15 @@
 ---
 name: environments
-version: 2.0.0
+version: 1.7.1
 description: >
   Virtual-environment-first setup for robotics projects: decide uv/venv vs Docker,
   make local and remote-server runs reproduce identically, handle GPU passthrough
   and headless/display forwarding. Use when: setting up any new robotics project
   environment; 'uv', 'venv', 'virtualenv', 'docker for this project', 'reproducible
-  environment', 'works locally but not on the server', 'GPU in container',
-  'should this project use uv or Docker'. Load early in any robium build, right
-  after architect. Decision rule of thumb:
+  environment', 'works locally but not on the server', 'GPU in container'. Load
+  early in any robium build, right after architect. Decision rule of thumb:
   pure-Python ML stacks → uv; anything needing ROS 2 or system deps → Docker. Not
-  for: multi-module application Dockerfiles and compose wiring (integration
-  skill), or provisioning and troubleshooting RunPod resources (runpod skill).
+  for: multi-module application Dockerfiles and compose wiring (integration skill).
 ---
 
 # environments
@@ -40,10 +38,9 @@ Dockerfiles or compose wiring across nodes; that's `integration`.
     `ros2`.
   - Picking a manipulation/training framework once the env is settled →
     `lerobot`.
-  - Provisioning, diagnosing, validating, or cleaning up RunPod compute after
-    the image/workload contract is chosen → `runpod`.
-  - Deploying a headless container to Google Cloud Run: the build → deploy path
-    and the sim-on-Cloud-Run gotchas → `cloud-run`.
+  - Deploying a headless container to Google Cloud Run (the CPU deploy target,
+    alongside the GPU-cloud/RunPod one this skill owns): the build → deploy
+    path and the sim-on-Cloud-Run gotchas → `cloud-run`.
   - The whole-stack decision this feeds into → `architect` (load that first if
     you haven't; it routes here).
 
@@ -226,10 +223,23 @@ directives; walk this before calling an environment strategy done):
   exception to local==remote.** <!-- id: no-macos-path-for-some-gpu-apps --> Isaac Sim / Isaac Lab (Omniverse Kit needs
   NVIDIA RTX+CUDA on Linux/Windows), GR00T, and heavy-CUDA training have no
   macOS path and Docker can't pass through a nonexistent Mac GPU: the Mac is
-  a thin SSH/browser client and the work runs on a cloud GPU. Record this as a
-  deliberate architecture exception, use `references/gpu-cloud.md` for the
-  environment boundary and hyperscaler quota context, then route RunPod
-  resource mechanics to the `runpod` skill.
+  a thin SSH/browser client and the work runs on a cloud GPU. Provider and
+  the sharp RunPod networking edges (silently-dead HTTP proxy, no SSH `-L`,
+  ports fixed at pod creation, GCP's global-quota auto-deny) are in
+  `references/gpu-cloud.md` (go2-locomotion, 2026-07-28).
+- **Don't infer a hung RunPod pod from proxy-timing artifacts; verify
+  with ground truth before terminating.** <!-- id: runpod-verify-before-terminating -->
+  A cold pull of a large (10-20GB) image plus per-attempt proxy-exec
+  round-trips (15-20s each) look identical to a hung container from
+  the outside: no "success" log line for many minutes, and RunPod's
+  console message ("Jupyter Lab... taking longer than expected") just
+  means nothing is listening on 8888 yet, not that the container is
+  stuck. Verify with a ground-truth channel, RunPod's Web Terminal
+  (independent of the pod's own entrypoint/sshd config), before
+  terminating or recreating a pod on a hang guess; a wrong guess costs
+  a real pod plus a full re-pull. See `references/gpu-cloud.md` for
+  the fuller RunPod networking picture (provider choice, proxy
+  quirks, GCP quota gotchas).
 
 ## Customization
 
@@ -266,9 +276,9 @@ directives; walk this before calling an environment strategy done):
 - `references/robot-networking.md`: real-robot bring-up host/LAN plumbing:
   IPv6 link-local first contact, IPv4-alias fallback, netplan Wi-Fi reconfig,
   DDS-vs-NAT, bridge-on-robot, DHCP/MAC gotchas, Mac camera-panel validation.
-- `references/gpu-cloud.md`: cloud-GPU environments as the local==remote
-  exception plus hyperscaler quota context; provider operations route to the
-  matching deployment skill.
+- `references/gpu-cloud.md`: cloud-GPU environments (the local==remote
+  exception): RunPod-first provider choice, RunPod networking edges, GCP GPU
+  quota gotchas. Robium's owner for the cross-cutting GPU-cloud/RunPod facts.
 - `examples/pyproject-uv.toml`: minimal pure-Python uv project (status:
   unverified).
 - `examples/Dockerfile.ros2`: ROS 2 workspace container with uv for the
@@ -281,16 +291,12 @@ directives; walk this before calling an environment strategy done):
   docs](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/).
   Sibling skills: `architect` (routes here early), `integration`
   (multi-module app Dockerfiles/compose, not duplicated here), `foxglove`
-  (remote/headless visualization), `cloud-run` (Cloud Run deployment),
-  `runpod` (RunPod provisioning/diagnostics), `ros2`, `lerobot`.
+  (remote/headless visualization), `cloud-run` (the CPU Cloud Run deploy
+  target; RunPod, owned here, is the GPU one), `ros2`, `lerobot`.
 
 ## Changelog
 
 <!-- One dated line per battle-tested change, added by skill-author hardening sessions. -->
-
-- 2.0.0 (2026-08-24): provider-operations ownership moved to the new `runpod`
-  skill; environments retains uv/Docker, image/CUDA parity, GPU passthrough,
-  remote/headless strategy, and the cloud-GPU local-parity exception.
 
 - 1.7.1 (2026-08-03): style pass; removed em dashes throughout (no content changes).
 
@@ -298,17 +304,17 @@ directives; walk this before calling an environment strategy done):
 - 1.6.1 (2026-08-01): anchor IDs added to claim-bearing items (learning-engine Phase 1); no content changes.
 
 - 1.6.0 (2026-08-01): cross-reference the new `cloud-run` skill (issue #67),
-  the CPU Cloud Run deploy target, then a sibling to the GPU-cloud/RunPod facts
-  that environments owned at version 1.6.0 (When to use + References list).
+  the CPU Cloud Run deploy target, sibling to the GPU-cloud/RunPod facts this
+  skill owns (When to use + References sibling list).
 
 - 1.5.0 (2026-07-31): two new single-topic references:
   `references/robot-networking.md` (tb4-teleop real-robot bring-up: IPv6
   link-local, netplan Wi-Fi, DDS-vs-NAT, bridge-on-robot, DHCP/MAC gotchas,
   Mac camera-panel validation) and `references/gpu-cloud.md` (go2-locomotion:
-  cloud-GPU as the one local==remote exception, the then-current RunPod-first
-  provider choice and networking edges, and GCP GPU quota gotchas), with a
-  Platform-gotchas pointer bullet for each. At version 1.5.0, environments
-  owned those cross-cutting provider facts; version 2.0.0 moved them.
+  cloud-GPU as the one local==remote exception, RunPod-first provider choice
+  and its networking edges, GCP GPU quota gotchas), with a Platform-gotchas
+  pointer bullet for each. environments now owns the cross-cutting
+  GPU-cloud/RunPod networking facts.
 
 - 1.4.0 (2026-07-24): tb4-teleop absorption: Platform gotchas gains the
   macOS network-service-order gotcha: a Mac cabled to a no-internet robot LAN

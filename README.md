@@ -95,7 +95,7 @@ The catalog in one view: every skill is one folder under
 
 | Pillar | Skills |
 | --- | --- |
-| Architecture & proof | `architect` · `testing` · `test-assets` · `live-demo` · `cloud-run` |
+| Architecture & proof | `architect` · `testing` · `test-assets` · `live-demo` · `cloud-run` · `runpod` |
 | Simulation | `simulation` · `gazebo` · `mujoco` · `isaac-sim` · `isaac-lab` |
 | Data & learning | `data` · `lerobot` · `huggingface` |
 | Visualization | `visualization` · `foxglove` · `rerun` · `rviz2` |

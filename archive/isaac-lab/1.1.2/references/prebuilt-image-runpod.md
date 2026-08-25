@@ -44,10 +44,10 @@ Observed on a RunPod L4 pod running the go2-locomotion app, 2026-07-26..28.
   pod; RunPod's `/restart` returns HTTP 500 for this change; a clean
   stop→start applies it.
 
-## General Pod operations belong to the runpod skill
+## Pod networking and SSH are the environments skill's territory
 
 Pod port exposure, the dead RunPod proxy, SSH-exec limits, datacenter
 enumeration, and `runpodctl` are general RunPod/GPU-cloud mechanics owned by
-the `runpod` skill; verify its current provider sources instead of re-deriving
-them here. This reference covers only what is Isaac-Lab-image-specific on top
-of that groundwork (the auth, EULA, volume-shadow, and entrypoint items above).
+the `environments` skill's GPU-and-remote reference; do not re-derive them
+here. This reference covers only what is Isaac-Lab-image-specific on top of
+that groundwork (the auth, EULA, volume-shadow, and entrypoint items above).
