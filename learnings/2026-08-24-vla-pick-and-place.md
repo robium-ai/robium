@@ -209,7 +209,7 @@
 - [environments] figured-out-from-scratch <!-- id: lrn-0824-21 -->
   symptom: The fixed model reached its first real action, then `torch._inductor` failed with `RuntimeError: Failed to find C compiler. Please specify via CC environment variable or set triton.knobs.build.impl.`
   root-cause: Pinned Pi0.5 decorates action sampling with `torch.compile`; Triton generates a small runtime extension, but the multi-stage image left `gcc` and Python development headers in the builder and omitted them from the CUDA runtime.
-  fix: Install `gcc` and `python3.10-dev` in the immutable GPU runtime and enforce that contract in the container test — check: diagnostic eager execution on the same exact GPU completed a successful real episode, proving model/GPU compatibility independently; Cloud Build `3829dc62-c144-4956-a8a0-0d2eb14c02c3` published the correction as immutable digest `sha256:0bc3bae587da9c175f8bce667009bfb3103251e75b11898ae8666c58ec61f083`, while default-compile exact-image revalidation remains required.
+  fix: Install `gcc` and `python3.10-dev` in the immutable GPU runtime and enforce that contract in the container test — check: diagnostic eager execution on the same exact GPU completed a successful real episode, proving model/GPU compatibility independently; Cloud Build `3829dc62-c144-4956-a8a0-0d2eb14c02c3` published the correction as immutable digest `sha256:0bc3bae587da9c175f8bce667009bfb3103251e75b11898ae8666c58ec61f083`; the exact image then completed a default-compile 75-step episode with success `true`, 7,691,964,928 peak VRAM bytes, and no `TORCHDYNAMO_DISABLE` override.
   dead-ends: Classifying this compiler lookup as unsupported Blackwell hardware or model OOM; shipping `TORCHDYNAMO_DISABLE=1` as the production correction; adding an unpinned compiler at Pod startup.
   anchors: environments#local-remote-parity-acceptance-test, testing#gate-paid-remote-run-behind-free-dry-run
   source: exact RunPod traceback from interactive Pod `ania2yd8fdkasy` and the app's builder/runtime Docker stages on 2026-08-24.
@@ -228,3 +228,23 @@
 - testing — fired: yes; accurate: yes, both new defects were reproduced before correction and the real episode, proxy, cancellation, artifacts, and zero-Pod cleanup were verified independently; complete: yes for the interactive validation block; lean: yes.
 
 - environments — fired: yes; accurate: yes, the global immutable build produced an independently resolved digest and the private template was re-read with the digest plus `VLA_LIVE_ENABLED=false` while the Pod count stayed zero; complete: yes for disabled deployment, with exact-image GPU validation still correctly gated; lean: yes.
+
+- [environments] figured-out-from-scratch <!-- id: lrn-0824-23 -->
+  symptom: `runpodctl` v2.8 accepted `--network-volume-id` and mount configuration, but the created Pod reported `networkVolume: null` and repeatedly failed with `PermissionError: [Errno 13] Permission denied: '/models'` after the image finally started.
+  root-cause: The CLI/template allocation path omitted the requested network-volume attachment; retrying the CLI with explicit mount flags produced the same null attachment. The direct REST schema also rejected the inventory's exact `NVIDIA RTX PRO 4500 Blackwell Server Edition` identifier because its GPU enum exposed only the shorter alias.
+  fix: Call the official GraphQL `podFindAndDeployOnDemand` mutation with `networkVolumeId`, `volumeInGb: 0`, and `volumeMountPath: /models`, then re-read the Pod and volume identity before waiting for application evidence — check: GraphQL Pod `aujvvs0earwm5l` reported volume `68s0bxbv7p`, completed CUDA and a successful 75-step exact-image episode, passed proxy/cancellation checks, and was deleted with authoritative Pod count zero.
+  dead-ends: Waiting on the CLI-created crash loop without checking the attached volume; retrying the same CLI path with more explicit flags; using direct REST with the exact Server Edition inventory ID.
+  anchors: environments#runpod-verify-before-terminating, environments#local-remote-parity-acceptance-test
+  source: [RunPod Pod create REST API](https://docs.runpod.io/api-reference/pods/POST/pods), [RunPod GraphQL Pod management](https://docs.runpod.io/sdks/graphql/manage-pods), [RunPod GraphQL schema](https://graphql-spec.dev.runpod.io/), safe-field Pod reads, and supplied system logs from the 2026-08-24 issue #69 validation.
+
+- [environments] user-correction <!-- id: lrn-0824-24 -->
+  symptom: The agent was prepared to classify a Pod as stuck and terminate at the initial bounded wait because RunPod still reported no runtime or ports; the operator explicitly asked to wait longer and inspect system logs first.
+  root-cause: A long private-image cold pull and weak control-plane readiness signals concealed a later container restart loop; the actual failure was not GPU scarcity or image pull but a missing `/models` network-volume attachment.
+  fix: Before terminating a slow-starting paid Pod, inspect provider system/application logs and independently verify attached storage plus durable markers, while retaining the lifetime cutoff — check: the supplied logs exposed the exact `/models` permission failure, safe-field API inspection showed `networkVolume: null`, and the corrected GraphQL allocation passed end to end.
+  dead-ends: Treating repeated `start container ...: begin`, `runtime: null`, or absent ports as a sufficient root cause; waiting longer without checking storage identity.
+  anchors: environments#runpod-verify-before-terminating
+  source: operator correction, `/Users/mdemirst/Desktop/logs.txt`, and RunPod safe-field reads during issue #69 on 2026-08-24.
+
+- environments — fired: yes; accurate: yes for immutable identity, exact GPU, funding, bounded lifetime, durable evidence, deletion, and disabled deployment; complete: no, the CLI's silently omitted network volume and REST/GraphQL schema mismatch required live discovery captured above; lean: yes.
+- lerobot — fired: yes; accurate: yes, the final exact checkpoint and default compile path completed a real simulator episode without changing the pinned dependency; complete: yes for the one-episode feasibility gate; lean: yes.
+- testing — fired: yes; accurate: yes, checksum, proxy isolation, cancellation, cleanup, and the full free suite independently guarded the real-model claim; complete: yes for final immutable-image validation; lean: yes.
