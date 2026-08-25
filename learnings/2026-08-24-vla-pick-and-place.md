@@ -294,7 +294,7 @@
 - [live-demo] user-correction <!-- id: lrn-0824-33 -->
   symptom: After clicking `Run one rollout`, the real RunPod UI appeared unresponsive for several minutes; the operator clicked again and the second request surfaced `RolloutBusyError: one rollout is already running` while the first request was still healthy.
   root-cause: The first policy action performs multi-minute `torch.compile`/Triton autotuning before the rollout generator yields its first visible frame or status update, and the Gradio button remains available without an explicit compiling/busy phase.
-  fix: Use eager policy execution for interactive gateway sessions while preserving compiled feasibility/evaluation, show an immediate starting message, disable Run while the lock is held, and surface busy as a friendly status instead of a traceback — check: protected status stayed `running` while continuous autotune logs advanced, then returned `ready` about 3 minutes 13 seconds after the first click with no first-run exception; the correction is covered by execution-profile and UI busy-state regressions, all 41 free tests pass, and the rebuilt Linux/amd64 fake container passed capability, rollout, shutdown, and process-exit checks.
+  fix: Use eager policy execution for interactive gateway sessions while preserving compiled feasibility/evaluation, show an immediate starting message, disable Run while the lock is held, and surface busy as a friendly status instead of a traceback — check: protected status stayed `running` while continuous autotune logs advanced, then returned `ready` about 3 minutes 13 seconds after the first click with no first-run exception; the correction is covered by execution-profile and UI busy-state regressions, all 46 free tests pass, and the rebuilt Linux/amd64 fake container passed capability, rollout, shutdown, and process-exit checks.
   dead-ends: Treating the silent interval as a crashed Pod; restarting or cancelling during active compiler progress; accepting a raw busy traceback as adequate visitor feedback.
   anchors: live-demo#honest-cold-boot-copy-on-page
   source: operator correction plus protected status polling and secret-redacted RunPod container logs from Pod `rw23jisldqt4mx` on 2026-08-24.
@@ -312,3 +312,19 @@
 - lerobot — fired: yes; accurate: yes, it kept the benchmark on the pinned compiled path and isolated eager execution to the interactive adapter boundary; complete: no, the first-action compile UX cost was learned only from the real Pod and is captured above; lean: yes.
 - runpod — fired: yes; accurate: yes, it enforced zero-Pod cleanup and prevented the free remediation from silently crossing another paid allocation gate; complete: yes for this block; lean: yes.
 - testing — fired: yes; accurate: yes, publication ordering, immutable pointers, runtime profiles, immediate feedback, busy handling, both container targets, and the protected fake lifecycle were checked at their owning layers; complete: yes for the free gate; lean: yes.
+
+- [testing] figured-out-from-scratch <!-- id: lrn-0824-35 -->
+  symptom: The immutable GPU entrypoint supported only gateway and one-episode feasibility modes, so the otherwise-valid 20-episode evaluator could not be launched noninteractively from the exact image; a Pod restart could also overwrite partial measured episodes.
+  root-cause: The paid protocol had CLI logic but no immutable startup contract for validated app/image/GPU identity, persistent output, completion signaling, post-evaluation deletion wait, or no-retry recovery.
+  fix: Add an `evaluation` startup mode that validates immutable inputs before CUDA, stages the exact checkpoint, invokes the compiled evaluator in a token-free offline subprocess, writes artifacts plus `evaluation_complete` to the network volume, releases the model subprocess, and waits for controller deletion; make the evaluator refuse any output containing prior measured artifacts — check: focused startup/no-retry regressions passed, the full suite reached 46 tests, both Linux/amd64 image targets rebuilt, and the protected fake lifecycle passed.
+  dead-ends: Overriding the immutable entrypoint interactively; leaving the large model loaded while evidence is retrieved; giving the Pod Hugging Face publication credentials; allowing automatic container restart to rerun completed state IDs.
+  anchors: testing#gate-paid-remote-run-behind-free-dry-run, testing#determinism-makes-a-test-a-test
+  source: issue #69 Task 6 dry-run against the committed startup/CLI contract on 2026-08-24.
+
+- [integration] better-method <!-- id: lrn-0824-36 -->
+  symptom: A README-only change invalidated the Docker dependency layer and forced repeated downloads of the multi-gigabyte CUDA/PyTorch/LeRobot environment; local Docker image loading also evicted large builder layers between builds.
+  root-cause: Both Docker stages copied `README.md` together with `pyproject.toml` and `uv.lock` before `uv sync`, and uv downloads had no BuildKit cache mount.
+  fix: Copy only `pyproject.toml` and `uv.lock` before dependency sync, cache `/root/.cache/uv` with BuildKit, and copy README/source only before the final project install — check: the final CPU/GPU images built from the corrected Dockerfile and a container-contract regression pins the cache mounts and layer ordering.
+  dead-ends: Accepting five-minute dependency downloads after every prose/source edit; using mutable remote caches; skipping the final full image build because unit tests passed.
+  anchors: integration#multistage-dockerfile-per-module
+  source: two consecutive local Linux/amd64 GPU builds during issue #69 on 2026-08-24.
