@@ -89,3 +89,43 @@
 - cloud-run — fired: yes; accurate: yes for staged no-traffic revisions, exact revision promotion, traffic inspection, and rollback readiness; complete: partial because the combined service/tag length limit required live discovery, captured above; lean: yes.
 - testing — fired: yes; accurate: yes for testing both immutable site modes and the final rollout/cancel/delete production path; complete: yes; lean: yes.
 - learning-loop — fired: yes; accurate: yes for promoting the pending queue flag and recording evidence without editing skills; complete: yes; lean: yes.
+
+- [live-demo] figured-out-from-scratch (seen 1x) <!-- id: lrn-0826-10 -->
+  symptom: Raising the generated demo `maxInstances` value to three did not allow a third VLA Pod; the provider driver still returned `The one VLA GPU slot is busy`, and simultaneous creates could pass provider-list checks before new Pods became visible.
+  root-cause: Fleet capacity existed in both the generic manager and a hard-coded RunPod one-Pod guard, while provider list consistency was insufficient as an atomic admission lock.
+  fix: Make the canonical app manifest the only capacity source, compare both manager/provider counts to that value, and count active generation-conditional GCS reservations inside the same budget transaction. (check: focused red tests failed on the old one-Pod behavior; the final 50-test suite admits three, atomically rejects a fourth with `BUSY`, and the production smoke created exactly three Pods while request four returned HTTP 429 without a Pod.)
+  dead-ends: Editing only the generated website JSON, which `sync-demos` correctly reverted; relying only on RunPod's active Pod list for concurrent clicks.
+  anchors: live-demo#fleet-budget; live-demo#instance-lifecycle-gateway-contract
+  source: website commits `5f002d0` and `ab290ed`; queue signature `ba1f089bd016`
+
+- [runpod] figured-out-from-scratch (seen 1x) <!-- id: lrn-0826-11 -->
+  symptom: Three RTX PRO 4500 SE Pods could mount the same network volume, but two concurrent cold starts missed the eight-minute boot gate and one logged `FileNotFoundError: .../.phase.json.tmp -> .../phase.json` before restarting.
+  root-cause: Read-only model sharing was supported, but concurrent image/checkpoint startup increased cold-load latency; all Pods also wrote startup diagnostics through one shared directory and fixed temp filename.
+  fix: Keep model data shared and immutable, but append the server-generated session ID to `VLA_DIAGNOSTIC_OUTPUT` so each Pod owns its diagnostic files. Treat concurrent readiness as a separate capacity measurement from successful allocation. (check: the production smoke allocated three exact-image/GPU/volume Pods, one reached `READY`, the diagnostic-path contract test passes, and all Pods were deleted.)
+  dead-ends: Assuming documented multi-Pod volume attachment implied three equal cold-boot times; treating the diagnostic traceback as a model or CUDA failure.
+  anchors: runpod#persistent-volume-shared-readers; runpod#safe-field-provider-diagnostics
+  source: Pods `1ft1yzgh620veq`, `k4lu8tnaa5ajlw`, and `gpncldceb6t8m9`; website commit `941ddc9`
+
+- [live-demo] figured-out-from-scratch (seen 1x) <!-- id: lrn-0826-12 -->
+  symptom: The controller automatically deleted two boot-timeout Pods, but their atomic ledger reservations retained null `deletedAt` values; the provider router then sent idempotent visitor deletes to Cloud Run because the RunPod resources no longer existed.
+  root-cause: Reconciliation deleted provider resources without releasing logical slots, and ownership routing depended solely on a currently visible provider resource instead of allowing a vanished RunPod session to release historical ledger state.
+  fix: Mark reservations deleted in the same reconciliation path; make RunPod delete release a matching reservation even without a Pod; when neither provider can find an ID, let both idempotent delete paths run. (check: red reconcile/router tests reproduced both gaps; final 50 tests pass; all three production reservations have deletion timestamps, active reservations are zero, and RunPod lists zero Pods.)
+  dead-ends: Retrying DELETE against the RunPod driver implementation before fixing the provider router; relying on hard-expiry filtering to restore capacity while leaving stale audit state.
+  anchors: live-demo#cleanup-reaper; runpod#cleanup-and-production-separate-gates
+  source: website commits `f08ce91` and `ab290ed`; queue signatures `6b2716e1bd72` and `f66dba2a4fc3`
+
+- [cloud-run] figured-out-from-scratch (seen 1x) <!-- id: lrn-0826-13 -->
+  symptom: Interrupting a silent `gcloud builds submit` waiter printed `Cancelling...` and cancelled remote build `e57da544-5cb5-4f59-bbf3-a40662659fd0`, rather than detaching only the local wait.
+  root-cause: The submit command owns the newly created Cloud Build operation and propagates Ctrl-C cancellation to it.
+  fix: Once a build ID is printed, keep polling the same command or inspect that build read-only; do not send Ctrl-C unless remote cancellation is intended. (check: one clean replacement build `64ee16f9-7959-47b6-aeed-6a9f6f208ef2` completed successfully, and the later final build `48755e15-af49-48f3-ba4e-76335380c902` produced the deployed digest.)
+  dead-ends: Interpreting a quiet waiter as a local-only hang despite the already printed remote build ID.
+  anchors: cloud-run#build-push-artifact-registry
+  source: issue #69 capacity follow-up, 2026-08-26
+
+## End-of-block retro — three-slot production capacity
+
+- brainstorming — fired: yes; accurate: yes for scoping the approved change to three slots, an atomic admission contract, and one bounded paid smoke; complete: yes; lean: yes.
+- runpod — fired: yes; accurate: yes for inventory/balance/zero-Pod preflight, immutable contract checks, log inspection, and authoritative cleanup; complete: partial because shared-volume attachment guidance did not distinguish concurrent cold-start performance or diagnostic-writer isolation, captured above; lean: yes.
+- live-demo — fired: yes; accurate: yes for per-visitor isolation, budget gating, staged promotion, and public product-state verification; complete: partial because the hard-coded provider cap and vanished-resource ledger routing required live discovery, captured above; lean: yes.
+- cloud-run — fired: yes; accurate: yes for immutable builds, no-traffic candidate checks, exact revision promotion, and traffic-map verification; complete: partial because Ctrl-C cancellation propagation was not surfaced, captured above; lean: yes.
+- testing — fired: yes; accurate: yes for red/green capacity, atomic reservation, BUSY phase, diagnostic isolation, reconciliation, router, free gates, and a bounded real-provider smoke; complete: yes; lean: yes.
