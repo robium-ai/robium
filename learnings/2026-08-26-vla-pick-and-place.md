@@ -143,3 +143,17 @@
 - brainstorming — fired: yes; accurate: yes for treating the request as a bounded existing-flow change and getting explicit approval for the state semantics; complete: yes; lean: yes.
 - live-demo — fired: yes; accurate: yes that cold boot must be honest and the page must distinguish lifecycle ownership from the direct gateway handoff; complete: partial because proxy-host availability versus gateway readiness needed live discovery, captured above; lean: yes.
 - cloud-run — fired: yes; accurate: yes for immutable build, no-traffic staging, direct candidate verification, and exact revision promotion; complete: yes; lean: yes.
+
+- [live-demo] better-method (seen 1x) <!-- id: lrn-0826-15 -->
+  symptom: After the model reached `READY`, the RunPod gateway logged repeated claim HTTP 200 responses while Chrome kept the page in “Connecting your private workspace.” The response had no `Access-Control-Allow-Origin`, so the browser treated each successful cross-origin fetch as a failure.
+  root-cause: The website depended on reading a cross-origin `/claim` response even though the capability-scoped Gradio iframe did not require CORS and the gateway's `claimed` flag was informational rather than an access gate.
+  fix: Remove the browser-side claim request and render the capability-scoped iframe directly when the lifecycle controller reports `READY`. (check: staged and production live bundles contain the private iframe and no `/claim` request; site revision `robium-site-00040-sar` serves 100% traffic; zero Pods remained before the next visitor test.)
+  dead-ends: Rebuilding the large GPU image solely to add CORS for an informational endpoint; proxying claim through the lifecycle controller and putting it back into the application data path; `no-cors` fetch, which would hide genuine failures.
+  anchors: live-demo#instance-lifecycle-gateway-contract; live-demo#lifecycle-needs-host-level-orchestrator
+  source: production session `5ae47f8663583986141867`, Pod `twen64io4zix9x`, website commit `5424b7e`
+
+## End-of-block retro — direct ready-workspace handoff
+
+- brainstorming — fired: yes; accurate: yes for comparing gateway rebuild, opaque fetch, controller relay, and direct iframe approaches before selecting the smallest safe change; complete: yes; lean: yes.
+- live-demo — fired: yes; accurate: yes for keeping the lifecycle controller out of the data path and preserving the capability-scoped direct handoff; complete: yes; lean: yes.
+- cloud-run — fired: yes; accurate: yes for immutable site build, no-traffic staging, direct bundle inspection, and exact revision promotion; complete: yes; lean: yes.
