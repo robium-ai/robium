@@ -8,8 +8,8 @@ evidence: endpoint and status-string checks passed while the primary viewer disp
 
 ## rebuild the deployment image after gateway lifecycle changes <!-- id: obs-testing-002 -->
 status: ready
-proof: 1
+proof: 2
 signal: verified
-sources: [lrn-0825-08]
+sources: [lrn-0825-08, lrn-0826-03]
 target: testing#gate-paid-remote-run-behind-free-dry-run (update) — after gateway lifecycle changes, rebuild the deployment-platform fake image and exercise allocation, capability isolation, one rollout, deletion, and zero-resource cleanup before a paid remote smoke
-evidence: the earlier local image predated ready-window termination behavior ✓ · the rebuilt Linux/amd64 image completed READY, isolated capability routes, a five-frame rollout, deletion, and zero-container cleanup before the full website smoke passed ✓ · reusing the stale pre-change image as evidence was ruled out ✓
+evidence: the earlier local and first paid images predated ready-window termination behavior ✓ · the rebuilt Linux/amd64 fake image passed the free lifecycle, then the exact replacement GPU digest exposed `remaining_s`, completed a genuine rollout and active cancellation, and left zero Pods ✓ · reusing a stale pre-change digest or changing the immutable evaluation pointer was ruled out ✓
