@@ -40,6 +40,30 @@
   anchors: headless EGL teardown; durable evaluation state; no-retry evidence protocol
   source: RunPod Pod `j49jvedkgd9gmi` logs and durable volume `68s0bxbv7p`
 
+- [live-demo] figured-out-from-scratch (seen 1x) <!-- id: lrn-0825-06 -->
+  symptom: The first local end-to-end VLA allocation reached the capability-scoped gateway's `ready` phase, but the orchestrator continued reporting `BOOTING` because readiness mapping was conditional on the configured provider being RunPod.
+  root-cause: Local development correctly routes every demo through Docker, while the VLA gateway contract is capability-scoped regardless of provider; provider identity was the wrong discriminator for gateway semantics.
+  fix: Generate a separate 32-character capability, map capability-scoped `ready`, `running`, `stopping`, and `expired` phases independent of provider, and keep the 22-character session ID only as the control-plane identifier. (check: 44 orchestrator tests and TypeScript checking passed; the rebuilt Linux/amd64 fake image completed allocate → READY → capability-isolation checks → rollout → delete, with zero labeled containers remaining.)
+  dead-ends: Reusing the 22-character session ID as the gateway secret was ruled out because the gateway enforces a 32–128 character capability; conditioning the mapping on `provider === "runpod"` broke the required local Docker development path.
+  anchors: capability-scoped gateway; local provider routing; lifecycle state mapping
+  source: issue #69 local website integration gate on 2026-08-25
+
+- [runpod] figured-out-from-scratch (seen 1x) <!-- id: lrn-0825-07 -->
+  symptom: Adding `@google-cloud/storage` solely for an atomic daily budget ledger introduced a transitive moderate-severity production audit finding and a much larger dependency tree.
+  root-cause: The orchestrator already depended on `google-auth-library`, and the ledger needs only the narrow Google Cloud Storage JSON API operations for object read plus generation-conditional write.
+  fix: Use the existing authenticated HTTP client for GCS media download/upload, retain the object's generation, and write with `ifGenerationMatch` so competing reservations fail closed on HTTP 412. (check: the production dependency audit reported 0 vulnerabilities, ledger generation/conflict tests passed, and the complete 44-test orchestrator suite passed.)
+  dead-ends: Keeping the storage SDK was ruled out because its broad dependency tree was unnecessary for two JSON API calls; an unconditional object overwrite was ruled out because concurrent Pod allocations could exceed the $5 daily cap.
+  anchors: daily budget ledger; atomic reservation; Google Cloud Storage JSON API
+  source: issue #69 RunPod provider implementation on 2026-08-25
+
+- [testing] verified (seen 1x) <!-- id: lrn-0825-08 -->
+  symptom: The live website path needed proof that disabled production wiring and the local fake lifecycle did not weaken capability isolation, lifecycle cleanup, or the published evidence gate.
+  root-cause: Unit tests alone do not cover the Docker-hosted gateway boundary or the generated static website content.
+  fix: Rebuild the fake image for Linux/amd64, drive a real local orchestrator allocation through READY and one rollout, assert root/missing/foreign capability routes return 404, delete the instance, and then run the full site build/smoke suite. (check: local state 0 returned 5 frames and a boolean successful simulator outcome; deletion left zero VLA containers; `make smoke` passed all website checks, including immutable evidence and `VLA_LIVE_ENABLED=false`.)
+  dead-ends: Treating the prior pre-timer image run as current evidence was ruled out because the gateway ready-window behavior had changed afterward.
+  anchors: local fake lifecycle; capability isolation; website publication smoke
+  source: issue #69 free integration gate on 2026-08-25
+
 ## End-of-block retro — public evaluation and publication
 
 - integration — fired: yes; accurate: yes for immutable images and explicit runtime contracts; complete: partial because Cloud Build's legacy Docker builder needed an explicit BuildKit environment flag, captured above; lean: yes.
@@ -47,3 +71,11 @@
 - lerobot — fired: yes; accurate: yes for the pinned Pi0.5/LIBERO evaluation and compiled-versus-eager separation; complete: partial because benign EGL destructor errors after durable completion needed evidence-based interpretation, captured above; lean: yes.
 - testing — fired: yes; accurate: yes for the no-retry protocol, immutable verification, video/hash checks, and clean publication gate; complete: yes for the 20-episode evidence milestone; lean: yes.
 - huggingface — fired: yes; accurate: yes for immutable revisions and public verification; complete: partial because the required upstream Hub-mechanics skill was unavailable and namespace authorization plus CLI progress behavior required direct official CLI/API checks, captured above; lean: yes.
+
+## End-of-block retro — disabled website integration
+
+- brainstorming — fired: yes; accurate: yes for preserving the approved issue design and resolving implementation details inside that boundary; complete: yes; lean: yes.
+- live-demo — fired: yes; accurate: yes for the evidence-first workspace, per-visitor capability, explicit lifecycle states, hard session limits, and disabled production switch; complete: partial because provider-independent capability readiness needed live local discovery, captured above; lean: yes.
+- integration — fired: yes; accurate: yes for the generated app-to-site contract, immutable image, provider routing, and local Docker parity; complete: yes for the free integration milestone; lean: yes.
+- testing — fired: yes; accurate: yes for test-first lifecycle behavior, real local boundary testing, and full publication smoke; complete: yes for every free gate; lean: yes.
+- runpod — fired: yes; accurate: yes for REST API ownership checks, exact image/GPU/region/volume contracts, conservative reservations, reconciliation, and deletion; complete: partial pending the separately approved paid production-like lifecycle; lean: yes.

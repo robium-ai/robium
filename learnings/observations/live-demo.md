@@ -32,3 +32,11 @@ evidence: proof=1, signal=figured-out-from-scratch (not user-correction, no
   architect entry was corrected for. Promote to `ready` once (a) a relay VM
   actually ships and reaches a demo through it (a passing check), or (b) a
   second independent session hits the same constraint (proof=2).
+
+## capability semantics must survive local provider substitution <!-- id: obs-live-demo-002 -->
+status: ready
+proof: 1
+signal: figured-out-from-scratch
+sources: [lrn-0825-06]
+target: live-demo#instance-lifecycle-gateway-contract (update) — distinguish the control-plane session ID from a longer browser capability and map capability-scoped gateway phases independently of the local or remote provider
+evidence: the local Docker gateway returned `ready` while the orchestrator remained `BOOTING` ✓ · 44 orchestrator tests plus a rebuilt Linux/amd64 allocate-to-delete lifecycle passed after capability-driven mapping ✓ · provider-identity mapping and reuse of the too-short session ID were both ruled out ✓
