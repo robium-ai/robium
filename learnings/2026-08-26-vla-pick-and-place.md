@@ -129,3 +129,17 @@
 - live-demo — fired: yes; accurate: yes for per-visitor isolation, budget gating, staged promotion, and public product-state verification; complete: partial because the hard-coded provider cap and vanished-resource ledger routing required live discovery, captured above; lean: yes.
 - cloud-run — fired: yes; accurate: yes for immutable builds, no-traffic candidate checks, exact revision promotion, and traffic-map verification; complete: partial because Ctrl-C cancellation propagation was not surfaced, captured above; lean: yes.
 - testing — fired: yes; accurate: yes for red/green capacity, atomic reservation, BUSY phase, diagnostic isolation, reconciliation, router, free gates, and a bounded real-provider smoke; complete: yes; lean: yes.
+
+- [live-demo] figured-out-from-scratch (seen 1x) <!-- id: lrn-0826-14 -->
+  symptom: Immediately after a successful VLA allocation, the page replaced `BOOTING` with “Live capacity is unavailable” even though the controller returned POST 202, every status poll returned 200, and RunPod was still extracting the immutable image.
+  root-cause: The frontend attempted the capability claim as soon as RunPod exposed a proxy hostname, before the gateway was listening; that claim exception shared the controller-poll catch and was mislabeled as lifecycle/capacity failure. The same state also exposed Retry while the existing Pod remained active.
+  fix: Attempt the capability claim only after controller phase `READY`; keep claim connection retries in `BOOTING` with an explicit workspace-connection message; reserve `UNAVAILABLE` for controller polling failures; hide Retry whenever an instance exists and tell the visitor that polling continues. (check: live-enabled Astro build passed; staged and public bundles contain the new lifecycle copy; production revision `robium-site-00038-xas` serves 100% traffic; the original session expired cleanly with zero Pods.)
+  dead-ends: Treating a RunPod proxy hostname as gateway readiness; mapping gateway connection errors and controller failures to one UI state; asking the visitor to Retry while their first Pod was still billable.
+  anchors: live-demo#honest-cold-boot-copy-on-page; live-demo#instance-lifecycle-gateway-contract
+  source: production session `1fba2c8f36423785a7e4d0`, Pod `6z7aopyr9248cy`, website commit `07d2cea`
+
+## End-of-block retro — VLA boot feedback
+
+- brainstorming — fired: yes; accurate: yes for treating the request as a bounded existing-flow change and getting explicit approval for the state semantics; complete: yes; lean: yes.
+- live-demo — fired: yes; accurate: yes that cold boot must be honest and the page must distinguish lifecycle ownership from the direct gateway handoff; complete: partial because proxy-host availability versus gateway readiness needed live discovery, captured above; lean: yes.
+- cloud-run — fired: yes; accurate: yes for immutable build, no-traffic staging, direct candidate verification, and exact revision promotion; complete: yes; lean: yes.
