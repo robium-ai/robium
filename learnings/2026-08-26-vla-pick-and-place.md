@@ -40,6 +40,38 @@
   anchors: live-demo#lifecycle-needs-host-level-orchestrator; runpod#cleanup-and-production-separate-gates
   source: issue #69 local ADC error and deleted Cloud Run service `demo-vla-control-canary`
 
+- [cloud-run] figured-out-from-scratch (seen 1x) <!-- id: lrn-0826-06 -->
+  symptom: `gcloud run services update` rejected the staged controller with `traffic tag 'vla-live-candidate' and service name 'demo-robot-navigation-control' together are too long. Combined traffic tag and service name cannot exceed 46 characters.`
+  root-cause: Cloud Run validates the combined service-name and traffic-tag length; the descriptive candidate tag exceeded that current platform limit.
+  fix: Use a short, purpose-specific tag (`vla`) and retain the full revision ID in evidence and explicit traffic commands. (check: tagged revision `demo-robot-navigation-control-00008-cus` passed direct candidate probes, then served 100% production traffic.)
+  dead-ends: Retrying the same descriptive tag; shortening or recreating the production service.
+  anchors: cloud-run deployment verification
+  source: queue flag signature `82fcb3babf8f`, issue #69 production enablement
+
+- [live-demo] figured-out-from-scratch (seen 1x) <!-- id: lrn-0826-07 -->
+  symptom: The enabled controller candidate reported the VLA demo available, but the staged website still rendered the disabled workspace because `PUBLIC_VLA_LIVE_ENABLED` existed only in the React source and was never passed through Docker or Cloud Build.
+  root-cause: Production availability used two independent compile/runtime gates, but only the controller runtime gate had a deployment surface.
+  fix: Add a default-false Docker build argument, thread it through Cloud Build and Make, and compile/test both `vla-recorded-build` and `vla-live-build` outputs before promotion. (check: production site revision `robium-site-00032-zes` exposed `data-build-mode=vla-live-build`; an actual browser showed `IDLE` with an enabled Start control.)
+  dead-ends: Promoting the controller alone; treating the source-level `import.meta.env` check as proof the immutable site image contained the live build.
+  anchors: live-demo#gate-with-demo-smoke-before-linking; cloud-run#build-push-artifact-registry
+  source: website commit `591ae34`, Cloud Build `dbf0cc39-bc53-429c-a46c-8459f969e890`
+
+- [runpod] better-method (seen 1x) <!-- id: lrn-0826-08 -->
+  symptom: `runpodctl pod list --all --json` failed with `unknown flag: --json` during the final zero-Pod preflight.
+  root-cause: The current CLI exposes output format through the global `-o/--output` flag rather than a command-specific JSON boolean.
+  fix: Use `runpodctl pod list --all -o json`, then filter only safe fields with `jq`. (check: the corrected command returned zero active Pods before allocation and again after visitor deletion.)
+  dead-ends: Treating the usage error as a provider/API failure or retrying `--json`.
+  anchors: runpod#safe-field-provider-diagnostics; runpod#cleanup-and-production-separate-gates
+  source: issue #69 production lifecycle smoke, 2026-08-26
+
+- [testing] verified (seen 1x) <!-- id: lrn-0826-09 -->
+  symptom: Production enablement required proof that the public site, public controller, direct RunPod proxy, real policy, cancellation path, and cleanup all described the same live revision.
+  root-cause: Unit, private-canary, or source-level success alone cannot establish the public multi-service release contract.
+  fix: Promote exact site/controller revisions, create through the public controller, verify proxy isolation and numeric ready lifetime, run canonical state 0, cancel active state 1, delete through the public controller, and require the authoritative active-Pod count to reach zero. (check: state 0 succeeded with 76 frames; state 1 cancelled; DELETE returned 204; active Pod count returned 0; browser showed live IDLE.)
+  dead-ends: Accepting a healthy candidate tag without exercising public production traffic; checking only Cloud Run health endpoints; inferring deletion from the controller response without RunPod re-listing.
+  anchors: testing#confirm-smoke-passes-before-done; live-demo#demo-smoke-extends-product-surface; runpod#cleanup-and-production-separate-gates
+  source: production session `a99c53d8a3ad0526140fcb`, Pod `c74qvd52y74rm6`
+
 ## End-of-block retro — final RunPod and production-disabled deployment
 
 - brainstorming — fired: yes; accurate: yes for keeping the approved issue design and treating the available-GPU amendment as a bounded change; complete: yes; lean: yes.
@@ -49,3 +81,11 @@
 - testing — fired: yes; accurate: yes for free-before-paid gates, revision-specific contract checks, real rollout, cancellation, cleanup, and regression suites; complete: yes; lean: yes.
 - learning-loop — fired: yes; accurate: yes for queue promotion, evidence completion, observation merge, and no skill edits; complete: yes; lean: yes.
 
+## End-of-block retro — approved production enablement
+
+- brainstorming — fired: yes; accurate: yes for isolating the missing website build switch before production traffic; complete: yes; lean: yes.
+- runpod — fired: yes; accurate: yes for the bounded paid gate, independent proxy/lifecycle signals, safe output, honest billing lag, and zero-Pod cleanup; complete: partial because the current CLI output flag shape was absent and is captured above; lean: yes.
+- live-demo — fired: yes; accurate: yes for the direct browser-to-Pod handoff, evidence fallback, one-session product state, and public lifecycle smoke; complete: partial because the separate compile-time website gate had not been surfaced, captured above; lean: yes.
+- cloud-run — fired: yes; accurate: yes for staged no-traffic revisions, exact revision promotion, traffic inspection, and rollback readiness; complete: partial because the combined service/tag length limit required live discovery, captured above; lean: yes.
+- testing — fired: yes; accurate: yes for testing both immutable site modes and the final rollout/cancel/delete production path; complete: yes; lean: yes.
+- learning-loop — fired: yes; accurate: yes for promoting the pending queue flag and recording evidence without editing skills; complete: yes; lean: yes.
