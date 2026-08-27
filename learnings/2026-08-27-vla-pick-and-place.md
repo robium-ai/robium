@@ -30,3 +30,15 @@
 ## End-of-block retro — technical voice without benchmark emphasis
 
 - live-demo — fired: yes; accurate: yes for the per-visitor lifecycle, direct application handoff, cancellation boundaries, and honest cold start; complete: partial because model-selection and article voice required comparison against the sibling technical tutorials; lean: yes.
+
+- [cloud-run] figured-out-from-scratch <!-- id: lrn-0827-04 -->
+  symptom: `gcloud run deploy robium-site --image=<new-digest>` created healthy revision `robium-site-00035-bs4`, but the CLI summary still named prior revision `robium-site-00040-sar` and production traffic remained pinned there.
+  root-cause: The service had an existing revision-tag traffic map with 100% assigned to a named revision, so deploying a new template did not float traffic to the latest ready revision.
+  fix: inspected the service template and revision list, then ran `gcloud run services update-traffic robium-site --to-revisions=robium-site-00035-bs4=100` — check: Cloud Run reported 100% on the new revision; public smoke and VLA route checks passed against image digest `sha256:5932e99a…5074f8`.
+  dead-ends: trusting the successful deploy summary would have left the prior image serving production.
+  anchors: cloud-run#no-gcloud-facts-from-memory
+
+## End-of-block retro — production publication
+
+- cloud-run — fired: yes; accurate: yes for immutable-digest deployment, checking current CLI help, and verifying the live revision rather than trusting command success; complete: partial because tagged services preserving a pinned traffic map after deploy was not covered; lean: yes.
+- live-demo — fired: yes; accurate: yes for keeping the VLA live build enabled and verifying the public demo, article, and live routes after promotion; complete: yes for this frontend publication; lean: yes.
