@@ -3,13 +3,13 @@
   "skills": [
     {
       "name": "architect",
-      "version": "1.8.1",
+      "version": "1.9.0",
       "description": "Entry-point skill for designing robotics applications with AI agents. Turns requirements (robot type, task, hardware, sim-vs-real, GPU/budget) into a full stack decision (middleware, simulation, data, visualization, training frameworks) plus a scaffold plan and a written architecture brief. Use when: starting any new robotics app; 'build a robot app', 'which robotics stack', 'scaffold a robotics project', 'mobile robot', 'robot arm', 'manipulation policy', 'navigation stack', backlog-driven kickoffs like 'let's do demo 1', 'do demo N', 'build the next demo'; or when requirements exist but the stack is unchosen. This is the entry-point skill of the robium plugin: load it first; it routes to every other robium skill per build phase. Not for: debugging an existing stack (use the matching tool skill) or authoring robium skills (skill-author)."
     },
     {
       "name": "cloud-run",
-      "version": "1.0.2",
-      "description": "Deploy headless robotics / sim / demo containers to Google Cloud Run: the build → Artifact Registry → Cloud Run path plus the gotchas that bite sim workloads (no UDP multicast for gz-transport/DDS, CPU allocated only while a request is open, session affinity for per-visitor instances, request timeout / concurrency for long-lived WebSockets, VPC subnet sizing). Use when: 'deploy to Cloud Run', 'gcloud run deploy', 'Cloud Build', 'Artifact Registry', 'host the sim in the cloud', 'Cloud Run WebSocket / Foxglove bridge times out', 'session affinity', '--no-cpu-throttling', 'GZ_RELAY / GZ_IP on Cloud Run', deploy auth from CI with a GCP service-account key. Owns the Cloud Run deploy mechanics that live-demo and environments point at. Not for: the demo orchestrator, session gateway, or mission-control page (live-demo); GPU-cloud/RunPod or uv-vs-Docker choice (environments); general non-robotics gcloud/GCP basics (upstream Google docs)."
+      "version": "1.0.3",
+      "description": "Deploy headless robotics / sim / demo containers to Google Cloud Run: the build → Artifact Registry → Cloud Run path plus the gotchas that bite sim workloads (no UDP multicast for gz-transport/DDS, CPU allocated only while a request is open, session affinity for per-visitor instances, request timeout / concurrency for long-lived WebSockets, VPC subnet sizing). Use when: 'deploy to Cloud Run', 'gcloud run deploy', 'Cloud Build', 'Artifact Registry', 'host the sim in the cloud', 'Cloud Run WebSocket / Foxglove bridge times out', 'session affinity', '--no-cpu-throttling', 'GZ_RELAY / GZ_IP on Cloud Run', deploy auth from CI with a GCP service-account key. Owns the Cloud Run deploy mechanics that live-demo and environments point at. Not for: the demo orchestrator, session gateway, or mission-control page (live-demo); RunPod operations (runpod); uv-vs-Docker choice (environments); general non-robotics gcloud/GCP basics (upstream Google docs)."
     },
     {
       "name": "data",
@@ -18,8 +18,8 @@
     },
     {
       "name": "environments",
-      "version": "1.7.1",
-      "description": "Virtual-environment-first setup for robotics projects: decide uv/venv vs Docker, make local and remote-server runs reproduce identically, handle GPU passthrough and headless/display forwarding. Use when: setting up any new robotics project environment; 'uv', 'venv', 'virtualenv', 'docker for this project', 'reproducible environment', 'works locally but not on the server', 'GPU in container'. Load early in any robium build, right after architect. Decision rule of thumb: pure-Python ML stacks → uv; anything needing ROS 2 or system deps → Docker. Not for: multi-module application Dockerfiles and compose wiring (integration skill)."
+      "version": "2.0.0",
+      "description": "Virtual-environment-first setup for robotics projects: decide uv/venv vs Docker, make local and remote-server runs reproduce identically, handle GPU passthrough and headless/display forwarding. Use when: setting up any new robotics project environment; 'uv', 'venv', 'virtualenv', 'docker for this project', 'reproducible environment', 'works locally but not on the server', 'GPU in container', 'should this project use uv or Docker'. Load early in any robium build, right after architect. Decision rule of thumb: pure-Python ML stacks → uv; anything needing ROS 2 or system deps → Docker. Not for: multi-module application Dockerfiles and compose wiring (integration skill), or provisioning and troubleshooting RunPod resources (runpod skill)."
     },
     {
       "name": "foxglove",
@@ -43,7 +43,7 @@
     },
     {
       "name": "isaac-lab",
-      "version": "1.1.2",
+      "version": "1.1.3",
       "description": "NVIDIA Isaac Lab: reinforcement-learning and imitation-learning workflows on top of Isaac Sim: prebuilt environments and tasks, training runs, and exporting policies. Use when: 'isaac lab', 'GPU RL for robots', 'train in isaac', sim-to-real policy training in the NVIDIA stack. Load after isaac-sim basics are settled (same GPU requirements apply: RTX-class NVIDIA GPU, no macOS). Alternative ML path to lerobot; the architect skill decides between them. Not for: Isaac Sim setup itself (isaac-sim) or imitation learning on real-robot datasets (lerobot)."
     },
     {
@@ -90,6 +90,11 @@
       "name": "ros2",
       "version": "1.7.1",
       "description": "Core ROS 2 usage: workspaces, colcon builds, packages (ament_python/ament_cmake), nodes, topics/services/actions, QoS, launch files, parameters, TF2, rosdep, and gluing third-party packages together. Use when: any ROS 2 development or debugging; 'ros2', 'colcon', 'launch file', 'package.xml', 'QoS mismatch', 'TF', 'node not receiving messages', 'rosdep'. Foundation skill for the ROS vertical; load alongside nav2, gazebo, rviz2. ROS 2 only; ROS 1 is EOL and out of scope. Not for: navigation specifics (nav2), simulation (gazebo), or visualization (rviz2/foxglove)."
+    },
+    {
+      "name": "runpod",
+      "version": "0.1.0",
+      "description": "Operate RunPod Pods safely: inspect balance, compare alternative GPU resources and US regions, launch immutable images, attach network volumes, expose services, diagnose logs/startup, validate workloads, and clean up paid compute. Use when: 'RunPod', 'runpodctl', 'check alternative resources in RunPod', 'find an available RunPod GPU in the same region as my volume', 'try A40/A100/H100/4090', 'networkVolume is null', 'start container begin', 'check RunPod logs before terminating', 'RunPod proxy', 'connect interactively', or 'delete the Pod'. Load after environments defines the workload contract. Not for: uv/Docker or CUDA image parity (environments), application Dockerfiles (integration), the cloud-run skill, or framework-specific model/simulator mechanics."
     },
     {
       "name": "rviz2",

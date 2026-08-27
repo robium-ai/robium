@@ -157,3 +157,16 @@
 - brainstorming — fired: yes; accurate: yes for comparing gateway rebuild, opaque fetch, controller relay, and direct iframe approaches before selecting the smallest safe change; complete: yes; lean: yes.
 - live-demo — fired: yes; accurate: yes for keeping the lifecycle controller out of the data path and preserving the capability-scoped direct handoff; complete: yes; lean: yes.
 - cloud-run — fired: yes; accurate: yes for immutable site build, no-traffic staging, direct bundle inspection, and exact revision promotion; complete: yes; lean: yes.
+
+- [runpod] better-method (seen 1x) <!-- id: lrn-0826-16 -->
+  symptom: The final cold-start audit needed the immutable image's compressed transfer size, but `gcloud artifacts docker images describe` exposed no size and `docker buildx imagetools inspect --raw` returned `401 Unauthorized` despite an authenticated gcloud session.
+  root-cause: Artifact Registry's image summary omits Docker layer sizes, while the local Docker credential path was not configured to reuse the active gcloud OAuth session.
+  fix: Send the active gcloud access token directly to Artifact Registry's Docker Registry V2 manifest endpoint and sum `.layers[].size` with `jq`. (check: digest `sha256:4613c522…606a` resolved to 8,124,128,554 compressed bytes across 17 layers, including one 5,282,054,320-byte layer.)
+  dead-ends: Reading nonexistent size fields from the gcloud summary; treating Docker's 401 as evidence that the registry image was unavailable; estimating image size from the 7.47 GB checkpoint, which is stored separately on the RunPod volume.
+  anchors: runpod#multi-signal-startup-diagnosis; runpod#safe-field-provider-diagnostics
+  source: issue #69 closeout audit, queue signatures `dbb0cd616125` and `289141140d82`
+
+## End-of-block retro — issue #69 closeout audit
+
+- testing — fired: yes; accurate: yes for requiring repository checks, immutable evidence, production lifecycle proof, and clean synchronized worktrees before calling the app complete; complete: yes; lean: yes.
+- learning-loop — fired: yes; accurate: yes for promoting the one durable queue finding, rejecting command-output noise, and keeping consolidation outside `skills/**`; complete: yes; lean: yes.
