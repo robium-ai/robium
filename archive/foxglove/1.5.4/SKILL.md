@@ -1,47 +1,48 @@
 ---
 name: foxglove
-version: 1.6.0
+version: 1.5.4
 description: >
-  Foxglove and Lichtblick for robotics visualization: foxglove_bridge setup
-  for live ROS 2 robots, choosing the open-source Lichtblick client versus
-  Foxglove, layouts, MCAP playback/recording, and remote web visualization.
-  Use when: 'foxglove', 'lichtblick', 'mcap', an open-source robotics viewer,
-  visualizing a robot on a remote server, sharing visualization, or recording
-  sessions. The remote-viz answer in the robium stack; key to the
-  local-vs-remote workflow (cross-ref environments). Not for: ROS desktop
-  debugging (rviz2) or ML logging (rerun).
+  Foxglove for robotics visualization: foxglove_bridge setup for live ROS 2
+  robots, layouts, MCAP recording and playback, and remote/web visualization
+  of robots running on servers. Use when: 'foxglove', 'mcap', visualizing a
+  robot running on a remote server, sharing visualization with others, or
+  recording sessions for later analysis. The remote-viz answer in the robium
+  stack; key to the local-vs-remote workflow (cross-ref environments). Not
+  for: ROS desktop debugging (rviz2) or ML logging (rerun).
 ---
 
 # foxglove
 
-The remote/web visualization path for robium: `foxglove_bridge` exposes a live
-ROS 2 graph over a WebSocket, and either Foxglove or the open-source Lichtblick
-client connects to it or opens recorded data. This is the answer
-`environments` and `gazebo` route to whenever a robot or sim runs
-headless/remote and RViz2's local-display requirement doesn't fit.
+The remote/web visualization tool for robium: `foxglove_bridge` exposes a
+live ROS 2 graph over a WebSocket, and the Foxglove app (desktop or
+`app.foxglove.dev` in a browser) connects to it or opens a recorded MCAP
+file: the answer `environments` and `gazebo` route to whenever a robot or
+sim runs headless/remote and RViz2's local-display requirement doesn't fit.
 Two things changed over time and matter for how this skill is used: the
 bridge itself (`foxglove_bridge`, MIT-licensed, open source) moved its
 active development from `foxglove/ros-foxglove-bridge` (now ROS 1-only,
 maintenance mode) to the `foxglove/foxglove-sdk` monorepo, and the *app*
 that used to be free/open-source "Foxglove Studio" was discontinued in
 February 2024 (last open-source release v1.87.0, MPL-2.0) in favor of the
-current closed-source, commercial Foxglove app, which offers free and paid
-managed-platform plans. Lichtblick continues the inspectable, self-hostable
-viewer path as an open-core fork; most of its repository is MPL-2.0. The
-bridge migration was verified from the two upstream repositories on
-2026-07-10. Lichtblick's distribution/license and Foxglove's current pricing
-and self-hosting terms were re-verified from their official sources on
-2026-08-27 (see References); check them again before making procurement or
-deployment commitments because these terms drift.
+current closed-source, commercial "Foxglove" 2.x app, which does still
+ship a free tier the product page states is "free forever" for local/live
+visualization, separate from its paid Data Platform/cloud features. The
+bridge migration was confirmed via direct fetch of the
+`foxglove/ros-foxglove-bridge` and `foxglove/foxglove-sdk` GitHub repos this
+session; the free-tier claim was confirmed via direct fetch of
+`foxglove.dev`'s pricing page, while the Studio-to-2.x licensing history was
+reconstructed via search-synthesis after the source blog post 404'd on
+direct fetch (see References); re-verify before repeating either claim,
+since licensing terms are exactly the kind of thing that drifts.
 
 ## When to use this skill
 
-- Setting up `foxglove_bridge` on a robot or sim host, choosing Foxglove or
-  Lichtblick as its client, building a layout, recording or replaying an MCAP
-  file, or viewing a robot's data from another machine.
-- The trigger phrases in the description: 'foxglove', 'lichtblick', 'mcap',
-  'open-source robotics viewer', visualizing a robot on a remote server,
-  sharing visualization, or recording sessions for later analysis.
+- Setting up `foxglove_bridge` on a robot or sim host, building a layout,
+  recording or replaying an MCAP file, or viewing a robot's data from a
+  machine that isn't the robot itself.
+- The trigger phrases in the description: 'foxglove', 'mcap', visualizing a
+  robot running on a remote server, sharing visualization with others,
+  recording sessions for later analysis.
 - Any time `environments` or `gazebo` has already concluded the target is
   headless/remote and the next question is "how do I actually see it";
   this skill is that answer.
@@ -114,47 +115,6 @@ gotchas; don't expose this port directly to the internet).
 **3. Save a layout** <!-- id: save-layout-quickstart --> once panels are arranged the way a given task needs
 (3D view + a couple of plots + raw topic panels is a common start), so the
 next session reopens the same view instead of rebuilding it.
-
-## Choose Lichtblick or Foxglove
-
-Both clients handle the common local workflow: connect to a
-`foxglove_bridge` URL, inspect live ROS 2 data, open recordings, arrange
-panels, and load custom `.foxe` extensions. Choose based on ownership and
-service needs, not protocol compatibility.
-
-| Need | Choose | Why |
-|---|---|---|
-| Inspectable viewer, local/offline use, or a browser UI you can host yourself | **Lichtblick** | Its repository is open core (most code MPL-2.0), it publishes desktop builds and a browser client, and its official OCI image serves the web app locally. |
-| A custom panel that ships with your application | **Lichtblick** when self-hosting is important; either client otherwise | Lichtblick packages TypeScript extensions as `.foxe`; Robot Navigation proves the browser path with a bundled dashboard extension. Foxglove also supports local extensions. |
-| Managed recordings, search/indexing, fleet remote access, organization layouts, or vendor support | **Foxglove** | Those are integrated Foxglove platform capabilities with free, Pro, and Enterprise plans; Lichtblick's self-hosted viewer does not replace that managed operational layer. |
-| Fully self-hosted Foxglove viewer | **Check the current contract first** | Foxglove's current self-hosted embedded viewer requires a custom Enterprise agreement; Lichtblick is the direct open-source/self-hosted viewer choice. |
-
-### Lichtblick with Robot Navigation
-
-The reference app in `robium-ai/robium-apps` packages a pinned Lichtblick web
-build, preinstalls the shared Robium Dashboard `.foxe`, commits mapping and
-navigation layouts, and serves the resulting UI at `http://localhost:8080`:
-
-```bash
-cd robot-navigation
-./app run
-```
-
-Open `http://localhost:8080`; the bundled viewer connects to the bridge at
-`ws://localhost:8765`. To use an upstream Lichtblick build instead, open its
-browser or desktop client, choose **Open connection → Foxglove WebSocket**, and
-enter `ws://localhost:8765`. The same bridge remains on the robot/sim host, and
-the existing VPN/SSH-tunnel rule still applies remotely.
-
-For a standalone self-hosted browser client, upstream documents:
-
-```bash
-docker run --rm -p 8080:8080 ghcr.io/lichtblick-suite/lichtblick:latest
-```
-
-Open `http://localhost:8080`, then add the Foxglove WebSocket connection. Pin a
-release tag or digest in reproducible applications instead of deploying
-`latest`.
 
 ## Usage patterns
 
@@ -314,11 +274,13 @@ for a one-off debugging session.
   pointed at whatever WebSocket URL is given to it; no project files here
   assume the hosted URL specifically. The self-hosting story changed: the old
   open-source foxglove/studio Docker image is gone, and the current self-host
-  path is the @foxglove/embed FoxgloveViewer dropped into your own page. The
-  current docs require a custom Enterprise agreement for that asset (verified
-  2026-08-27). For an open-source browser client you can host directly, use
-  Lichtblick; for Foxglove without self-hosting, use the hosted app or launcher
-  deep-links. The connection mechanics (`ws://` URL, VPN/tunnel) are unchanged.
+  path is the @foxglove/embed FoxgloveViewer dropped into your own page, but
+  that self-hosted viewer asset requires a **paid** Foxglove plan
+  (user-confirmed, tb4-teleop 2026-07-24; verified via
+  docs.foxglove.dev/docs/embed/self-hosted, fetched 2026-07-24). For a free
+  self-directed path, prefer launcher deep-links (see Usage patterns) over a
+  self-hosted viewer. Either way the connection mechanics (`ws://` URL, VPN/
+  tunnel) are unchanged.
 - **Layouts per task:** keep a saved layout per debugging task (nav
   debugging vs. sensor calibration vs. a demo view) the same way `rviz2`
   keeps a config per task, rather than one layout trying to cover every
@@ -343,18 +305,7 @@ for a one-off debugging session.
   confirmed via search-synthesis of Foxglove's own blog posts and should be
   re-verified by reading that post directly before repeating the exact
   dates in a real project), [MCAP format](https://mcap.dev/) (fetched
-  directly on 2026-07-10), [Lichtblick repository and installation
-  guide](https://github.com/Lichtblick-Suite/lichtblick) (browser/desktop,
-  OCI image, and MPL-2.0/open-core statement verified 2026-08-27), [Lichtblick
-  live-data documentation](https://lichtblick-suite.github.io/docs/docs/connecting-to-data/live-data/)
-  (Foxglove WebSocket support verified 2026-08-27), and [Lichtblick extension
-  documentation](https://lichtblick-suite.github.io/docs/docs/extensions/introduction/)
-  (`.foxe` workflow and browser/desktop distinction verified 2026-08-27),
-  [Foxglove pricing](https://foxglove.dev/pricing), [Foxglove self-hosted
-  viewer documentation](https://docs.foxglove.dev/docs/embed/self-hosted),
-  and [Robot Navigation](https://github.com/robium-ai/robium-apps/tree/main/robot-navigation)
-  (tested client workflow).
-  Sibling skills: `environments` (headless/remote
+  directly on 2026-07-10). Sibling skills: `environments` (headless/remote
   decision this skill assumes is already made), `rviz2` (local desktop
   debugging), `rerun` (ML/data-centric logging), `visualization` (umbrella,
   routes here).
@@ -362,10 +313,6 @@ for a one-off debugging session.
 ## Changelog
 
 <!-- One dated line per battle-tested change, added by skill-author hardening sessions. -->
-
-- 1.6.0 (2026-08-27): add the Lichtblick-versus-Foxglove choice guide and a
-  verified Robot Navigation workflow; update the Foxglove self-hosting rule
-  from paid-plan wording to the current custom Enterprise requirement.
 
 - 1.5.4 (2026-08-27): replace the remaining former in-repo teleoperation
   layout path with the current sibling robium-apps path.

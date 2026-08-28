@@ -23,8 +23,8 @@
     },
     {
       "name": "foxglove",
-      "version": "1.5.4",
-      "description": "Foxglove for robotics visualization: foxglove_bridge setup for live ROS 2 robots, layouts, MCAP recording and playback, and remote/web visualization of robots running on servers. Use when: 'foxglove', 'mcap', visualizing a robot running on a remote server, sharing visualization with others, or recording sessions for later analysis. The remote-viz answer in the robium stack; key to the local-vs-remote workflow (cross-ref environments). Not for: ROS desktop debugging (rviz2) or ML logging (rerun)."
+      "version": "1.6.0",
+      "description": "Foxglove and Lichtblick for robotics visualization: foxglove_bridge setup for live ROS 2 robots, choosing the open-source Lichtblick client versus Foxglove, layouts, MCAP playback/recording, and remote web visualization. Use when: 'foxglove', 'lichtblick', 'mcap', an open-source robotics viewer, visualizing a robot on a remote server, sharing visualization, or recording sessions. The remote-viz answer in the robium stack; key to the local-vs-remote workflow (cross-ref environments). Not for: ROS desktop debugging (rviz2) or ML logging (rerun)."
     },
     {
       "name": "gazebo",
