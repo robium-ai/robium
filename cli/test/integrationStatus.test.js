@@ -8,12 +8,13 @@ import {
   integrationVersions,
   isOlderVersion,
   parseGeminiSkills,
+  parseGeminiExtensionText,
 } from '../src/integrationStatus.js';
 
 test('integrationVersions loads CLI, plugin, and skill release versions', async () => {
   const versions = await integrationVersions();
-  assert.equal(versions.cli, '0.9.0');
-  assert.equal(versions.plugin, '0.3.0');
+  assert.equal(versions.cli, '0.10.0');
+  assert.equal(versions.plugin, '0.4.0');
   assert.match(versions.skills.nav2, /^\d+\.\d+\.\d+$/);
 });
 
@@ -30,6 +31,25 @@ test('parseGeminiSkills reads enabled state and location', () => {
     { name: 'nav2', enabled: true, location: '/tmp/nav2' },
     { name: 'ros2', enabled: false, location: '/tmp/ros2' },
   ]);
+});
+
+test('parseGeminiExtensionText reads version and enablement from concise output', () => {
+  assert.deepEqual(parseGeminiExtensionText(`✓ robium (0.4.0)\n Enabled (User): true\n Enabled (Workspace): true\n`), {
+    name: 'robium', version: '0.4.0', isActive: true,
+  });
+  assert.equal(parseGeminiExtensionText('No extensions installed.\n'), null);
+});
+
+test('Gemini inspection falls back to concise extension output', async () => {
+  const exec = async (_command, args) => args.includes('--output-format')
+    ? { ok: true, stdout: '[{"name":"robium"', stderr: '', code: 0 }
+    : { ok: true, stdout: '✓ robium (0.4.0)\n Enabled (User): true\n', stderr: '', code: 0 };
+  const result = await inspectGeminiIntegration({
+    exec, home: '/not-used', expectedPluginVersion: '0.4.0', skillVersions: {},
+  });
+  assert.equal(result.state, 'active');
+  assert.equal(result.source, 'extension');
+  assert.equal(result.installedVersion, '0.4.0');
 });
 
 test('Gemini managed copy is active when discovered and reports stale skill version', async () => {

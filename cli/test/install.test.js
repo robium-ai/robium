@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  installClaude, installCodex, uninstallClaude, uninstallCodex,
+  installClaude, installCodex, installGemini,
+  uninstallClaude, uninstallCodex, uninstallGemini,
 } from '../src/install.js';
 
 function recordingExec(responses) {
@@ -126,6 +127,53 @@ test('installCodex: uses an explicitly resolved desktop command', async () => {
   assert.ok(!calls.some((call) => call.startsWith('codex ')));
 });
 
+test('installGemini links the checkout with consent and verifies activation', async () => {
+  const { exec, calls } = recordingExec({
+    'gemini --version': { stdout: '0.30.0\n' },
+    'gemini extensions link': {},
+    'gemini extensions list': {
+      stdout: '[{"name":"robium","version":"0.4.0","isActive":true}]',
+    },
+  });
+  assert.equal(await installGemini({
+    exec, extensionPath: '/src/robium', log: () => {}, error: () => {},
+  }), 0);
+  assert.deepEqual(calls, [
+    'gemini --version',
+    'gemini extensions link /src/robium --consent',
+    'gemini extensions list --output-format json',
+  ]);
+});
+
+test('installGemini refuses to claim success when extension activation is missing', async () => {
+  const { exec } = recordingExec({
+    'gemini --version': { stdout: '0.30.0\n' },
+    'gemini extensions link': {},
+    'gemini extensions list': { stdout: '[]' },
+  });
+  let message = '';
+  assert.equal(await installGemini({
+    exec, extensionPath: '/src/robium', log: () => {}, error: (line) => { message += line; },
+  }), 1);
+  assert.match(message, /did not report.*active/);
+});
+
+test('installGemini falls back to concise output when JSON listing is truncated', async () => {
+  const calls = [];
+  const exec = async (command, args) => {
+    const key = [command, ...args].join(' ');
+    calls.push(key);
+    if (key === 'gemini --version') return { ok: true, stdout: '0.30.0\n', stderr: '', code: 0 };
+    if (key.startsWith('gemini extensions link')) return { ok: true, stdout: '', stderr: '', code: 0 };
+    if (key.endsWith('--output-format json')) return { ok: true, stdout: '[{"name":"robium"', stderr: '', code: 0 };
+    return { ok: true, stdout: '✓ robium (0.4.0)\n Enabled (User): true\n', stderr: '', code: 0 };
+  };
+  assert.equal(await installGemini({
+    exec, extensionPath: '/src/robium', log: () => {}, error: () => {},
+  }), 0);
+  assert.ok(calls.includes('gemini extensions list'));
+});
+
 test('uninstallClaude removes only the Robium plugin and marketplace', async () => {
   const { exec, calls } = recordingExec({
     'claude plugin list': { stdout: '[{"id":"robium@robium","enabled":true}]' },
@@ -171,4 +219,20 @@ test('uninstallClaude cleans a partial marketplace-only install', async () => {
   assert.equal(result.skipped.length, 1);
   assert.ok(!calls.some((call) => call.startsWith('claude plugin uninstall')));
   assert.ok(calls.includes('claude plugin marketplace remove robium --scope user'));
+});
+
+test('uninstallGemini removes only the named Robium extension', async () => {
+  const { exec, calls } = recordingExec({
+    'gemini extensions list': {
+      stdout: '[{"name":"robium"},{"name":"other"}]',
+    },
+    'gemini extensions uninstall robium': {},
+  });
+  const result = await uninstallGemini({ exec });
+  assert.deepEqual(result.removed, ['Gemini extension robium']);
+  assert.equal(result.errors.length, 0);
+  assert.deepEqual(calls, [
+    'gemini extensions list --output-format json',
+    'gemini extensions uninstall robium',
+  ]);
 });

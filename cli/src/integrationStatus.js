@@ -58,13 +58,22 @@ export async function inspectCodexIntegration({ exec, command = 'codex', expecte
   return { ...pluginResult(findCodexRobiumPlugin(listed.stdout), expectedVersion), apiAvailable: true };
 }
 
-function parseGeminiExtensions(stdout) {
+export function parseGeminiExtensions(stdout) {
   try {
     const extensions = JSON.parse(stdout);
     return Array.isArray(extensions) ? extensions : null;
   } catch {
     return null;
   }
+}
+
+export function parseGeminiExtensionText(stdout) {
+  const clean = String(stdout ?? '').replace(/\x1b\[[0-9;]*m/g, '');
+  const heading = clean.match(/^[^\w\n]*robium\s+\((\d+\.\d+\.\d+)\)\s*$/m);
+  if (!heading) return null;
+  const disabled = /^\s*Enabled \((?:User|Workspace)\):\s*false\s*$/m.test(clean)
+    && !/^\s*Enabled \((?:User|Workspace)\):\s*true\s*$/m.test(clean);
+  return { name: 'robium', version: heading[1], isActive: !disabled };
 }
 
 export function parseGeminiSkills(stdout) {
@@ -121,6 +130,19 @@ export async function inspectGeminiIntegration({
         source: 'extension',
       };
     }
+  }
+
+  const textList = await exec('gemini', ['extensions', 'list']);
+  const textExtension = textList.ok ? parseGeminiExtensionText(textList.stdout) : null;
+  if (textExtension) {
+    return {
+      ...pluginResult({
+        version: textExtension.version,
+        enabled: textExtension.isActive,
+      }, expectedPluginVersion),
+      apiAvailable: true,
+      source: 'extension',
+    };
   }
 
   const root = path.join(home, '.gemini', 'skills');

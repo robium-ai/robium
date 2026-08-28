@@ -51,6 +51,15 @@ reported honestly as activation-unknown because it has no supported status API.
 Outdated native plugins and managed skills receive host-specific update and
 new-session guidance, while unavailable detection APIs remain non-destructive.
 
+CLI 0.10.0 makes Gemini CLI a first-class native client. The Gemini extension
+now bundles all skills, the Robium architect subagent, and host-native
+BeforeAgent, AfterTool, SessionStart, and SessionEnd capture adapters. Setup
+links the checkout as an extension, migrates old managed skill links, doctor
+checks extension activation and version, and removal uninstalls only the
+Robium extension plus legacy managed links. Capture uses Gemini's documented
+payloads and extension-path variables, emits strict JSON, and remains fail-open
+when Python or a transcript is unavailable. Plugin manifests are 0.4.0.
+
 ## 2026-08-24: Generic RunPod operations skill
 
 Added `runpod` as the provider-specific owner for safe inventory, GPU/region

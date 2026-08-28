@@ -3,10 +3,12 @@
 
 script_path=${1:-}
 if [ -z "$script_path" ]; then
+  printf '{}\n'
   exit 0
 fi
 
 if [ ! -f "$script_path" ]; then
+  printf '{}\n'
   exit 0
 fi
 

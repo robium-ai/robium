@@ -15,17 +15,35 @@
         ]
       }
     ],
+    "BeforeAgent": [
+      {
+        "matcher": "*",
+        "hooks": [
+          { "name": "robium-capture-prompt", "type": "command", "command": "node \"${extensionPath}${/}hooks${/}scripts${/}gemini_hook.mjs\" user-prompt-submit", "timeout": 5000 }
+        ]
+      }
+    ],
+    "AfterTool": [
+      {
+        "matcher": "run_shell_command",
+        "hooks": [
+          { "name": "robium-capture-shell-error", "type": "command", "command": "node \"${extensionPath}${/}hooks${/}scripts${/}gemini_hook.mjs\" post-tool-use", "timeout": 5000 }
+        ]
+      }
+    ],
     "SessionStart": [
       {
         "hooks": [
-          { "type": "command", "command": "sh \"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/hooks/scripts/run_hook.sh\" \"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/hooks/scripts/session_start.py\"" }
+          { "type": "command", "command": "sh \"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/hooks/scripts/run_hook.sh\" \"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/hooks/scripts/session_start.py\"" },
+          { "name": "robium-gemini-session-start", "type": "command", "command": "node \"${extensionPath}${/}hooks${/}scripts${/}gemini_hook.mjs\" session-start", "timeout": 5000 }
         ]
       }
     ],
     "SessionEnd": [
       {
         "hooks": [
-          { "type": "command", "command": "sh \"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/hooks/scripts/run_hook.sh\" \"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/hooks/scripts/session_end.py\"" }
+          { "type": "command", "command": "sh \"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/hooks/scripts/run_hook.sh\" \"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/hooks/scripts/session_end.py\"" },
+          { "name": "robium-gemini-session-end", "type": "command", "command": "node \"${extensionPath}${/}hooks${/}scripts${/}gemini_hook.mjs\" session-end", "timeout": 5000 }
         ]
       }
     ]

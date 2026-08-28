@@ -150,7 +150,7 @@ export function buildChecks({
       },
     },
     {
-      id: 'gemini-skills', label: 'Gemini skills',
+      id: 'gemini-extension', label: 'Gemini extension',
       async run() {
         const detected = await support();
         if (!detected.gemini) return { status: 'skip', detail: 'Gemini CLI not installed' };
@@ -165,9 +165,9 @@ export function buildChecks({
           missingHint: 'run: npx robium-ai setup --agent gemini',
           inactiveHint: result.source === 'extension'
             ? 'run: gemini extensions enable robium; then start a new Gemini session'
-            : 'run: gemini skills list; enable the Robium skills, then start a new Gemini session',
+            : 'legacy skill-only install detected; run: npx robium-ai setup --agent gemini',
           outdatedHint: 'run: npx robium-ai update --agent gemini; then start a new Gemini session',
-          unknownHint: 'start a new Gemini session and run: gemini skills list',
+          unknownHint: 'run: gemini extensions list --output-format json',
         });
       },
     },

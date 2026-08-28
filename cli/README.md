@@ -69,9 +69,10 @@ or uses the checkout you're already inside, then wires it in per agent:
 - **Codex**: the native plugin (skills + capture hooks) via
   `codex plugin marketplace add <clone>` + `codex plugin add robium@robium`.
   Review and trust the bundled hooks with `/hooks` before expecting capture.
-- **Gemini CLI**: each Agent Skill is linked from the checkout into
-  `~/.gemini/skills`. The repository also ships `gemini-extension.json` for
-  users who prefer Gemini's extension installer.
+- **Gemini CLI**: the checkout is linked as a native extension with
+  `gemini extensions link <clone> --consent`. Gemini auto-loads the skills,
+  architect subagent, and capture hooks from the extension. Setup removes only
+  legacy Robium-managed skill links; foreign skills are preserved.
 - **Cursor**: each Agent Skill is linked from the checkout into
   `~/.cursor/skills`, one of Cursor's documented native skill directories.
 
@@ -92,8 +93,8 @@ Codex Desktop on macOS is supported even when its bundled CLI is not on shell
 
 After setup, Robium asks each host whether the integration is active when the
 host exposes a supported status command. Claude Code and Codex report native
-plugin state and installed version; Gemini reports extension or discovered
-Agent Skill state. Cursor currently exposes no skill activation-status API, so
+plugin state and installed version; Gemini reports native extension state.
+Cursor currently exposes no skill activation-status API, so
 setup reports the limitation and asks for a new chat instead of claiming the
 skills are active. `doctor` uses the same local probes to distinguish missing,
 inactive, active, obviously outdated, and activation-unknown installations.
@@ -101,9 +102,10 @@ Its refresh guidance names the session or task that must be restarted.
 
 `npx robium-ai remove` reverses setup without deleting the repository checkout.
 Claude Code and Codex use their native plugin and marketplace removal commands.
-Gemini CLI and Cursor remove only Robium checkout symlinks and copied skill
-directories carrying the `.robium-managed` marker; unrelated skills and files
-are reported and preserved. Repeated removal is a successful no-op.
+Gemini CLI uses `gemini extensions uninstall robium` and also cleans up legacy
+Robium-managed skill links. Cursor removes only Robium checkout symlinks and
+copied skill directories carrying the `.robium-managed` marker. Unrelated
+skills and files are preserved. Repeated removal is a successful no-op.
 
 ### Install one skill
 

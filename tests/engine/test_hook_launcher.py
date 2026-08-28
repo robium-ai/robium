@@ -21,12 +21,14 @@ def test_manifest_routes_every_hook_through_launcher():
                 for matcher in matchers
                 for hook in matcher["hooks"]]
 
-    assert len(commands) == 4
-    assert all("run_hook.sh" in command for command in commands)
+    legacy = [command for command in commands if "run_hook.sh" in command]
+    gemini = [command for command in commands if "gemini_hook.mjs" in command]
+    assert len(legacy) == 4
+    assert len(gemini) == 4
     assert all(not command.startswith("python3 ") for command in commands)
     for script in ("user_prompt_submit.py", "post_tool_use.py",
                    "session_start.py", "session_end.py"):
-        assert sum(script in command for command in commands) == 1
+        assert sum(script in command for command in legacy) == 1
 
 
 def test_launcher_interpreter_preference_is_python3_python_then_py3():

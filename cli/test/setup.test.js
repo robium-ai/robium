@@ -26,6 +26,12 @@ function agentExec(present) {
       }
       return { ok: true, code: 0, stdout: '', stderr: '' };
     }
+    if (present.includes('gemini') && cmd === 'gemini' && args[0] === 'extensions') {
+      if (args[1] === 'list') {
+        return { ok: true, code: 0, stdout: '[{"name":"robium","version":"0.4.0","isActive":true}]', stderr: '' };
+      }
+      return { ok: true, code: 0, stdout: '', stderr: '' };
+    }
     return { ok: false, code: 1, stdout: '', stderr: 'not found' };
   };
   return { exec, calls };
@@ -71,22 +77,17 @@ test('detectAgents: finds binaries on PATH, cursor via ~/.cursor dir', async () 
   await rm(base, { recursive: true, force: true });
 });
 
-test('setup: codex+gemini → native Codex plugin plus Gemini skill links', async () => {
+test('setup: codex+gemini installs both native integrations', async () => {
   const fx = await makeFixtures();
   const { exec, calls } = agentExec(['codex', 'gemini']);
   let out = '';
   const code = await setup(opts(fx, { exec, log: (s) => { out += `${s}\n`; } }));
   assert.equal(code, 0);
-  const target = path.join(fx.home, '.gemini', 'skills');
-  const st = await lstat(path.join(target, 'ros2'));
-  assert.ok(st.isSymbolicLink());
-  assert.equal(await readlink(path.join(target, 'ros2')), path.join(fx.src, 'ros2'));
-  assert.ok(await exists(path.join(target, 'gazebo', 'references', 'notes.md')));
-  assert.ok(!(await exists(path.join(target, '_TEMPLATE'))));
+  assert.ok(calls.includes(`gemini extensions link ${fx.repo} --consent`));
   assert.ok(!calls.some((c) => c.startsWith('claude plugin')));
   assert.ok(calls.includes(`codex plugin marketplace add ${fx.repo}`));
   assert.ok(calls.includes('codex plugin add robium@robium --json'));
-  assert.match(out, /2 linked/);
+  assert.match(out, /Gemini extension linked/);
   assert.match(out, /Codex, Gemini CLI/);
   assert.match(out, /Codex activation verified/);
   await rm(fx.base, { recursive: true, force: true });
@@ -103,7 +104,7 @@ test('setup: claude-only → plugin flow with the checkout as marketplace ref', 
   await rm(fx.base, { recursive: true, force: true });
 });
 
-test('setup: foreign Gemini skill with same name is skipped, not clobbered', async () => {
+test('setup: Gemini migration preserves foreign skills', async () => {
   const fx = await makeFixtures();
   const foreign = path.join(fx.home, '.gemini', 'skills', 'ros2');
   await mkdir(foreign, { recursive: true });
@@ -113,11 +114,11 @@ test('setup: foreign Gemini skill with same name is skipped, not clobbered', asy
   const code = await setup(opts(fx, { exec, log: (s) => { out += `${s}\n`; } }));
   assert.equal(code, 0);
   assert.equal(await readFile(path.join(foreign, 'SKILL.md'), 'utf8'), 'someone elses ros2 skill\n');
-  assert.match(out, /Skipped 1 name collision/);
+  assert.ok(!out.includes('legacy Gemini skill link'));
   await rm(fx.base, { recursive: true, force: true });
 });
 
-test('setup: v0.3 marker copy upgrades to symlink', async () => {
+test('setup: Gemini migration removes a legacy managed skill copy', async () => {
   const fx = await makeFixtures();
   const old = path.join(fx.home, '.gemini', 'skills', 'ros2');
   await mkdir(old, { recursive: true });
@@ -126,7 +127,7 @@ test('setup: v0.3 marker copy upgrades to symlink', async () => {
   const { exec } = agentExec(['gemini']);
   const code = await setup(opts(fx, { exec }));
   assert.equal(code, 0);
-  assert.ok((await lstat(old)).isSymbolicLink());
+  assert.ok(!(await exists(old)));
   await rm(fx.base, { recursive: true, force: true });
 });
 
@@ -156,10 +157,10 @@ test('linkSkills: robium symlink replaced; foreign symlink skipped; broken repla
 
 test('setup --copy: real dirs with marker, sourced from the checkout', async () => {
   const fx = await makeFixtures();
-  const { exec } = agentExec(['gemini']);
+  const { exec } = agentExec(['cursor-agent']);
   const code = await setup(opts(fx, { exec, copy: true }));
   assert.equal(code, 0);
-  const dest = path.join(fx.home, '.gemini', 'skills', 'ros2');
+  const dest = path.join(fx.home, '.cursor', 'skills', 'ros2');
   assert.ok(!(await lstat(dest)).isSymbolicLink());
   assert.match(await readFile(path.join(dest, '.robium-managed'), 'utf8'), /robium-ai/);
   await rm(fx.base, { recursive: true, force: true });
@@ -170,34 +171,28 @@ test('setup: re-run is idempotent', async () => {
   const { exec } = agentExec(['gemini']);
   assert.equal(await setup(opts(fx, { exec })), 0);
   assert.equal(await setup(opts(fx, { exec })), 0);
-  const names = (await readdir(path.join(fx.home, '.gemini', 'skills'))).sort();
-  assert.deepEqual(names, ['gazebo', 'ros2']);
   await rm(fx.base, { recursive: true, force: true });
 });
 
-test('setup: explicit Gemini target not detected → installs skills anyway with a note', async () => {
+test('setup: explicit Gemini target requires the host binary', async () => {
   const fx = await makeFixtures();
   const { exec } = agentExec([]);
   let out = '';
   const code = await setup(opts(fx, { exec, agent: 'gemini', log: (s) => { out += `${s}\n`; } }));
-  assert.equal(code, 0);
+  assert.equal(code, 1);
   assert.match(out, /not detected/);
-  assert.match(out, /activation status is unavailable/);
-  assert.ok(await exists(path.join(fx.home, '.gemini', 'skills', 'ros2')));
+  assert.ok(!(await exists(path.join(fx.home, '.gemini', 'skills', 'ros2'))));
   await rm(fx.base, { recursive: true, force: true });
 });
 
-test('setup: Gemini confirms managed skills discovered by the host', async () => {
+test('setup: Gemini confirms the native extension is active', async () => {
   const fx = await makeFixtures();
   const base = agentExec(['gemini']);
   const exec = async (command, args) => {
-    if (command === 'gemini' && args.join(' ') === 'skills list') {
+    if (command === 'gemini' && args.join(' ') === 'extensions list --output-format json') {
       return {
         ok: true, code: 0, stderr: '',
-        stdout: [
-          `ros2 [Enabled]\n  Description: test\n  Location:    ${path.join(fx.home, '.gemini', 'skills', 'ros2')}\n`,
-          `gazebo [Enabled]\n  Description: test\n  Location:    ${path.join(fx.home, '.gemini', 'skills', 'gazebo')}\n`,
-        ].join('\n'),
+        stdout: '[{"name":"robium","version":"0.4.0","isActive":true}]',
       };
     }
     return base.exec(command, args);

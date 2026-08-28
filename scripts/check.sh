@@ -34,6 +34,25 @@ versions = {
 }
 if len(versions) != 1:
     raise SystemExit(f"plugin version mismatch: {sorted(versions)}")
+hooks = documents["hooks/hooks.json"]["hooks"]
+for event in ("BeforeAgent", "AfterTool", "SessionStart", "SessionEnd"):
+    if event not in hooks:
+        raise SystemExit(f"Gemini hook event missing: {event}")
+gemini_commands = [
+    hook["command"]
+    for event in hooks.values()
+    for definition in event
+    for hook in definition["hooks"]
+    if hook.get("name", "").startswith(("robium-gemini", "robium-capture"))
+]
+if len(gemini_commands) != 4 or any(
+    "${extensionPath}" not in command or "${/}" not in command
+    for command in gemini_commands
+):
+    raise SystemExit("Gemini hook commands must use portable extension variables")
+agent = Path("agents/robium-architect.md").read_text()
+if "name: robium-architect" not in agent or "tools: Read" in agent:
+    raise SystemExit("Gemini architect agent is missing or uses host-specific tools")
 print(f"Validated {len(paths)} manifests; plugin version {versions.pop()}")
 '
 

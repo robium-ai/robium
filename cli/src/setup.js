@@ -2,7 +2,8 @@ import { homedir } from 'node:os';
 import path from 'node:path';
 import { cp, lstat, mkdir, readdir, realpath, rm, stat, symlink, writeFile } from 'node:fs/promises';
 import { run } from './exec.js';
-import { installClaude, installCodex } from './install.js';
+import { installClaude, installCodex, installGemini } from './install.js';
+import { removeManagedSkills } from './removeManagedSkills.js';
 import { resolveRepo } from './repo.js';
 import { detectAgentSupport } from './agentCommands.js';
 import {
@@ -18,10 +19,8 @@ import {
   integrationVersions,
 } from './integrationStatus.js';
 
-// Claude Code and Codex install the native plugin (skills + capture hooks),
-// served from the clone. Gemini and Cursor receive Agent Skills symlinks in
-// their own user directories. Keeping those links out of ~/.agents/skills
-// avoids duplicate Codex skill registrations when the plugin is enabled.
+// Claude Code, Codex, and Gemini install native bundles served from the clone.
+// Cursor receives Agent Skills symlinks in its user directory.
 export const AGENTS = ['claude', 'codex', 'gemini', 'cursor'];
 
 export const LABEL = {
@@ -97,7 +96,7 @@ const NONE_FOUND = `✗ No supported coding agent found.
 const REFRESH_HINT = {
   claude: 'Start a new Claude Code session to load the installed plugin.',
   codex: 'Start a new Codex task to load the installed plugin.',
-  gemini: 'Start a new Gemini session to load the installed skills.',
+  gemini: 'Start a new Gemini session to load the extension.',
   cursor: 'Start a new Cursor chat to load the installed skills.',
 };
 
@@ -187,9 +186,27 @@ export async function setup({
     if (rc !== 0) failed = true;
   }
 
-  const skillTargets = targets.filter((a) => a === 'gemini' || a === 'cursor');
+  if (targets.includes('gemini')) {
+    const rc = await installGemini({ exec, log, error, extensionPath: repo });
+    if (rc !== 0) {
+      failed = true;
+    } else {
+      // Migrate setup <=0.9 without touching foreign user skills.
+      const legacy = await removeManagedSkills({
+        targetDir: path.join(home, '.gemini', 'skills'),
+      });
+      if (legacy.errors.length) {
+        for (const item of legacy.errors) error(`✗ Could not remove legacy Gemini skill: ${item}`);
+        failed = true;
+      } else if (legacy.removed.length) {
+        log(`✓ Removed ${legacy.removed.length} legacy Gemini skill link(s); the extension now owns discovery.`);
+      }
+    }
+  }
+
+  const skillTargets = targets.filter((a) => a === 'cursor');
   for (const target of skillTargets) {
-    const targetDir = path.join(home, target === 'gemini' ? '.gemini' : '.cursor', 'skills');
+    const targetDir = path.join(home, '.cursor', 'skills');
     try {
       const { linked, copied } = await linkSkills({
         src: path.join(repo, 'skills'),
@@ -199,7 +216,7 @@ export async function setup({
         log,
       });
       const how = [linked && `${linked} linked`, copied && `${copied} copied`].filter(Boolean).join(', ');
-      log(`✓ Agent Skills installed to ${path.join('~', target === 'gemini' ? '.gemini' : '.cursor', 'skills')} (${how || 'up to date'})`);
+      log(`✓ Agent Skills installed to ${path.join('~', '.cursor', 'skills')} (${how || 'up to date'})`);
       log(`  Read natively by ${LABEL[target]}; git pull in the repo updates them.`);
     } catch (e) {
       error(`✗ Could not install skills for ${LABEL[target]}: ${e.message}`);

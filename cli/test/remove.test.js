@@ -50,6 +50,10 @@ function fullExec() {
     if (key === 'codex plugin marketplace list --json') {
       return { ok: true, code: 0, stdout: '{"marketplaces":[{"name":"robium"}]}', stderr: '' };
     }
+    if (key === 'gemini extensions list --output-format json') {
+      return { ok: true, code: 0, stdout: '[{"name":"robium","version":"0.4.0","isActive":true}]', stderr: '' };
+    }
+    if (args[0] === 'extensions') return { ok: true, code: 0, stdout: '', stderr: '' };
     if (args[0] === 'plugin') return { ok: true, code: 0, stdout: '', stderr: '' };
     return { ok: false, code: 1, stdout: '', stderr: 'not found' };
   };
@@ -88,7 +92,7 @@ test('remove reverses every supported setup integration and preserves checkout',
   assert.equal(await setup({
     exec, home: fx.home, cwd: fx.repo, log: () => {}, error: () => {},
   }), 0);
-  assert.ok(await exists(path.join(fx.home, '.gemini', 'skills', 'ros2')));
+  assert.ok(calls.includes(`gemini extensions link ${fx.repo} --consent`));
   assert.ok(await exists(path.join(fx.home, '.cursor', 'skills', 'ros2')));
 
   let output = '';
@@ -100,7 +104,7 @@ test('remove reverses every supported setup integration and preserves checkout',
   assert.ok(calls.includes('claude plugin marketplace remove robium --scope user'));
   assert.ok(calls.includes('codex plugin remove robium@robium --json'));
   assert.ok(calls.includes('codex plugin marketplace remove robium --json'));
-  assert.ok(!(await exists(path.join(fx.home, '.gemini', 'skills', 'ros2'))));
+  assert.ok(calls.includes('gemini extensions uninstall robium'));
   assert.ok(!(await exists(path.join(fx.home, '.cursor', 'skills', 'ros2'))));
   assert.ok(await exists(fx.repo));
   assert.match(output, /checkout was preserved/);

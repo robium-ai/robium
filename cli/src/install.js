@@ -1,5 +1,6 @@
 import { run } from './exec.js';
 import { findCodexRobiumPlugin, findRobiumPlugin } from './plugins.js';
+import { parseGeminiExtensions, parseGeminiExtensionText } from './integrationStatus.js';
 
 const MARKETPLACE_REF = 'robium-ai/robium';
 const MARKETPLACE_NAME = 'robium';
@@ -16,7 +17,8 @@ const CLAUDE_MISSING = `✗ Claude Code not found on PATH.
 // Claude Code path: the full plugin (skills + robium-architect agent +
 // capture hooks) via Claude's marketplace, served from the local clone when
 // setup resolved one (marketplaceRef = clone path); `git pull` updates it.
-// Gemini and Cursor are handled by setup.js through their native skill dirs.
+// Gemini is installed as a linked native extension by setup.js. Cursor is
+// handled there through its native skill directory.
 export async function installClaude({
   exec = run,
   log = console.log,
@@ -129,6 +131,50 @@ export async function installCodex({
   return 0;
 }
 
+const GEMINI_MISSING = `✗ Gemini CLI not found on PATH.
+
+  Install Gemini CLI first, then re-run:
+
+    npx robium-ai setup --agent gemini`;
+
+export async function installGemini({
+  exec = run,
+  log = console.log,
+  error = console.error,
+  extensionPath,
+} = {}) {
+  const ver = await exec('gemini', ['--version']);
+  if (!ver.ok) {
+    error(GEMINI_MISSING);
+    return 1;
+  }
+  log(`✓ Gemini CLI detected (${ver.stdout.trim()})`);
+
+  const linked = await exec('gemini', [
+    'extensions', 'link', extensionPath, '--consent',
+  ]);
+  if (!linked.ok) {
+    error(`✗ Could not link the Robium Gemini extension:\n${(linked.stderr || linked.stdout).trim()}`);
+    return 1;
+  }
+  log(`✓ Gemini extension linked: ${extensionPath}`);
+
+  const listed = await exec('gemini', ['extensions', 'list', '--output-format', 'json']);
+  let extension = listed.ok
+    ? parseGeminiExtensions(listed.stdout)?.find((item) => item?.name === 'robium')
+    : null;
+  if (!extension) {
+    const textList = await exec('gemini', ['extensions', 'list']);
+    extension = textList.ok ? parseGeminiExtensionText(textList.stdout) : null;
+  }
+  if (!extension || extension.isActive === false) {
+    error('✗ Gemini CLI did not report the Robium extension as active.');
+    return 1;
+  }
+  log('✓ Verified: robium is installed and enabled in Gemini CLI');
+  return 0;
+}
+
 function claudeHasMarketplace(stdout) {
   try {
     const entries = JSON.parse(stdout);
@@ -219,5 +265,29 @@ export async function uninstallCodex({
   } else {
     result.skipped.push('Codex marketplace (not configured)');
   }
+  return result;
+}
+
+export async function uninstallGemini({ exec = run } = {}) {
+  const result = removalResult();
+  const listed = await exec('gemini', ['extensions', 'list', '--output-format', 'json']);
+  let extension = listed.ok
+    ? parseGeminiExtensions(listed.stdout)?.find((item) => item?.name === 'robium')
+    : null;
+  if (!extension) {
+    const textList = await exec('gemini', ['extensions', 'list']);
+    if (!textList.ok) {
+      result.errors.push('Gemini extension state could not be inspected');
+      return result;
+    }
+    extension = parseGeminiExtensionText(textList.stdout);
+  }
+  if (!extension) {
+    result.skipped.push('Gemini extension (not installed)');
+    return result;
+  }
+  const removed = await exec('gemini', ['extensions', 'uninstall', 'robium']);
+  if (removed.ok) result.removed.push('Gemini extension robium');
+  else result.errors.push(`Gemini extension: ${(removed.stderr || removed.stdout).trim()}`);
   return result;
 }

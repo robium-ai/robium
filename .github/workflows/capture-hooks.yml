@@ -10,6 +10,8 @@ on:
       - "tests/engine/test_miner.py"
       - "tests/engine/test_scrub.py"
       - "tests/engine/test_session_end.py"
+      - "tests/engine/test_gemini_hooks.py"
+      - "hooks/scripts/gemini_hook.mjs"
       - ".github/workflows/capture-hooks.yml"
   pull_request:
     paths:
@@ -19,6 +21,8 @@ on:
       - "tests/engine/test_miner.py"
       - "tests/engine/test_scrub.py"
       - "tests/engine/test_session_end.py"
+      - "tests/engine/test_gemini_hooks.py"
+      - "hooks/scripts/gemini_hook.mjs"
       - ".github/workflows/capture-hooks.yml"
   workflow_dispatch:
 
@@ -49,5 +53,6 @@ jobs:
           tests/engine/test_hook_scripts.py
           tests/engine/test_session_end.py
           tests/engine/test_hook_launcher.py
+          tests/engine/test_gemini_hooks.py
           tests/engine/test_miner.py
           -q

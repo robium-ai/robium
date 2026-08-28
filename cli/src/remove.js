@@ -1,46 +1,16 @@
 import { homedir } from 'node:os';
 import path from 'node:path';
-import { lstat, readdir, rm, rmdir } from 'node:fs/promises';
+import { lstat, readdir } from 'node:fs/promises';
 import { run } from './exec.js';
 import { detectAgentSupport } from './agentCommands.js';
-import { uninstallClaude, uninstallCodex } from './install.js';
+import { uninstallClaude, uninstallCodex, uninstallGemini } from './install.js';
 import { AGENTS, LABEL } from './setup.js';
 import { isManagedSkill } from './managedSkills.js';
+export { removeManagedSkills } from './removeManagedSkills.js';
+import { removeManagedSkills } from './removeManagedSkills.js';
 
 async function exists(target) {
   try { await lstat(target); return true; } catch { return false; }
-}
-
-export async function removeManagedSkills({ targetDir }) {
-  const result = { removed: [], skipped: [], errors: [] };
-  if (!(await exists(targetDir))) return result;
-
-  let entries;
-  try {
-    entries = await readdir(targetDir, { withFileTypes: true });
-  } catch (error) {
-    result.errors.push(`${targetDir}: ${error.message}`);
-    return result;
-  }
-
-  for (const entry of entries) {
-    const dest = path.join(targetDir, entry.name);
-    if (!(await isManagedSkill(dest))) {
-      result.skipped.push(`${dest} (not managed by Robium)`);
-      continue;
-    }
-    try {
-      await rm(dest, { recursive: true, force: true });
-      result.removed.push(dest);
-    } catch (error) {
-      result.errors.push(`${dest}: ${error.message}`);
-    }
-  }
-
-  // setup creates the skills directory. Remove it only when it is empty;
-  // never remove the host directory or a directory containing foreign skills.
-  try { await rmdir(targetDir); } catch {}
-  return result;
 }
 
 async function hasManagedSkills(targetDir) {
@@ -98,6 +68,14 @@ export async function remove({
       result = await uninstallClaude({ exec, command: support.claude?.command ?? 'claude' });
     } else if (target === 'codex') {
       result = await uninstallCodex({ exec, command: support.codex?.command ?? 'codex' });
+    } else if (target === 'gemini') {
+      result = support.gemini
+        ? await uninstallGemini({ exec })
+        : { removed: [], skipped: ['Gemini extension (host not installed)'], errors: [] };
+      const legacy = await removeManagedSkills({
+        targetDir: path.join(home, '.gemini', 'skills'),
+      });
+      mergeResult(result, legacy);
     } else {
       result = await removeManagedSkills({
         targetDir: path.join(home, `.${target}`, 'skills'),
