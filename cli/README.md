@@ -22,6 +22,10 @@ npx robium-ai update
 # `install` is an alias for `setup`
 npx robium-ai install
 
+# Remove managed integrations but preserve the Robium checkout
+npx robium-ai remove
+npx robium-ai remove --agent cursor
+
 # Check your machine for robotics work (Docker, GPU, disk, Python/uv, …)
 npx robium-ai doctor          # human-readable
 npx robium-ai doctor --json   # machine-readable (for agents/scripts)
@@ -85,6 +89,12 @@ Requires `git` (setup prints the manual recipe if missing).
 
 Codex Desktop on macOS is supported even when its bundled CLI is not on shell
 `PATH`; setup and doctor probe the application bundle directly.
+
+`npx robium-ai remove` reverses setup without deleting the repository checkout.
+Claude Code and Codex use their native plugin and marketplace removal commands.
+Gemini CLI and Cursor remove only Robium checkout symlinks and copied skill
+directories carrying the `.robium-managed` marker; unrelated skills and files
+are reported and preserved. Repeated removal is a successful no-op.
 
 ### Install one skill
 

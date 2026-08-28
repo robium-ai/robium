@@ -128,3 +128,96 @@ export async function installCodex({
     : '! Could not verify Codex install (run `codex plugin list` to check)');
   return 0;
 }
+
+function claudeHasMarketplace(stdout) {
+  try {
+    const entries = JSON.parse(stdout);
+    return Array.isArray(entries) && entries.some((entry) => entry?.name === MARKETPLACE_NAME);
+  } catch {
+    return false;
+  }
+}
+
+function codexHasMarketplace(stdout) {
+  try {
+    const payload = JSON.parse(stdout);
+    return Array.isArray(payload?.marketplaces)
+      && payload.marketplaces.some((entry) => entry?.name === MARKETPLACE_NAME);
+  } catch {
+    return false;
+  }
+}
+
+function removalResult() {
+  return { removed: [], skipped: [], errors: [] };
+}
+
+export async function uninstallClaude({
+  exec = run,
+  command = 'claude',
+} = {}) {
+  const result = removalResult();
+  const plugins = await exec(command, ['plugin', 'list', '--json']);
+  if (!plugins.ok) {
+    result.errors.push('Claude Code plugin state could not be inspected');
+    return result;
+  }
+
+  if (findRobiumPlugin(plugins.stdout)) {
+    const removed = await exec(command, [
+      'plugin', 'uninstall', PLUGIN_SPEC, '--scope', 'user',
+    ]);
+    if (removed.ok) result.removed.push('Claude Code plugin robium@robium');
+    else result.errors.push(`Claude Code plugin: ${(removed.stderr || removed.stdout).trim()}`);
+  } else {
+    result.skipped.push('Claude Code plugin (not installed)');
+  }
+
+  const marketplaces = await exec(command, ['plugin', 'marketplace', 'list', '--json']);
+  if (!marketplaces.ok) {
+    result.errors.push('Claude Code marketplace state could not be inspected');
+  } else if (claudeHasMarketplace(marketplaces.stdout)) {
+    const removed = await exec(command, [
+      'plugin', 'marketplace', 'remove', MARKETPLACE_NAME, '--scope', 'user',
+    ]);
+    if (removed.ok) result.removed.push('Claude Code marketplace robium');
+    else result.errors.push(`Claude Code marketplace: ${(removed.stderr || removed.stdout).trim()}`);
+  } else {
+    result.skipped.push('Claude Code marketplace (not configured)');
+  }
+  return result;
+}
+
+export async function uninstallCodex({
+  exec = run,
+  command = 'codex',
+} = {}) {
+  const result = removalResult();
+  const plugins = await exec(command, ['plugin', 'list', '--json']);
+  if (!plugins.ok) {
+    result.errors.push('Codex plugin state could not be inspected');
+    return result;
+  }
+
+  if (findCodexRobiumPlugin(plugins.stdout)) {
+    const removed = await exec(command, ['plugin', 'remove', PLUGIN_SPEC, '--json']);
+    if (removed.ok) result.removed.push('Codex plugin robium@robium');
+    else result.errors.push(`Codex plugin: ${(removed.stderr || removed.stdout).trim()}`);
+  } else {
+    result.skipped.push('Codex plugin (not installed)');
+  }
+
+  const marketplaces = await exec(command, ['plugin', 'marketplace', 'list', '--json']);
+  if (!marketplaces.ok) {
+    result.errors.push('Codex marketplace state could not be inspected');
+  } else if (codexHasMarketplace(marketplaces.stdout)) {
+    const removed = await exec(command, [
+      'plugin', 'marketplace', 'remove', MARKETPLACE_NAME, '--json',
+    ]);
+    if (removed.ok) result.removed.push('Codex marketplace robium');
+    else result.errors.push(`Codex marketplace: ${(removed.stderr || removed.stdout).trim()}`);
+  } else {
+    result.skipped.push('Codex marketplace (not configured)');
+  }
+  return result;
+}

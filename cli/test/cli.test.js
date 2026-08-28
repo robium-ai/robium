@@ -12,6 +12,7 @@ test('--help prints usage, exit 0', () => {
   const r = runCli('--help');
   assert.equal(r.status, 0);
   assert.match(r.stdout, /Usage:/);
+  assert.match(r.stdout, /npx robium-ai remove/);
 });
 
 test('no args prints usage, exit 0', () => {

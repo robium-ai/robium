@@ -38,6 +38,12 @@ timeout, removes only automatically owned variant workdirs, rejects unknown
 deep-verification skills, preserves canonical Markdown block spacing, and uses
 one validated task-check schema across the runner and skill validator.
 
+The `robium-ai` CLI reaches 0.8.0 with a symmetric `remove` command. Claude Code
+and Codex use native plugin and marketplace removal, while Gemini CLI and Cursor
+remove only Robium checkout symlinks or copied skills carrying the managed
+marker. Foreign skills and the repository checkout are preserved, and repeated
+removal is a successful no-op.
+
 ## 2026-08-24: Generic RunPod operations skill
 
 Added `runpod` as the provider-specific owner for safe inventory, GPU/region

@@ -12,7 +12,7 @@ import { detectAgentSupport } from './agentCommands.js';
 // avoids duplicate Codex skill registrations when the plugin is enabled.
 export const AGENTS = ['claude', 'codex', 'gemini', 'cursor'];
 
-const LABEL = {
+export const LABEL = {
   claude: 'Claude Code',
   codex: 'Codex',
   gemini: 'Gemini CLI',
@@ -37,6 +37,15 @@ async function isRobiumSkillTarget(resolved) {
   return (await isFile(path.join(resolved, 'SKILL.md')))
     && ((await isFile(path.join(resolved, '..', '..', '.codex-plugin', 'plugin.json')))
       || (await isFile(path.join(resolved, '..', '..', '.claude-plugin', 'plugin.json'))));
+}
+
+export async function isManagedSkill(dest) {
+  let st;
+  try { st = await lstat(dest); } catch { return false; }
+  if (st.isSymbolicLink()) {
+    try { return isRobiumSkillTarget(await realpath(dest)); } catch { return false; }
+  }
+  return st.isDirectory() && isFile(path.join(dest, MARKER));
 }
 
 // Decide whether we may replace what's at dest. Returns true for: nothing,

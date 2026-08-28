@@ -4,6 +4,7 @@ import { setup } from '../src/setup.js';
 import { doctor } from '../src/doctor.js';
 import { skills } from '../src/skills.js';
 import { appCmd } from '../src/apps.js';
+import { remove } from '../src/remove.js';
 
 const USAGE = `robium: robotics skill pack for coding agents (https://robium.ai)
 
@@ -14,6 +15,8 @@ Usage:
   npx robium-ai install                  Alias for setup
   npx robium-ai update [options]         Pull the Robium checkout and refresh
                                          every detected agent integration
+  npx robium-ai remove [options]         Remove managed agent integrations;
+                                         preserve the Robium checkout
   npx robium-ai doctor [--json]          Check your environment
   npx robium-ai skills [query]           Browse the skill catalog
   npx robium-ai app <subcommand>         Work with reference applications
@@ -78,6 +81,8 @@ export async function main(argv) {
       return setup({ agent: flags.agent, dir: flags.dir, yes: flags.yes, copy: flags.copy });
     case 'update':
       return setup({ agent: flags.agent, dir: flags.dir, yes: true, copy: flags.copy });
+    case 'remove':
+      return remove({ agent: flags.agent });
     case 'doctor':
       return doctor({ json: flags.json });
     case 'skills':

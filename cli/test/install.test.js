@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { installClaude, installCodex } from '../src/install.js';
+import {
+  installClaude, installCodex, uninstallClaude, uninstallCodex,
+} from '../src/install.js';
 
 function recordingExec(responses) {
   const calls = [];
@@ -122,4 +124,51 @@ test('installCodex: uses an explicitly resolved desktop command', async () => {
   assert.equal(await installCodex({ exec, command: desktop, log: () => {}, error: () => {} }), 0);
   assert.ok(calls.includes(`${desktop} plugin add robium@robium --json`));
   assert.ok(!calls.some((call) => call.startsWith('codex ')));
+});
+
+test('uninstallClaude removes only the Robium plugin and marketplace', async () => {
+  const { exec, calls } = recordingExec({
+    'claude plugin list': { stdout: '[{"id":"robium@robium","enabled":true}]' },
+    'claude plugin uninstall': {},
+    'claude plugin marketplace list': { stdout: '[{"name":"robium"},{"name":"other"}]' },
+    'claude plugin marketplace remove': {},
+  });
+  const result = await uninstallClaude({ exec });
+  assert.equal(result.errors.length, 0);
+  assert.equal(result.removed.length, 2);
+  assert.deepEqual(calls, [
+    'claude plugin list --json',
+    'claude plugin uninstall robium@robium --scope user',
+    'claude plugin marketplace list --json',
+    'claude plugin marketplace remove robium --scope user',
+  ]);
+});
+
+test('uninstallCodex is idempotent when Robium is already absent', async () => {
+  const { exec, calls } = recordingExec({
+    'codex plugin list': { stdout: '{"installed":[]}' },
+    'codex plugin marketplace list': { stdout: '{"marketplaces":[]}' },
+  });
+  const result = await uninstallCodex({ exec });
+  assert.equal(result.errors.length, 0);
+  assert.equal(result.removed.length, 0);
+  assert.equal(result.skipped.length, 2);
+  assert.deepEqual(calls, [
+    'codex plugin list --json',
+    'codex plugin marketplace list --json',
+  ]);
+});
+
+test('uninstallClaude cleans a partial marketplace-only install', async () => {
+  const { exec, calls } = recordingExec({
+    'claude plugin list': { stdout: '[]' },
+    'claude plugin marketplace list': { stdout: '[{"name":"robium"}]' },
+    'claude plugin marketplace remove': {},
+  });
+  const result = await uninstallClaude({ exec });
+  assert.equal(result.errors.length, 0);
+  assert.deepEqual(result.removed, ['Claude Code marketplace robium']);
+  assert.equal(result.skipped.length, 1);
+  assert.ok(!calls.some((call) => call.startsWith('claude plugin uninstall')));
+  assert.ok(calls.includes('claude plugin marketplace remove robium --scope user'));
 });
