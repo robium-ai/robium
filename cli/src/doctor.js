@@ -1,9 +1,13 @@
 import os from 'node:os';
-import path from 'node:path';
-import { readFile, readdir, realpath, stat } from 'node:fs/promises';
 import { run } from './exec.js';
-import { findCodexRobiumPlugin, findRobiumPlugin } from './plugins.js';
 import { detectAgentSupport } from './agentCommands.js';
+import {
+  inspectClaudeIntegration,
+  inspectCodexIntegration,
+  inspectCursorIntegration,
+  inspectGeminiIntegration,
+  integrationVersions,
+} from './integrationStatus.js';
 
 const GLYPH = { pass: '✓', warn: '!', fail: '✗', info: '·', skip: '-' };
 const AGENT_LABEL = {
@@ -13,29 +17,36 @@ const AGENT_LABEL = {
   cursor: 'Cursor',
 };
 
-async function isRobiumSkill(skillDir) {
-  try {
-    await readFile(path.join(skillDir, '.robium-managed'));
-    return true;
-  } catch { /* linked installs do not need a marker */ }
-  try {
-    const resolved = await realpath(skillDir);
-    return (await stat(path.join(resolved, '..', '..', '.codex-plugin', 'plugin.json'))).isFile();
-  } catch { return false; }
-}
-
-async function countRobiumSkills(root) {
-  let entries;
-  try { entries = await readdir(root, { withFileTypes: true }); } catch { return 0; }
-  let count = 0;
-  for (const entry of entries) {
-    if (!entry.isDirectory() && !entry.isSymbolicLink()) continue;
-    try {
-      const skillDir = path.join(root, entry.name);
-      if ((await stat(path.join(skillDir, 'SKILL.md'))).isFile() && await isRobiumSkill(skillDir)) count++;
-    } catch { /* broken or incomplete skill link */ }
+function integrationCheck(result, {
+  missingHint,
+  inactiveHint,
+  outdatedHint,
+  unknownHint,
+} = {}) {
+  const state = { integrationState: result.state, outdated: !!result.outdated };
+  const version = result.installedVersion ? ` v${result.installedVersion}` : '';
+  const count = result.count ? ` (${result.count} managed skill${result.count === 1 ? '' : 's'})` : '';
+  const expected = result.expectedVersion ? `; expected v${result.expectedVersion}` : '';
+  if (result.state === 'missing') {
+    return { ...state, status: 'warn', detail: 'not installed', hint: missingHint };
   }
-  return count;
+  if (result.state === 'inactive') {
+    const stale = result.outdated ? ` and outdated${version}${expected}` : '';
+    return { ...state, status: 'warn', detail: `installed but inactive${stale}${count}`, hint: inactiveHint };
+  }
+  if (result.outdated) {
+    const activity = result.state === 'active' ? 'active' : 'installed';
+    return { ...state, status: 'warn', detail: `${activity} but outdated${version}${expected}${count}`, hint: outdatedHint };
+  }
+  if (result.state === 'active') {
+    return { ...state, status: 'pass', detail: `active${version}${count}` };
+  }
+  return {
+    ...state,
+    status: 'warn',
+    detail: `installed${count}; activation status unavailable`,
+    hint: unknownHint,
+  };
 }
 
 export function buildChecks({
@@ -47,9 +58,14 @@ export function buildChecks({
 } = {}) {
   const appleSilicon = platform === 'darwin' && arch === 'arm64';
   let supportPromise;
+  let versionsPromise;
   const support = () => {
     supportPromise ??= detectAgentSupport({ exec, home, platform });
     return supportPromise;
+  };
+  const versions = () => {
+    versionsPromise ??= integrationVersions();
+    return versionsPromise;
   };
   return [
     {
@@ -87,14 +103,16 @@ export function buildChecks({
       async run() {
         const detected = await support();
         if (!detected.claude) return { status: 'skip', detail: 'Claude Code not installed' };
-        const r = await exec('claude', ['plugin', 'list', '--json']);
-        if (!r.ok) return { status: 'skip', detail: 'could not query plugin list' };
-        const plugin = findRobiumPlugin(r.stdout);
-        if (!plugin) return { status: 'warn', detail: 'not installed', hint: 'run: npx robium-ai setup --agent claude' };
-        if (plugin.enabled === false) {
-          return { status: 'warn', detail: 'installed but not loaded', hint: 'check plugin dependencies: claude plugin list' };
-        }
-        return { status: 'pass', detail: 'installed' };
+        const expected = await versions();
+        const result = await inspectClaudeIntegration({
+          exec, command: detected.claude.command, expectedVersion: expected.plugin,
+        });
+        return integrationCheck(result, {
+          missingHint: 'run: npx robium-ai setup --agent claude',
+          inactiveHint: 'enable robium@robium, then start a new Claude Code session',
+          outdatedHint: 'run: npx robium-ai update --agent claude; then start a new Claude Code session',
+          unknownHint: 'run: claude plugin list --json',
+        });
       },
     },
     {
@@ -111,12 +129,16 @@ export function buildChecks({
       async run() {
         const detected = await support();
         if (!detected.codex) return { status: 'skip', detail: 'Codex not installed' };
-        const r = await exec(detected.codex.command, ['plugin', 'list', '--json']);
-        if (!r.ok) return { status: 'skip', detail: 'could not query Codex plugin list' };
-        const plugin = findCodexRobiumPlugin(r.stdout);
-        if (!plugin) return { status: 'warn', detail: 'not installed', hint: 'run: npx robium-ai setup --agent codex' };
-        if (plugin.enabled === false) return { status: 'warn', detail: 'installed but disabled', hint: 'enable robium in the Codex plugin browser' };
-        return { status: 'pass', detail: 'installed' };
+        const expected = await versions();
+        const result = await inspectCodexIntegration({
+          exec, command: detected.codex.command, expectedVersion: expected.plugin,
+        });
+        return integrationCheck(result, {
+          missingHint: 'run: npx robium-ai setup --agent codex',
+          inactiveHint: 'enable robium in the Codex plugin browser, then start a new task',
+          outdatedHint: 'run: npx robium-ai update --agent codex; then start a new Codex task',
+          unknownHint: 'run: codex plugin list --json',
+        });
       },
     },
     {
@@ -132,14 +154,21 @@ export function buildChecks({
       async run() {
         const detected = await support();
         if (!detected.gemini) return { status: 'skip', detail: 'Gemini CLI not installed' };
-        const extension = await exec('gemini', ['extensions', 'list']);
-        if (extension.ok && /\brobium\b/i.test(extension.stdout)) {
-          return { status: 'pass', detail: 'native Robium extension installed' };
-        }
-        const count = await countRobiumSkills(path.join(home, '.gemini', 'skills'));
-        return count
-          ? { status: 'pass', detail: `${count} Robium Agent Skills available` }
-          : { status: 'warn', detail: 'not installed', hint: 'run: npx robium-ai setup --agent gemini' };
+        const expected = await versions();
+        const result = await inspectGeminiIntegration({
+          exec,
+          home,
+          expectedPluginVersion: expected.plugin,
+          skillVersions: expected.skills,
+        });
+        return integrationCheck(result, {
+          missingHint: 'run: npx robium-ai setup --agent gemini',
+          inactiveHint: result.source === 'extension'
+            ? 'run: gemini extensions enable robium; then start a new Gemini session'
+            : 'run: gemini skills list; enable the Robium skills, then start a new Gemini session',
+          outdatedHint: 'run: npx robium-ai update --agent gemini; then start a new Gemini session',
+          unknownHint: 'start a new Gemini session and run: gemini skills list',
+        });
       },
     },
     {
@@ -156,10 +185,13 @@ export function buildChecks({
       async run() {
         const detected = await support();
         if (!detected.cursor) return { status: 'skip', detail: 'Cursor not installed' };
-        const count = await countRobiumSkills(path.join(home, '.cursor', 'skills'));
-        return count
-          ? { status: 'pass', detail: `${count} Robium Agent Skills available` }
-          : { status: 'warn', detail: 'not installed', hint: 'run: npx robium-ai setup --agent cursor' };
+        const expected = await versions();
+        const result = await inspectCursorIntegration({ home, skillVersions: expected.skills });
+        return integrationCheck(result, {
+          missingHint: 'run: npx robium-ai setup --agent cursor',
+          outdatedHint: 'run: npx robium-ai update --agent cursor; then start a new Cursor chat',
+          unknownHint: 'start a new Cursor chat; Cursor does not expose a skill activation-status API',
+        });
       },
     },
     {

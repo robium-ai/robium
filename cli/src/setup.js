@@ -5,6 +5,18 @@ import { run } from './exec.js';
 import { installClaude, installCodex } from './install.js';
 import { resolveRepo } from './repo.js';
 import { detectAgentSupport } from './agentCommands.js';
+import {
+  MANAGED_MARKER,
+  isManagedSkill,
+  readSkillVersions,
+} from './managedSkills.js';
+import {
+  inspectClaudeIntegration,
+  inspectCodexIntegration,
+  inspectCursorIntegration,
+  inspectGeminiIntegration,
+  integrationVersions,
+} from './integrationStatus.js';
 
 // Claude Code and Codex install the native plugin (skills + capture hooks),
 // served from the clone. Gemini and Cursor receive Agent Skills symlinks in
@@ -19,33 +31,8 @@ export const LABEL = {
   cursor: 'Cursor',
 };
 
-// Marker file for COPIED skill dirs (symlinks are self-identifying: they
-// resolve into a robium checkout). Lets re-runs upgrade our copies without
-// ever clobbering someone else's same-named skill.
-const MARKER = '.robium-managed';
-
-async function isFile(p) {
-  try { return (await stat(p)).isFile(); } catch { return false; }
-}
-
 export async function detectAgents(opts = {}) {
   return (await detectAgentSupport(opts)).agents;
-}
-
-// A path is "ours" when it resolves to a skill dir inside a robium checkout.
-async function isRobiumSkillTarget(resolved) {
-  return (await isFile(path.join(resolved, 'SKILL.md')))
-    && ((await isFile(path.join(resolved, '..', '..', '.codex-plugin', 'plugin.json')))
-      || (await isFile(path.join(resolved, '..', '..', '.claude-plugin', 'plugin.json'))));
-}
-
-export async function isManagedSkill(dest) {
-  let st;
-  try { st = await lstat(dest); } catch { return false; }
-  if (st.isSymbolicLink()) {
-    try { return isRobiumSkillTarget(await realpath(dest)); } catch { return false; }
-  }
-  return st.isDirectory() && isFile(path.join(dest, MARKER));
 }
 
 // Decide whether we may replace what's at dest. Returns true for: nothing,
@@ -57,9 +44,9 @@ async function canReplace(dest) {
   if (st.isSymbolicLink()) {
     let resolved;
     try { resolved = await realpath(dest); } catch { return true; } // broken link
-    return isRobiumSkillTarget(resolved);
+    return isManagedSkill(dest);
   }
-  if (st.isDirectory()) return isFile(path.join(dest, MARKER));
+  if (st.isDirectory()) return isManagedSkill(dest);
   return false;
 }
 
@@ -81,7 +68,7 @@ export async function linkSkills({ src, targetDir, copyMode = false, version = '
     await rm(dest, { recursive: true, force: true });
     if (copyMode) {
       await cp(from, dest, { recursive: true });
-      await writeFile(path.join(dest, MARKER), `robium-ai ${version}\n`.trimStart());
+      await writeFile(path.join(dest, MANAGED_MARKER), `robium-ai ${version}\n`.trimStart());
       copied++;
     } else {
       try {
@@ -89,7 +76,7 @@ export async function linkSkills({ src, targetDir, copyMode = false, version = '
         linked++;
       } catch {
         await cp(from, dest, { recursive: true });
-        await writeFile(path.join(dest, MARKER), `robium-ai ${version}\n`.trimStart());
+        await writeFile(path.join(dest, MANAGED_MARKER), `robium-ai ${version}\n`.trimStart());
         copied++;
       }
     }
@@ -106,6 +93,43 @@ const NONE_FOUND = `✗ No supported coding agent found.
   Install one, then re-run:  npx robium-ai setup
 
   Or target one explicitly:  npx robium-ai setup --agent codex`;
+
+const REFRESH_HINT = {
+  claude: 'Start a new Claude Code session to load the installed plugin.',
+  codex: 'Start a new Codex task to load the installed plugin.',
+  gemini: 'Start a new Gemini session to load the installed skills.',
+  cursor: 'Start a new Cursor chat to load the installed skills.',
+};
+
+async function isFile(target) {
+  try { return (await stat(target)).isFile(); } catch { return false; }
+}
+
+async function verifyIntegration({ target, support, exec, home, versions }) {
+  if (target === 'claude') {
+    return inspectClaudeIntegration({
+      exec,
+      command: support.claude?.command ?? 'claude',
+      expectedVersion: versions.plugin,
+    });
+  }
+  if (target === 'codex') {
+    return inspectCodexIntegration({
+      exec,
+      command: support.codex?.command ?? 'codex',
+      expectedVersion: versions.plugin,
+    });
+  }
+  if (target === 'gemini') {
+    return inspectGeminiIntegration({
+      exec,
+      home,
+      expectedPluginVersion: versions.plugin,
+      skillVersions: versions.skills,
+    });
+  }
+  return inspectCursorIntegration({ home, skillVersions: versions.skills });
+}
 
 export async function setup({
   agent,
@@ -179,6 +203,32 @@ export async function setup({
       log(`  Read natively by ${LABEL[target]}; git pull in the repo updates them.`);
     } catch (e) {
       error(`✗ Could not install skills for ${LABEL[target]}: ${e.message}`);
+      failed = true;
+    }
+  }
+
+  const versions = {
+    ...await integrationVersions(),
+    skills: await readSkillVersions(path.join(repo, 'skills')),
+  };
+  for (const target of targets) {
+    const result = await verifyIntegration({ target, support, exec, home, versions });
+    if (result.state === 'active' && !result.outdated) {
+      const detail = result.installedVersion
+        ? ` v${result.installedVersion}`
+        : result.count
+          ? ` (${result.count} managed skill${result.count === 1 ? '' : 's'})`
+          : '';
+      log(`✓ ${LABEL[target]} activation verified${detail}. ${REFRESH_HINT[target]}`);
+    } else if (result.state === 'unknown' && !result.outdated) {
+      log(`! ${LABEL[target]} installed; activation status is unavailable. ${REFRESH_HINT[target]}`);
+    } else {
+      const problem = result.state === 'missing'
+        ? 'not recognized after setup'
+        : result.state === 'inactive'
+          ? 'installed but inactive'
+          : 'installed version is outdated';
+      error(`✗ ${LABEL[target]} ${problem}. Run doctor for host-specific guidance.`);
       failed = true;
     }
   }

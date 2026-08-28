@@ -44,6 +44,13 @@ remove only Robium checkout symlinks or copied skills carrying the managed
 marker. Foreign skills and the repository checkout are preserved, and repeated
 removal is a successful no-op.
 
+CLI 0.9.0 verifies integrations after setup and reports installation state in
+doctor. Native Claude Code and Codex plugins expose enabled state and installed
+version; Gemini exposes extension or discovered-skill activity; Cursor is
+reported honestly as activation-unknown because it has no supported status API.
+Outdated native plugins and managed skills receive host-specific update and
+new-session guidance, while unavailable detection APIs remain non-destructive.
+
 ## 2026-08-24: Generic RunPod operations skill
 
 Added `runpod` as the provider-specific owner for safe inventory, GPU/region

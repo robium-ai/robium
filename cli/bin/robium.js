@@ -17,7 +17,7 @@ Usage:
                                          every detected agent integration
   npx robium-ai remove [options]         Remove managed agent integrations;
                                          preserve the Robium checkout
-  npx robium-ai doctor [--json]          Check your environment
+  npx robium-ai doctor [--json]          Check environment and integration state
   npx robium-ai skills [query]           Browse the skill catalog
   npx robium-ai app <subcommand>         Work with reference applications
                                          (list | describe | help | doctor |

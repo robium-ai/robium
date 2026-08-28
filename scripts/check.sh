@@ -30,6 +30,7 @@ versions = {
     documents[".claude-plugin/marketplace.json"]["metadata"]["version"],
     documents[".codex-plugin/plugin.json"]["version"],
     documents["gemini-extension.json"]["version"],
+    json.loads(Path("cli/package.json").read_text())["robiumPluginVersion"],
 }
 if len(versions) != 1:
     raise SystemExit(f"plugin version mismatch: {sorted(versions)}")

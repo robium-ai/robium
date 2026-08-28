@@ -26,7 +26,7 @@ npx robium-ai install
 npx robium-ai remove
 npx robium-ai remove --agent cursor
 
-# Check your machine for robotics work (Docker, GPU, disk, Python/uv, …)
+# Check your machine and Robium integration state
 npx robium-ai doctor          # human-readable
 npx robium-ai doctor --json   # machine-readable (for agents/scripts)
 
@@ -89,6 +89,15 @@ Requires `git` (setup prints the manual recipe if missing).
 
 Codex Desktop on macOS is supported even when its bundled CLI is not on shell
 `PATH`; setup and doctor probe the application bundle directly.
+
+After setup, Robium asks each host whether the integration is active when the
+host exposes a supported status command. Claude Code and Codex report native
+plugin state and installed version; Gemini reports extension or discovered
+Agent Skill state. Cursor currently exposes no skill activation-status API, so
+setup reports the limitation and asks for a new chat instead of claiming the
+skills are active. `doctor` uses the same local probes to distinguish missing,
+inactive, active, obviously outdated, and activation-unknown installations.
+Its refresh guidance names the session or task that must be restarted.
 
 `npx robium-ai remove` reverses setup without deleting the repository checkout.
 Claude Code and Codex use their native plugin and marketplace removal commands.

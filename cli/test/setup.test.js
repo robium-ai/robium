@@ -88,6 +88,7 @@ test('setup: codex+gemini → native Codex plugin plus Gemini skill links', asyn
   assert.ok(calls.includes('codex plugin add robium@robium --json'));
   assert.match(out, /2 linked/);
   assert.match(out, /Codex, Gemini CLI/);
+  assert.match(out, /Codex activation verified/);
   await rm(fx.base, { recursive: true, force: true });
 });
 
@@ -181,7 +182,45 @@ test('setup: explicit Gemini target not detected → installs skills anyway with
   const code = await setup(opts(fx, { exec, agent: 'gemini', log: (s) => { out += `${s}\n`; } }));
   assert.equal(code, 0);
   assert.match(out, /not detected/);
+  assert.match(out, /activation status is unavailable/);
   assert.ok(await exists(path.join(fx.home, '.gemini', 'skills', 'ros2')));
+  await rm(fx.base, { recursive: true, force: true });
+});
+
+test('setup: Gemini confirms managed skills discovered by the host', async () => {
+  const fx = await makeFixtures();
+  const base = agentExec(['gemini']);
+  const exec = async (command, args) => {
+    if (command === 'gemini' && args.join(' ') === 'skills list') {
+      return {
+        ok: true, code: 0, stderr: '',
+        stdout: [
+          `ros2 [Enabled]\n  Description: test\n  Location:    ${path.join(fx.home, '.gemini', 'skills', 'ros2')}\n`,
+          `gazebo [Enabled]\n  Description: test\n  Location:    ${path.join(fx.home, '.gemini', 'skills', 'gazebo')}\n`,
+        ].join('\n'),
+      };
+    }
+    return base.exec(command, args);
+  };
+  let out = '';
+  assert.equal(await setup(opts(fx, { exec, log: (line) => { out += `${line}\n`; } })), 0);
+  assert.match(out, /Gemini CLI activation verified/);
+  await rm(fx.base, { recursive: true, force: true });
+});
+
+test('setup: recognized but inactive native plugin fails verification', async () => {
+  const fx = await makeFixtures();
+  const base = agentExec(['codex']);
+  const exec = async (command, args) => {
+    if (command === 'codex' && args.join(' ') === 'plugin list --json') {
+      return { ok: true, code: 0, stderr: '',
+        stdout: '{"installed":[{"pluginId":"robium@robium","version":"0.3.0","enabled":false}]}' };
+    }
+    return base.exec(command, args);
+  };
+  let err = '';
+  assert.equal(await setup(opts(fx, { exec, error: (line) => { err += `${line}\n`; } })), 1);
+  assert.match(err, /installed but inactive/);
   await rm(fx.base, { recursive: true, force: true });
 });
 

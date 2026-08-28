@@ -4,7 +4,8 @@ import { lstat, readdir, rm, rmdir } from 'node:fs/promises';
 import { run } from './exec.js';
 import { detectAgentSupport } from './agentCommands.js';
 import { uninstallClaude, uninstallCodex } from './install.js';
-import { AGENTS, LABEL, isManagedSkill } from './setup.js';
+import { AGENTS, LABEL } from './setup.js';
+import { isManagedSkill } from './managedSkills.js';
 
 async function exists(target) {
   try { await lstat(target); return true; } catch { return false; }

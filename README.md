@@ -32,6 +32,7 @@ npx robium-ai setup                  # auto-detects your agents
 npx robium-ai setup --agent codex    # or target one
 npx robium-ai update                 # pull Robium and refresh integrations
 npx robium-ai remove                 # remove integrations; keep the checkout
+npx robium-ai doctor                 # verify activation and installed versions
 ```
 
 The default clone lives at `~/robium` and is a normal Git checkout you can
