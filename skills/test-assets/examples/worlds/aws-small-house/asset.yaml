@@ -1,0 +1,23 @@
+schema_version: "1"
+id: world.aws-small-house
+kind: world
+name: AWS RoboMaker Small House
+revision: "1"
+storage: pointer
+license:
+  id: MIT
+  file: LICENSE
+  url: https://github.com/aws-robotics/aws-robomaker-small-house-world/blob/ff9631ca6d1db9c1ba656498151464b5ab74aafe/LICENSE
+verification:
+  date: "2026-08-27"
+  method: Clean-cache archive fetch, SHA-256 verification, entrypoint check, and pinned-license byte comparison.
+source:
+  type: git-archive
+  repository: https://github.com/aws-robotics/aws-robomaker-small-house-world
+  revision: ff9631ca6d1db9c1ba656498151464b5ab74aafe
+  url: https://github.com/aws-robotics/aws-robomaker-small-house-world/archive/ff9631ca6d1db9c1ba656498151464b5ab74aafe.tar.gz
+  sha256: e459bd9d7bdabdfc40f8afc6770ceb1d774316e5da94a1048f036baa7388b2d9
+  archive: tar.gz
+  strip_prefix: aws-robomaker-small-house-world-ff9631ca6d1db9c1ba656498151464b5ab74aafe
+entrypoints:
+  world: worlds/small_house.world

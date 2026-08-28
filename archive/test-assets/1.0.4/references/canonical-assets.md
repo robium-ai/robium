@@ -11,8 +11,8 @@ verification date; re-confirm at adoption time before vendoring.
 | Asset | Upstream | License | Canonical for | Verified |
 |---|---|---|---|---|
 | TurtleBot3 House | [ROBOTIS-GIT/turtlebot3_simulations](https://github.com/ROBOTIS-GIT/turtlebot3_simulations) | Apache-2.0 | Indoor/house nav testing; the Nav2-tutorial-canonical world | GitHub API 2026-07-18: 515★, pushed 2025-07-14, SPDX Apache-2.0 |
-| Tugbot in Warehouse (OpenRobotics) | [Gazebo Fuel](https://app.gazebosim.org/OpenRobotics/fuel/worlds/Tugbot%20in%20Warehouse) | CC-BY-NC-ND-4.0; pointer only | Industrial/warehouse scenes in modern gz | Fuel world-details API + clean-cache version 2 ZIP SHA/entrypoint check, 2026-08-27 |
-| AWS RoboMaker Small House | [aws-robotics/aws-robomaker-small-house-world](https://github.com/aws-robotics/aws-robomaker-small-house-world) | MIT at pinned commit | Richer furnished multi-room house; **Gazebo-Classic era: verify modern-gz load before adopting** | Commit `ff9631ca6d1db9c1ba656498151464b5ab74aafe`; pinned license byte comparison + clean-cache archive SHA/entrypoint check, 2026-08-27 |
+| Tugbot in Warehouse (OpenRobotics) | [Gazebo Fuel](https://app.gazebosim.org/OpenRobotics/fuel/worlds/Tugbot%20in%20Warehouse) | read from Fuel page at adoption | Industrial/warehouse scenes in modern gz | Fuel API 2026-07-18: 47,114 downloads; most-downloaded warehouse world |
+| AWS RoboMaker Small House | [aws-robotics/aws-robomaker-small-house-world](https://github.com/aws-robotics/aws-robomaker-small-house-world) | check repo at adoption | Richer furnished multi-room house; **Gazebo-Classic era: verify modern-gz load before adopting** | GitHub API 2026-07-18: 322★, last pushed 2024-07-26 |
 | AWS RoboMaker Small Warehouse | [aws-robotics/aws-robomaker-small-warehouse-world](https://github.com/aws-robotics/aws-robomaker-small-warehouse-world) | check repo at adoption | The most-recognized open warehouse world; **same Gazebo-Classic caveat** | GitHub API 2026-07-18: 487★, last pushed 2024-07-26 |
 
 ## Robot models

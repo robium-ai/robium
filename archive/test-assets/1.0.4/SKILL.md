@@ -1,11 +1,11 @@
 ---
 name: test-assets
-version: 1.1.0
+version: 1.0.4
 description: >
   Canonical test assets and fixture sourcing for robotics testing: which
   worlds, robot models, sample datasets, and recordings to test against for a
   given robot type; the standard test-assets folder layout with a provenance
-  catalog and per-asset manifests; pointer vs vendored sourcing modes; fixture and golden policy
+  manifest; pointer vs vendored sourcing modes; fixture and golden policy
   (tolerance bands, seeded generation). Use when: 'test assets', 'test world',
   'test fixture', 'download a test dataset', 'sample rosbag', 'which world
   should I test in', 'robot model for simulation tests', 'golden output',
@@ -92,24 +92,19 @@ from the suitability matrix in Decision guidance (details and links in
 **2. Choose the sourcing mode** with the funnel in Decision guidance and
 record it (and the size budget, if vendoring) in the test-assets README.
 
-**3. Write the catalog and per-asset manifests.** Create the folder per
-`references/test-assets-layout.md`. Start from `examples/catalog.yaml` and
-its `worlds/*/asset.yaml` records. Each pointer carries an immutable archive
-URL, SHA-256, entrypoint, checked-in license evidence, and dated verification
-method.
+**3. Write the manifest.** Create the folder per
+`references/test-assets-layout.md` and describe each asset in MANIFEST.yaml;
+`examples/assets-manifest.yaml` is a working starting point.
 
 **4. Fetch:** <!-- id: vendor-assets-fetch-command -->
 
 ```bash
-uv run test-assets/scripts/fetch_assets.py \
-  --catalog test-assets/catalog.yaml \
-  --destination test-assets/cache
+uv run scripts/vendor_assets.py --manifest test-assets/MANIFEST.yaml
 ```
 
-Re-run from an empty destination to verify the upstream bytes, checksum, safe
-extraction, and entrypoints. Commit the result only in vendored mode; in
-pointer mode, gitignore the cache and commit only catalog metadata and license
-evidence.
+Re-run any time to refresh; `--check` verifies presence and pins without
+fetching. Commit the result (vendored mode) or gitignore the data dirs
+(pointer mode).
 
 **5. Wire the assets into the `testing` pyramid** <!-- id: record-goldens-from-seeded-run --> and record goldens from a
 known-good seeded run into goldens/ with explicit tolerances.
@@ -122,7 +117,7 @@ links live in `references/canonical-assets.md`; simulator-choice rationale →
 
 | Robot type | Model pick | World/scene pick | Best-fit sim for testing | Matching open dataset |
 |---|---|---|---|---|
-| Mobile base / nav | TurtleBot3 burger or waffle | AWS Small House (indoor), Tugbot in Warehouse (industrial) | Modern Gazebo (gz), Nav2-ready<!-- id: mobile-nav-turtlebot3-gz --> | none canonical (self-record bags) |
+| Mobile base / nav | TurtleBot3 burger or waffle | TurtleBot3 House (indoor), Tugbot in Warehouse (industrial) | Modern Gazebo (gz), Nav2-ready<!-- id: mobile-nav-turtlebot3-gz --> | none canonical (self-record bags) |
 | Arm (classical or VLA) | SO-101 | tabletop scene | MuJoCo (LeRobot-native) or gz<!-- id: arm-so101-mujoco-or-gz --> | SO-101 pick-place sample; pusht for train-smoke |
 | Quadruped | Unitree Go2 | flat ground / rough-terrain heightfield | MuJoCo<!-- id: quadruped-go2-mujoco --> | none yet (no robium legged skill either) |
 | Humanoid | Unitree G1 | flat ground | MuJoCo or Isaac (GPU floor → `isaac-sim`)<!-- id: humanoid-g1-mujoco-or-isaac --> | none yet |
@@ -149,10 +144,10 @@ Expensive to regenerate (long sim, GPU-gated)?    → Hub-hosted MCAP escape hat
 
 ## Platform gotchas
 
-- **Fuel assets need network on first fetch.** <!-- id: fuel-assets-need-network-first-fetch --> Resolve a versioned Fuel
-  archive through the checksum-first fetcher and cache it under the project;
-  sims run offline from that verified copy. CI and fresh clones must account
-  for the first-fetch network dependency (or use vendored mode).
+- **Fuel assets need the `gz` CLI and network on first fetch.** <!-- id: fuel-assets-need-network-first-fetch --> They cache
+  under ~/.gz/fuel afterwards, so sims run offline from the second load; CI
+  and fresh clones must account for the first-fetch network dependency (or
+  use vendored mode).
 - **Gazebo-Classic-era worlds don't necessarily load in modern gz.** <!-- id: classic-era-worlds-may-not-load-in-gz --> Famous
   older worlds (e.g. the AWS RoboMaker set) predate modern gz; verify a
   world loads headless in the target gz version at adoption time rather than
@@ -175,20 +170,20 @@ Expensive to regenerate (long sim, GPU-gated)?    → Hub-hosted MCAP escape hat
   with the same columns rather than inventing a new selection scheme; note
   gaps honestly (as the drone row does) instead of forcing a pick.
 - **Tighter or looser size budgets:** the vendored-mode budget is a project
-  decision; state it in the corpus README and enforce it with a repository
-  size check; trim textures/meshes/episodes before exceeding it, and record
-  trims in the manifest.
+  decision; state it in the corpus README and let the vendor script's size
+  summary enforce it socially; trim textures/meshes/episodes before busting
+  it, and record trims in the manifest.
 
 ## References
 
 - `references/canonical-assets.md`: the verified catalog of worlds, robot
   models, datasets, and recordings with links, licenses, and citation lines.
-- `references/test-assets-layout.md`: the standard catalog and per-asset
-  manifest format, plus slice conventions.
-- `scripts/fetch_assets.py`: checksum-first pointer resolver for tar.gz and
-  zip archives.
-- `examples/catalog.yaml`: the verified catalog used by Robot Navigation,
-  with matching per-asset manifests and license evidence under `examples/`.
+- `references/test-assets-layout.md`: the standard test-assets folder
+  format, MANIFEST.yaml schema, and slice conventions.
+- `scripts/vendor_assets.py`: manifest-driven fetcher/refresher for both
+  sourcing modes.
+- `examples/assets-manifest.yaml`: the catalog shortlist as a working
+  manifest (status: unverified until the first hardening run).
 - Sibling skills: `testing` (pyramid + pass bars this data serves), `data`
   (training-data sourcing), `simulation` (simulator choice), `gazebo` /
   `isaac-sim` (asset loading mechanics), `lerobot` (LeRobotDataset format,
@@ -199,10 +194,6 @@ Expensive to regenerate (long sim, GPU-gated)?    → Hub-hosted MCAP escape hat
 
 <!-- One dated line per battle-tested change, added by skill-author hardening sessions. -->
 
-- 1.1.0 (2026-08-27): replace the unverified monolithic manifest example
-  with the pointer catalog proven by Robot Navigation; require immutable
-  archives, SHA-256 checks, entrypoints, license evidence, and dated clean-cache
-  verification.
 - 1.0.4 (2026-08-27): replace the stale robium-applications corpus reference
   with the current robium-apps repository.
 - 1.0.3 (2026-08-03): style pass; removed em dashes throughout (no content changes).
