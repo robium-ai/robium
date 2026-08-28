@@ -5,8 +5,10 @@ structure and posture (report-first, measure-don't-vibe, every deletion
 paired with evidence) but each pass is now armed with a richer, engine-
 maintained evidence source instead of a one-off metrics run. Refine still
 produces a findings report first; approved findings become retire/move/
-annotate deltas that go through the same apply_deltas.py → validator →
-PR → merge path as absorb, rather than hand edits. Scoped refine (passes
+annotate deltas that go through the same apply_deltas.py and validation path as
+absorb, rather than ad-hoc edits. The default landing route is PR and human
+merge; the explicit maintainer direct-main exception in the parent skill also
+applies. Scoped refine (passes
 1–2) runs after every absorb, over just the skills that absorb touched;
 fresh absorption is where duplication enters the catalog. Full refine (all
 five passes) runs on its own cadence, roughly monthly or every 2–3 app
@@ -72,15 +74,12 @@ applied and reviewed exactly like any other absorb-style edit.
 
 ## Pass 4: Usage / retirement review
 
-This is the pass that actually gets *better* under the engine, because its
-input signal used to be optional and now exists reliably. skill-refiner
-depended on end-of-block retro lines that a human had to remember to write
-by hand in each app repo's learnings file; the consolidator now drafts that
-retro automatically at the end of every consolidate run, so the fired/
-quiet/accurate/complete signal accumulates whether or not anyone remembers
-to write it. Combine retro lines with the negative-eval side of each
-skill's evals.yaml (misfires: phrasings that wrongly selected a skill) for
-a second, independent usage signal that skill-refiner never had at all. The
+This pass combines evidence that exists without interrupting implementation:
+hook captures, promoted observations, trigger evals, and non-trivial verified
+examples. Mandatory per-skill end-of-block retros are no longer an input; a
+consolidation may record a compact milestone result when it adds real evidence.
+Combine these signals with the negative-eval side of each skill's evals.yaml
+(misfires: phrasings that wrongly selected a skill). The
 same three verdicts apply to a skill that never fires when it should: widen
 its description (a trigger bug, drafted as an `annotate` or `update` delta
 against the description and re-verified with skill-author's description
@@ -105,11 +104,12 @@ and 2 as concrete prune/merge candidates for the next refine cycle.
 
 ## What stayed exactly the same
 
-- **Report first, edit second, same two gates skill-refiner always ran.**
+- **Report first, edit second, same evidence and authority gates.**
   Findings are presented (`[skill] finding → smallest intended edit`) before
-  any delta is drafted, and the drafted deltas still go through a human
-  merge before landing; refine's deletions and merges are more dangerous
-  than absorb's additions, so the gate is not relaxed here.
+  any delta is drafted. External/unattended/unrequested changes require human
+  PR merge; an explicitly authorized maintainer direct-main run keeps the same
+  concrete diff, evidence, and validation requirements. Refine's deletions and
+  moves need especially careful target verification.
 - **Every deletion is paired with its evidence.** A prune's evidence is now
   literally the ledger counters that justified it (harmful>0, helpful=0);
   the report cites the counter values, not a feeling.

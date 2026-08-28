@@ -95,12 +95,15 @@ but relocates them:
   looks. A human can still downgrade or reject an observation at
   consolidate time (marking it `rejected (<reason>)`), which is Gate 1's
   manual override valve.
-- **Gate 2's job, nothing commits without a reviewed, concrete diff, is
-  now git merge.** Every absorb or refine run ends in a PR carrying the
-  evidence table (skill, anchor, op, observation link, sources, eval
-  results) and the dry-run report; no agent merges to main skills/**. This
-  is a *stricter* Gate 2 than skill-updater's, not a weaker one: a PR diff
-  plus CI plus a human reviewer beats a single conversational go-ahead.
+- **Gate 2's job is a concrete, verified diff under current human authority.**
+  External contributors, unattended automation, and unrequested absorption
+  end in a PR carrying the evidence table (skill, anchor, op, observation link,
+  sources, eval results) and the dry-run report, followed by human merge. A
+  maintainer may instead explicitly authorize local direct-main work in the
+  current conversation. That exception removes branch/PR ceremony only: the
+  same evidence table, archive/version/changelog mechanics, evals, validation,
+  and concrete diff remain mandatory. It never becomes standing authority for
+  a later session.
 
 The asymmetry skill-updater built the whole policy around (capture is
 free, absorption is curated) still holds: an observation that never

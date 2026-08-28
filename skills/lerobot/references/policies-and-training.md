@@ -205,36 +205,32 @@ of adding compute.
 
 ## No local GPU: Hugging Face Jobs
 
-`lerobot-train` runs locally by default; add `--job.target=<flavor>` to run
-the same command on managed Hugging Face infrastructure, billed by the
-second:
+`lerobot-train` runs locally by default. Current releases may expose
+`--job.target=<flavor>` to submit the same training command to managed Hugging
+Face infrastructure. Treat this as a paid external action: first inspect
+`lerobot-train --help`, then use the `huggingface` skill to verify identity,
+list current hardware and pricing, and present the exact namespace, hardware,
+timeout, output destination, and command for explicit approval.
 
 ```bash
 lerobot-train \
   --dataset.repo_id=${HF_USER}/so101_test \
   --policy.type=act \
   --policy.repo_id=${HF_USER}/my_policy \
-  --job.target=a10g-small
+  --job.target=<approved-live-flavor>
 ```
 
-`hf auth login` must be run once before submitting (the job runs under your
-token; this login step is the `huggingface` skill's territory, referenced
-here only because `lerobot-train` calls it inline). List current
-flavors/pricing with `hf jobs hardware`; flavors include `t4-small`/
-`t4-medium` (ACT-only), `l4x1`/`l4x4`, `a10g-small/large/largex2/largex4`,
-and `a100-large`. The job defaults to a 48h timeout; override with
-`--job.timeout=4h` (or another duration string). Re-attach or cancel a
-detached job with `hf jobs logs <job-id>` / `hf jobs cancel <job-id>`.
-
-SmolVLA sizing anchor: a ~20k-step fine-tune runs in ≈4h on a single A100
-(`docs/source/smolvla.mdx`), roughly $5-15/run on `a100-large`, cheap
-enough to treat as the default VLA fine-tune path when no local CUDA GPU is
-available.
+Do not preserve a flavor list, price, or default timeout in this reference.
+They are volatile. Use `hf jobs hardware`, `hf jobs run --help`, and
+`hf jobs uv run --help` immediately before approval. After submission, the
+`huggingface` skill owns `hf jobs logs`, `inspect`, `stats`, `wait`, and the
+explicitly authorized `cancel` operation. The LeRobot-specific concerns are
+the dataset/policy fields and remote output behavior below.
 
 Three Jobs failure modes hit during vla-trial (all verified 2026-07-14):
 
-- **402 Payment Required** if the account has no prepaid credits: `hf auth
-  login` alone is not sufficient; a job submitted against a zero-balance
+- **402 Payment Required** if the account has no prepaid credits: authentication
+  alone is not sufficient; a job submitted against a zero-balance
   account fails at submission with `402 Payment Required`, not a queued or
   running state.
 - **`--policy.repo_id` is silently ignored on the Jobs path**: the trained

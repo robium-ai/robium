@@ -7,6 +7,24 @@ Forward-looking work is tracked in **GitHub Issues**, not here — see
 This file is the history the old `docs/BACKLOG.md` "Done" section held, migrated
 verbatim on 2026-07-22.
 
+## 2026-08-27: Faster development and capture-only context
+
+Reduced constraint amplification across Robium development: repository guidance
+now authorizes bounded implementation without classification speeches or a
+duplicate approval gate, while new applications and genuine re-architecture
+use one lightweight direction decision and an evidence-driven first slice.
+Architect 2.0.0 owns that alignment flow and treats its brief as a concise,
+pivot-friendly decision record. Huggingface 2.0.0 is self-contained for the
+robotics Hub common path, and LeRobot routes generic Hub and paid Jobs lifecycle
+operations through it.
+
+The learning engine is capture-only: UserPromptSubmit stays silent,
+SessionStart injects nothing, recall was removed, and consolidation is batched
+at natural milestones instead of forcing immediate notes or per-skill retros.
+Evidence-aware transcript cleanup protects queued/tentative/ready sources,
+prunes terminal evidence after landing, expires unreferenced transcripts after
+14 days, and defaults to a report-only dry run. Plugin manifests are 0.3.0.
+
 ## 2026-08-24: Generic RunPod operations skill
 
 Added `runpod` as the provider-specific owner for safe inventory, GPU/region

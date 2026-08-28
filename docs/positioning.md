@@ -36,9 +36,10 @@ roboticist" (condescends to audience 2).
 
 ## Truth-gates (load-bearing — check before shipping any claim)
 
-1. **"Self-improving" refers to the CATALOG.** The learning engine's capture,
-   mining, consolidate, absorb and recall paths (Phases 1, 2a, 2b) are
-   shipped and real. "Learns YOUR codebase" / private overlay / company-brain
+1. **"Self-improving" refers to the CATALOG.** The learning engine's silent
+   capture, transcript retention, mining, consolidation, and absorption paths
+   are shipped and real. It does not recall or inject observations into fresh
+   prompts. "Learns YOUR codebase" / private overlay / company-brain
    ingestion is **roadmap** (design-spec Phase 3/4, user tier) — it may be
    described as future/vision, never as shipped.
 2. **Everything on the site is real** (website/CLAUDE.md content rule): real
@@ -47,8 +48,8 @@ roboticist" (condescends to audience 2).
    skill-load lines — never invented build output. Hand-typed counts are
    forbidden everywhere, including SVGs and repo descriptions — where a count
    can't be generated, write count-free copy.
-3. **Agent support:** Claude Code today; Cursor and Gemini planned (the CLI's
-   own roadmap). Diagram chips, fine print, and FAQ must agree.
+3. **Agent support:** Claude Code and Codex today; other agents remain roadmap.
+   Diagram chips, fine print, and FAQ must agree.
 
 ## Proof layer (the verb chain)
 
@@ -68,7 +69,7 @@ variants swap in via `html[data-theme='light']`.
 
 ## Where the copy lives
 
-- Site: `website/src/components/*` (smoke-pinned: `website/tests/smoke.sh`).
+- Site: the sibling `robium-ai/robium-website` repository.
 - Plugin manifests: `.claude-plugin/plugin.json` + `marketplace.json`.
 - CLI: `cli/package.json` description (npm surface at next publish).
 - GitHub repo description: set via `gh repo edit` (aligned 2026-08-02).

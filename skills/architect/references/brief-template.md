@@ -1,106 +1,71 @@
-# Architecture brief template
+# Architecture decision record template
 
-The required structure of `docs/architecture-brief.md`: the living architecture
-contract that lives in every robium application repo. The `robium-architect`
-subagent writes the first version; all later refinement happens in the main
-conversation with the `architect` skill loaded, editing this same file.
+Use `docs/architecture-brief.md` for a new application or a genuine
+re-architecture. It records decisions and uncertainty; it is not an immutable
+contract. Update it when evidence authorizes a pivot.
 
-**Every section below is required.** Depth scales with the project (a one-robot
-sim demo has a short comms plan; a fleet has a real one), but no section is
-omitted; an empty section is a signal that a decision hasn't been made yet.
-Copy the skeleton, fill each section, keep it current as the build proceeds.
-
----
-
-## Skeleton
+Only the four core sections are required. Add optional detail when it changes a
+decision or helps the next implementation step.
 
 ```markdown
 # Architecture Brief: <app name>
 
-**Date:** <YYYY-MM-DD>   **Status:** <draft | active | superseded>
-**Author:** <robium-architect subagent | main agent refinement>
+**Date:** <YYYY-MM-DD>
+**Status:** <draft | active | superseded>
 
-## 1. Requirements
+## Goal and constraints
 
-The inputs this design answers to. Robot type, task, hardware, sim-vs-real,
-GPU availability, local-vs-remote. Mark any assumed (not confirmed) input
-explicitly; assumptions also feed section 8.
+The user-visible outcome, robot/task, sim-vs-real target, available hardware,
+GPU/budget limits, and local/remote constraints. Mark unconfirmed inputs as
+provisional.
 
-## 2. Chosen stack + reasoning
+## Decisions
 
-The decisions and why. One row per component with the alternative rejected.
-
-| Layer | Choice | Version | Why (and what was rejected) |
+| Decision | Choice | Why now | Confidence |
 |---|---|---|---|
-| Middleware | ROS 2 / none | Jazzy | … |
-| Simulator | Gazebo / Isaac / LeRobot-sim | Harmonic | … |
-| Nav / learning | Nav2 / LeRobot / … | … | … |
-| Visualization | rviz2 / foxglove / rerun | … | … |
-| Environment | uv / Docker | … | … |
+| First working slice | ... | Cheapest useful risk reduction | validated/provisional |
+| Environment | uv/Docker/... | ... | validated/provisional |
+| Simulator/middleware | ... | ... | validated/provisional |
 
-Tie each choice back to a branch in the architect stack-selection trees.
+Include an alternative only when it was a genuine contender. Do not invent a
+rejected option to make the record look complete.
 
-## 3. Module breakdown
+## Provisional assumptions and risks
 
-The system decomposed into modules/packages/nodes, each with its
-responsibility and its inputs/outputs. Mirrors the scaffold layout.
+| Assumption or risk | Impact | Cheapest validation | Authorized pivot |
+|---|---|---|---|
+| ... | ... | ... | What may change without a new design gate |
 
-## 4. Comms plan
+## Implementation path
 
-How modules talk. For ROS 2: the key topics/services/actions and their
-message types and rates. For cross-process or remote boundaries: the
-transport (topics vs zenoh vs gRPC). Sensor rates and frames that matter go
-here. (The `integration` skill owns the detail.)
-
-## 5. Environment strategy
-
-Reproducibility. uv/venv vs Docker and why; base image or Python version;
-GPU passthrough if any; how local and remote stay identical. (The
-`environments` skill owns the detail.)
-
-## 6. Data plan
-
-Where data comes from and where it goes. Offline datasets vs sim-generated
-vs teleop-collected; Hub datasets/models pulled or pushed; storage and
-gitignore boundaries. For non-learning apps this may be short (maps, logs).
-(The `data` and `huggingface` skills own the detail.)
-
-## 7. Robium skills per build phase
-
-The routing plan: which skill the builder loads at each phase, in order.
-Example:
-
-| Phase | Skill(s) |
-|---|---|
-| Env setup | environments |
-| Robot model + bringup | ros2 |
-| Simulation | gazebo |
-| Navigation | nav2 |
-| Visualization | visualization → foxglove |
-| Testing | testing |
-
-## 8. Open risks
-
-Every unverified assumption and known unknown, stated plainly. GPU
-availability, sim-to-real gap, hardware you can't inspect, version pins you
-haven't confirmed, performance concerns. Each risk: what it is, what it
-blocks, and how you'd resolve or de-risk it. This section is never empty;
-if you think it is, you haven't looked hard enough.
+1. The smallest user-visible or risk-reducing slice.
+2. The smoke check that proves it.
+3. The next integration step if it passes.
 ```
 
----
+## Optional sections
 
-## Filling notes
+Add only those the application needs:
 
-- **Section 2 is the heart.** A reader should be able to reconstruct why the
-  stack is what it is without asking. Always name the rejected alternative.
-- **Section 7 makes the brief actionable**: it is the routing table from the
-  architect skill, narrowed to this app and ordered by build phase.
-- **Section 8 protects the project.** The architect directive is to surface
-  risks, not bury them. GPU availability is the most common one for the
-  manipulation path; the sim-to-real gap for anything targeting real hardware.
-- Keep **Status** current: `draft` while being written, `active` once the build
-  is proceeding from it, `superseded` when a re-architecture pivot produces a
-  new version (the subagent is relaunched only for genuine pivots).
+- **Module boundaries and communications** for multi-process, ROS 2, remote, or
+  multi-container systems.
+- **Environment and deployment detail** when GPU, system dependencies, or
+  local/remote parity is a real risk.
+- **Data lifecycle** for dataset sourcing, storage, recording, publication, or
+  model artifacts.
+- **Skill routing** when several Robium skills will be used across phases.
+- **Alternatives considered** for a material product or stack choice.
 
-See `examples/architecture-brief-example.md` for a filled instance.
+## Updating the record
+
+- Replace a provisional assumption with evidence as soon as a cheap probe
+  resolves it.
+- Treat a failed probe as information, not a specification violation. Use the
+  documented authorized pivot when it remains within the approved direction.
+- Ask for another direction decision only when the evidence creates a material
+  product choice, scope expansion, external-cost action, or safety concern.
+- Set the record to `superseded` only for a genuine re-architecture. Ordinary
+  implementation discoveries are normal edits to the active record.
+
+See `../examples/architecture-brief-example.md` for a filled instance; older
+examples may be more detailed than a small project requires.

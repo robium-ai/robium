@@ -8,4 +8,13 @@ triggers:
       source: learnings/2026-08-02.md
     - phrase: i think we can work on isaac lab skills now. want to do some project at the same time learn isaac lab.. what projects we can do, also how to do it.. i have my macbook air onmlu
       source: learnings/2026-08-02.md
+    - phrase: help me choose between Gazebo and Isaac Sim for a new warehouse robot app, then start with the cheapest useful demo
+    - phrase: we are changing this arm application from scripted control to a VLA and need to rethink the architecture
+  negative:
+    - phrase: fix the existing gateway CORS allowlist for our production frontend
+      expect: integration
+    - phrase: update this existing README typo and run the tests
+      expect: none
+    - phrase: diagnose why this existing ROS 2 node misses messages
+      expect: ros2
 tasks: []

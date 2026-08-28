@@ -57,6 +57,53 @@ def test_prunes_oldest_over_budget(tmp_path, monkeypatch):
     assert not old.exists() and new.exists()
 
 
+def test_size_ceiling_never_deletes_pending_queue_evidence(tmp_path, monkeypatch):
+    import session_end
+    tdir = tmp_path / ".robium" / "transcripts"
+    tdir.mkdir(parents=True)
+    protected = tdir / "proj__pending.jsonl"
+    disposable = tdir / "proj__disposable.jsonl"
+    protected.write_bytes(b"p" * 1024)
+    disposable.write_bytes(b"d" * 1024)
+    queue = tmp_path / ".robium" / "queue.jsonl"
+    queue.write_text('{"type":"error","session":"pending"}\n', encoding="utf-8")
+    monkeypatch.setattr(session_end, "MAX_ARCHIVE_MB", 0.0005)
+
+    session_end.prune_archive(str(tmp_path))
+
+    assert protected.exists()
+    assert not disposable.exists()
+
+
+def test_size_ceiling_never_deletes_tentative_observation_evidence(tmp_path, monkeypatch):
+    import session_end
+    tdir = tmp_path / ".robium" / "transcripts"
+    tdir.mkdir(parents=True)
+    name = "proj__evidence.jsonl"
+    protected = tdir / name
+    protected.write_bytes(b"p" * 1024)
+    learnings = tmp_path / "learnings"
+    observations = learnings / "observations"
+    observations.mkdir(parents=True)
+    (learnings / "2026-01-01.md").write_text(
+        f"- [none] wrong-guidance <!-- id: lrn-0101-01 -->\n"
+        f"  source: transcript {name}#turn-1\n",
+        encoding="utf-8",
+    )
+    (observations / "testing.md").write_text(
+        "## finding <!-- id: obs-testing-001 -->\n"
+        "status: tentative\nproof: 1\nsignal: wrong-guidance\n"
+        "sources: [lrn-0101-01]\ntarget: testing#x (update)\n"
+        "evidence: pending\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(session_end, "MAX_ARCHIVE_MB", 0.0005)
+
+    session_end.prune_archive(str(tmp_path))
+
+    assert protected.exists()
+
+
 def test_just_archived_survives_prune(tmp_path, monkeypatch):
     """Verify a just-archived old-mtime transcript survives pruning.
 

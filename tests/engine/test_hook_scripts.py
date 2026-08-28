@@ -171,7 +171,7 @@ def test_ptu_ignores_clean_output_and_other_tools(tmp_path):
 def test_ptu_never_writes_stdout(tmp_path):
     """Capture-only hook: even with flags pending, PostToolUse stays silent.
 
-    SessionStart is the single nudge channel; this hook must add no noise.
+    Learning hooks are capture-only; this hook must add no prompt noise.
     """
     for i in range(3):
         run_hook("user_prompt_submit.py", {"hook_event_name": "UserPromptSubmit",
@@ -221,65 +221,46 @@ def test_ptu_clean_commit_not_flagged(tmp_path):
     assert read_queue(tmp_path) == []
 
 
-def test_session_start_initializes_and_summarizes(tmp_path):
+def test_session_start_initializes_and_is_always_silent(tmp_path):
     r = run_hook("session_start.py", {"hook_event_name": "SessionStart",
                  "session_id": "s3", "cwd": str(tmp_path), "source": "startup"})
     assert r.returncode == 0
     assert (tmp_path / ".robium" / "transcripts").is_dir()
-    assert r.stdout.strip() == ""  # empty queue → silent
+    assert r.stdout.strip() == ""
     run_hook("user_prompt_submit.py", {"hook_event_name": "UserPromptSubmit",
              "session_id": "s3", "cwd": str(tmp_path), "prompt": "no, wrong distro"})
     r2 = run_hook("session_start.py", {"hook_event_name": "SessionStart",
                   "session_id": "s3", "cwd": str(tmp_path), "source": "startup"})
-    out = json.loads(r2.stdout)
-    assert "1 pending" in out["hookSpecificOutput"]["additionalContext"]
+    assert r2.returncode == 0
+    assert r2.stdout.strip() == ""
 
 
-OBS_READY = """## costmap inflation missing <!-- id: obs-nav2-007 -->
-status: ready
-proof: 2
-signal: wrong-guidance
-sources: [lrn-1]
-target: nav2#costmap-inflation (update) — robot hugs obstacles without inflation_layer
-evidence: ✓ ✓ ✓
-"""
-
-
-def _seed_obs(tmp_path):
+def test_ups_never_injects_observations(tmp_path):
     d = tmp_path / "learnings" / "observations"
     d.mkdir(parents=True)
-    (d / "nav2.md").write_text(OBS_READY, encoding="utf-8")
-
-
-def test_ups_injects_recall_on_match(tmp_path):
-    _seed_obs(tmp_path)
+    (d / "nav2.md").write_text(
+        "## costmap inflation missing <!-- id: obs-nav2-007 -->\n"
+        "status: ready\nproof: 2\nsignal: wrong-guidance\n"
+        "sources: [lrn-1]\ntarget: nav2#costmap-inflation (update)\n"
+        "evidence: ✓ ✓ ✓\n",
+        encoding="utf-8",
+    )
     r = run_hook("user_prompt_submit.py", {
         "hook_event_name": "UserPromptSubmit", "session_id": "s9",
         "cwd": str(tmp_path),
         "prompt": "why does the robot hug obstacles? costmap inflation maybe"})
-    out = json.loads(r.stdout)
-    ctx = out["hookSpecificOutput"]["additionalContext"]
-    assert ctx.startswith("[robium-recall]") and "obs-nav2-007" in ctx
+    assert r.returncode == 0
+    assert r.stdout.strip() == ""
+    assert read_queue(tmp_path) == []
 
 
-def test_ups_capture_and_recall_coexist(tmp_path):
-    _seed_obs(tmp_path)
+def test_ups_capture_stays_silent_with_observations_present(tmp_path):
+    d = tmp_path / "learnings" / "observations"
+    d.mkdir(parents=True)
+    (d / "nav2.md").write_text("prior observation", encoding="utf-8")
     r = run_hook("user_prompt_submit.py", {
         "hook_event_name": "UserPromptSubmit", "session_id": "s9",
         "cwd": str(tmp_path),
         "prompt": "no, the costmap inflation obstacles fix was wrong"})
-    assert read_queue(tmp_path)  # correction captured
-    assert "obs-nav2-007" in r.stdout  # and recall injected
-
-
-def test_ups_silent_when_no_match_or_marker(tmp_path):
-    _seed_obs(tmp_path)
-    r1 = run_hook("user_prompt_submit.py", {
-        "hook_event_name": "UserPromptSubmit", "session_id": "s9",
-        "cwd": str(tmp_path), "prompt": "please write a launch file for the lidar"})
-    assert r1.stdout.strip() == ""
-    r2 = run_hook("user_prompt_submit.py", {
-        "hook_event_name": "UserPromptSubmit", "session_id": "s9",
-        "cwd": str(tmp_path),
-        "prompt": "[robium-recall] costmap inflation obstacles"})
-    assert r2.stdout.strip() == "" and read_queue(tmp_path) == []
+    assert read_queue(tmp_path)
+    assert r.stdout.strip() == ""

@@ -81,11 +81,11 @@ Are you learning a control policy (imitation or RL)?
 
 **Data sourcing** for any learning path is the `data` skill's call (offline
 datasets vs sim-generated vs teleop-collected), and Hub pulls/pushes go through
-the `huggingface` delegation (`hf-cli@huggingface-skills`).
+the self-contained `huggingface` skill.
 
 ## Where each decision is recorded
 
-Every branch you take becomes a line in `docs/architecture-brief.md` under
-"chosen stack + reasoning". An unresolved branch (GPU unknown, distro pinned by
-an external dependency you haven't confirmed) becomes an entry under "open
-risks". See `brief-template.md`.
+Material branches become concise decisions in `docs/architecture-brief.md`.
+Unresolved high-impact branches (GPU unknown, a version pin constrained by an
+unverified dependency) remain provisional assumptions with a cheap validation
+step and an authorized pivot. See `brief-template.md`.

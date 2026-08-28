@@ -1,13 +1,12 @@
 # Scaffold patterns
 
-Starting repo layouts for the two golden paths. Copy the tree, rename packages
-to your app, prune directories you don't need. Two invariants hold for every
-robium app regardless of stack:
+Starting repo layouts for the two golden paths. Copy the closest verified app
+from the robium-apps registry when one exists; otherwise use these trees. Rename
+packages and prune anything the first working slice does not need.
 
-- `docs/architecture-brief.md`: the living architecture contract. Fixed
-  location; every build phase and the `robium-architect` subagent expect it here.
-- `learnings/YYYY-MM-DD.md`: dated friction notes captured during building,
-  later absorbed back into robium skills by `skill-author`.
+New applications keep a concise decision record at `docs/architecture-brief.md`.
+Learning capture belongs to Robium's sibling `learnings/` tree and hooks rather
+than an application-local ritual.
 
 The env layer (Dockerfile vs `pyproject.toml`) is decided by the `environments`
 skill; both trees below show the common case.
@@ -20,8 +19,7 @@ For a mobile robot navigating in Gazebo with Nav2. A ROS 2 workspace with a
 ```
 my-nav-robot/
 ├── docs/
-│   └── architecture-brief.md        # the contract (required)
-├── learnings/                       # dated friction notes for skill-author
+│   └── architecture-brief.md        # concise decision record
 ├── docker/
 │   ├── Dockerfile                   # ROS 2 Jazzy base + deps (environments skill)
 │   └── compose.yaml                 # sim + nav + viz services
@@ -65,8 +63,7 @@ For training and evaluating a manipulation policy. A Python project managed by
 ```
 my-arm-policy/
 ├── docs/
-│   └── architecture-brief.md        # the contract (required)
-├── learnings/                       # dated friction notes for skill-author
+│   └── architecture-brief.md        # concise decision record
 ├── pyproject.toml                   # uv-managed deps (environments skill)
 ├── uv.lock
 ├── src/
@@ -106,4 +103,5 @@ my-arm-policy/
 - A hybrid (learned policy running inside a ROS 2 system) starts from the ROS 2
   tree and adds a `my_policy` package that wraps the LeRobot inference.
 - Prune aggressively for an MVP; a single-package ROS 2 demo doesn't need four
-  packages. But never move `docs/architecture-brief.md`.
+  packages. Keep the decision record at `docs/architecture-brief.md` for new
+  applications and genuine re-architecture work.

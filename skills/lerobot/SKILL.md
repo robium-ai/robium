@@ -1,10 +1,11 @@
 ---
 name: lerobot
-version: 2.1.3
+version: 2.2.0
 description: >
   HuggingFace LeRobot for physical-AI manipulation: the LeRobotDataset
   format, loading and recording episodes, training policies (ACT, diffusion,
-  pi0) and VLAs (SmolVLA), evaluating in simulation, and teleoperation. Use
+  pi0) and VLAs (SmolVLA), inspecting checkpoint processors, evaluating in
+  simulation, LeRobot training-job lifecycle, and teleoperation. Use
   when: 'lerobot', 'manipulation policy', 'imitation learning', 'train a
   robot arm policy', 'ACT', 'diffusion policy', 'smolvla', 'VLA',
   'vision-language-action', 'fine-tune a policy', physical-AI
@@ -24,8 +25,9 @@ simulation, and teleoperation. LeRobot (`huggingface/lerobot`, PyPI package
 this number goes stale fast), `requires-python >=3.12`)
 is HuggingFace's end-to-end robot-learning library; this skill embeds the
 robotics-specific glue (dataset shape, training/eval CLI, sim envs,
-teleoperation) and delegates hub mechanics (auth, upload/download, model
-cards) to the `huggingface` skill's territory. LeRobot moves fast; every
+teleoperation) and routes Hub mechanics (auth, upload/download, model
+cards, Jobs operations) to Robium's self-contained `huggingface` skill.
+LeRobot moves fast; every
 command below is either a direct upstream docstring/doc example fetched
 on 2026-07-10 or marked with how it was verified; re-check before relying
 on exact flags in a real project.
@@ -39,10 +41,10 @@ on exact flags in a real project.
   'imitation learning', 'train a robot arm policy', 'ACT', 'diffusion
   policy'.
 - Cross-references: go to the sibling skill instead when the question is:
-  - Hub auth, dataset/model upload-download, model cards, repo management →
-    the `huggingface` skill's territory; LeRobot's own `hf auth login`/
-    `hf upload` commands are shown here only where a lerobot workflow
-    requires them inline.
+  - Hub auth, dataset/model upload-download, model cards, repo management,
+    Dataset Viewer, and Jobs lifecycle mechanics → the self-contained
+    `huggingface` skill. This skill keeps only LeRobot-specific artifact and
+    training semantics inline.
   - Whether to use uv or Docker, GPU passthrough, headless/remote display →
     `environments` (load first if not already decided; see Key directives).
   - Deciding *which* dataset(s) to source or combine for a task → the
@@ -62,10 +64,11 @@ on exact flags in a real project.
   (LeRobotDataset shape, training/eval CLI, which policies exist, sim envs
   shipped) lives in this skill and its references, because no single
   upstream page ties it together for a new robium project, but hub
-  mechanics (auth, push/pull, model cards) are explicitly *not*
-  re-explained here; they belong to the `huggingface` skill once it
-  exists, and LeRobot's own `hf auth login`/`hf upload` invocations are
-  shown inline only as far as a lerobot workflow needs them.
+  mechanics (auth, push/pull, model cards, Dataset Viewer, Jobs operations)
+  are explicitly *not* re-explained here; Robium's `huggingface` skill owns
+  their lean common path. This skill retains only the repo IDs, processor
+  and checkpoint checks, publication fields, and training-job behavior that
+  are specific to LeRobot.
 - **uv-first, per `environments`.** <!-- id: uv-first-install --> LeRobot is a pure-Python ML package:
   `environments`' decision tree routes it to uv, not Docker, unless the
   project also needs ROS 2 or another system dependency. LeRobot's own
@@ -197,6 +200,17 @@ hosted [dataset visualizer](https://huggingface.co/spaces/lerobot/visualize_data
 before committing to one; actually pulling/searching the Hub beyond that is
 the `huggingface` skill's territory. See `references/datasets.md` and
 `examples/load-dataset-snippet.py`.
+
+**Inspect or publish a LeRobot artifact on the Hub.** Use the `huggingface`
+skill to inspect the repository, download a pinned revision, authenticate, or
+perform an explicitly authorized upload. Before training or evaluation, check
+the dataset repo ID and format metadata; for a policy, inspect the checkpoint
+and its `policy_preprocessor.json` / `policy_postprocessor.json`. Before
+publication, confirm the target repo ID, dataset/model type, visibility,
+license/card, robot/task metadata, LeRobot tag or equivalent discoverability
+fields, and the exact files being uploaded. LeRobot's `--dataset.push_to_hub`
+and `--policy.repo_id` fields express artifact intent; the `huggingface` skill
+owns the external mutation gate and the resulting repo verification.
 
 **Visualize episodes.** <!-- id: visualize-episodes-rerun --> `lerobot-dataset-viz --repo-id=<id> --episode-index=0`
 renders a recorded/loaded episode through Rerun, locally or streamed from a
@@ -331,9 +345,10 @@ explicitly). See `references/datasets.md`.
   calibration, camera indices) is robot-specific and only lightly touched
   here; see LeRobot's own hardware docs (linked in References) for a
   specific arm.
-- **No local GPU:** add `--job.target=<flavor>` (e.g. `a10g-small`) to a
-  `lerobot-train` command to run it on Hugging Face Jobs instead of locally;
-  list current flavors/pricing with `hf jobs hardware`. See
+- **No local GPU:** the current LeRobot CLI may expose a `--job.target`
+  submission path. Inspect `lerobot-train --help`, then use the `huggingface`
+  skill to list live hardware, establish the paid-compute authorization gate,
+  and monitor or cancel the exact Job. See
   `references/policies-and-training.md`.
 
 ## References
@@ -369,6 +384,12 @@ explicitly). See `references/datasets.md`.
 ## Changelog
 
 <!-- One dated line per battle-tested change, added by skill-author hardening sessions. -->
+
+- 2.2.0 (2026-08-27): route Hub authentication, transfer, Dataset Viewer, and
+  Jobs lifecycle operations to the self-contained Robium `huggingface` skill;
+  keep LeRobot-specific repo IDs, processor/checkpoint checks, publication
+  fields, and training-job behavior inline; replace copied hardware/pricing
+  assumptions with live CLI inspection and an explicit paid-compute gate.
 
 - 2.1.3 (2026-08-03): style pass; removed em dashes throughout (no content changes).
 - 2.1.2 (2026-08-02): annotate examples/load-dataset-snippet.py [reasons: deep-verify-pusht-dataset-loads] (applied by apply_deltas)

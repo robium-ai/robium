@@ -2,4 +2,16 @@ triggers:
   positive:
     - phrase: if we use gradio do we need to host it on hugging face? can we just host it on our server and demo window would show the application?
       source: learnings/2026-07-13.md
+    - phrase: inspect this robotics dataset on the Hugging Face Hub before downloading it
+    - phrase: download the model checkpoint at a pinned Hub revision
+    - phrase: show me the available Hugging Face Jobs hardware, but do not start anything
+    - phrase: check the build logs for our Hugging Face Space
+    - phrase: upload this LeRobot dataset to our private Hugging Face organization
+  negative:
+    - phrase: record a new LeRobotDataset episode from my robot arm
+      expect: lerobot
+    - phrase: should we collect demonstrations or generate synthetic data
+      expect: data
+    - phrase: deploy this simulator container to Cloud Run
+      expect: cloud-run
 tasks: []

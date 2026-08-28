@@ -2,6 +2,14 @@ triggers:
   positive:
     - phrase: vla based arm control
       source: learnings/2026-07-13.md
+    - phrase: inspect the processor files in this SmolVLA checkpoint before evaluating it
+    - phrase: train an ACT policy and publish the LeRobot checkpoint to my Hub repo
+    - phrase: configure the lerobot-train job target and verify the remote policy repo and output directory behavior
+  negative:
+    - phrase: download this generic language model from the Hugging Face Hub
+      expect: huggingface
+    - phrase: list available Hugging Face Jobs hardware without starting a job
+      expect: huggingface
 tasks:
   - name: pusht-dataset-loads
     example: examples/load-dataset-snippet.py

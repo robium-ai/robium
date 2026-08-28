@@ -3,8 +3,8 @@
   "skills": [
     {
       "name": "architect",
-      "version": "1.9.0",
-      "description": "Entry-point skill for designing robotics applications with AI agents. Turns requirements (robot type, task, hardware, sim-vs-real, GPU/budget) into a full stack decision (middleware, simulation, data, visualization, training frameworks) plus a scaffold plan and a written architecture brief. Use when: starting any new robotics app; 'build a robot app', 'which robotics stack', 'scaffold a robotics project', 'mobile robot', 'robot arm', 'manipulation policy', 'navigation stack', backlog-driven kickoffs like 'let's do demo 1', 'do demo N', 'build the next demo'; or when requirements exist but the stack is unchosen. This is the entry-point skill of the robium plugin: load it first; it routes to every other robium skill per build phase. Not for: debugging an existing stack (use the matching tool skill) or authoring robium skills (skill-author)."
+      "version": "2.0.0",
+      "description": "Entry-point skill for shaping new robotics applications: lightweight brainstorming, project ideation, requirement/risk discovery, stack selection, comparing or choosing simulators/models/visualization, a first user-visible slice, and a concise architecture decision record. Use when: starting a new robotics app; 'brainstorm a robot app', 'build a robot app', 'which robotics stack', 'choose between simulators', 'decide the simulator, model, robot, and visualization', 'what robotics project can we build', 'cheapest useful demo', 'rethink the architecture', genuine re-architecture, 'scaffold a robotics project', 'mobile robot', 'robot arm', 'manipulation policy', 'navigation stack', 'let's do demo 1', or when requirements exist but the stack is unchosen. Load first for a new app, then route to domain skills. Excludes narrow maintenance work after stack selection and skill authoring (skill-author)."
     },
     {
       "name": "cloud-run",
@@ -23,7 +23,7 @@
     },
     {
       "name": "foxglove",
-      "version": "1.5.2",
+      "version": "1.5.3",
       "description": "Foxglove for robotics visualization: foxglove_bridge setup for live ROS 2 robots, layouts, MCAP recording and playback, and remote/web visualization of robots running on servers. Use when: 'foxglove', 'mcap', visualizing a robot running on a remote server, sharing visualization with others, or recording sessions for later analysis. The remote-viz answer in the robium stack; key to the local-vs-remote workflow (cross-ref environments). Not for: ROS desktop debugging (rviz2) or ML logging (rerun)."
     },
     {
@@ -33,8 +33,8 @@
     },
     {
       "name": "huggingface",
-      "version": "1.1.2",
-      "description": "HuggingFace ecosystem for robotics projects: hub datasets and models for robot learning, and demo Spaces. DELEGATES: for hub mechanics (download/upload/auth/jobs), install HuggingFace's own skills (/plugin marketplace add huggingface/skills, then /plugin install hf-cli@huggingface-skills) and defer to them; this skill adds only the robotics-specific layer (which datasets and models matter for manipulation and navigation, robotics dataset conventions on the hub). Use when: HF hub operations inside a robotics project, 'huggingface dataset for robots', 'upload the policy to the hub', and the HF skills aren't installed yet. Pairs with lerobot and data."
+      "version": "2.0.0",
+      "description": "Hugging Face Hub operations for robotics projects: inspect, download, create, upload, authenticate safely, explore Dataset Viewer data, run and diagnose Jobs, and inspect Spaces. Use when: \"Hugging Face\", \"HF Hub\", \"hf download\", \"hf upload\", \"Hub dataset\", \"Hub model\", \"Dataset Viewer\", \"HF Jobs\", or \"Space logs\" in a robotics workflow. Self-contained for the common path; checks live `hf --help` and official docs for volatile flags. Pairs with `lerobot` for LeRobot-specific formats and training, and `data` for sourcing."
     },
     {
       "name": "integration",
@@ -53,13 +53,13 @@
     },
     {
       "name": "learning-loop",
-      "version": "0.2.1",
-      "description": "The session-side surface of robium's learning engine: consolidate captured flags and learnings into evidence-counted observations, absorb ready observations into anchor-targeted skill-edit PRs via the deterministic delta pipeline, refine (prune/dedup/staleness) through the same pipeline, run blind variant A/B on contested edits ('experiment', 'A/B this edit', 'try competing fixes'), deep-verify unverified examples in pinned fixtures ('deep verify', 'verify the examples'), and report loop health. Use when: 'consolidate', 'absorb', 'run the loop', 'update my skills', 'absorb these learnings', 'refine the skills', 'learning loop status', end-of-block retros, promoting .robium/queue.jsonl flags, or drafting an absorb/refine PR. Everything before git merge may run autonomously; nothing lands on main skills/** without a human merge. Not for: mining external repos (mining), fresh skill authoring or the quality bar (skill-author), building robot applications (architect)."
+      "version": "1.0.0",
+      "description": "Robium's explicit learning engine: consolidate capture-only queue flags and transcript evidence into observations; absorb ready observations through deterministic anchor-targeted skill deltas; refine, A/B contested edits, deep-verify examples, prune landed transcript evidence, and report loop health. Use when: \"consolidate\", \"absorb\", \"run the loop\", \"update my skills\", \"refine the skills\", \"learning loop status\", \"A/B this edit\", \"deep verify\", or \"clean transcripts\". Never recalls or injects observations into new prompts. Not for external-repo mining, fresh skill authoring, or app implementation."
     },
     {
       "name": "lerobot",
-      "version": "2.1.3",
-      "description": "HuggingFace LeRobot for physical-AI manipulation: the LeRobotDataset format, loading and recording episodes, training policies (ACT, diffusion, pi0) and VLAs (SmolVLA), evaluating in simulation, and teleoperation. Use when: 'lerobot', 'manipulation policy', 'imitation learning', 'train a robot arm policy', 'ACT', 'diffusion policy', 'smolvla', 'VLA', 'vision-language-action', 'fine-tune a policy', physical-AI dataset/training/eval tasks. Core skill of the manipulation vertical; pairs with huggingface (hub mechanics), environments (uv-first install), and data (sourcing strategy). Not for: classical motion planning or the NVIDIA RL stack (isaac-lab)."
+      "version": "2.2.0",
+      "description": "HuggingFace LeRobot for physical-AI manipulation: the LeRobotDataset format, loading and recording episodes, training policies (ACT, diffusion, pi0) and VLAs (SmolVLA), inspecting checkpoint processors, evaluating in simulation, LeRobot training-job lifecycle, and teleoperation. Use when: 'lerobot', 'manipulation policy', 'imitation learning', 'train a robot arm policy', 'ACT', 'diffusion policy', 'smolvla', 'VLA', 'vision-language-action', 'fine-tune a policy', physical-AI dataset/training/eval tasks. Core skill of the manipulation vertical; pairs with huggingface (hub mechanics), environments (uv-first install), and data (sourcing strategy). Not for: classical motion planning or the NVIDIA RL stack (isaac-lab)."
     },
     {
       "name": "live-demo",
@@ -113,7 +113,7 @@
     },
     {
       "name": "test-assets",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "description": "Canonical test assets and fixture sourcing for robotics testing: which worlds, robot models, sample datasets, and recordings to test against for a given robot type; the standard test-assets folder layout with a provenance manifest; pointer vs vendored sourcing modes; fixture and golden policy (tolerance bands, seeded generation). Use when: 'test assets', 'test world', 'test fixture', 'download a test dataset', 'sample rosbag', 'which world should I test in', 'robot model for simulation tests', 'golden output', 'regression fixture', 'data for unit tests', setting up test data for any new robotics project. Load alongside testing when the test pyramid needs data. Not for: training-data sourcing (data), test structure and pass bars (testing), simulator selection rationale (simulation)."
     },
     {

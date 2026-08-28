@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """PostToolUse(Bash) hook — flag error-bearing commands.
 
-Capture only: the sole nudge channel is SessionStart, so this hook never
-writes to stdout. Dedup: one flag per (command-head, error-signature) per
+Capture only: learning hooks emit no nudges or prompt context, so this hook
+never writes to stdout. Dedup: one flag per (command-head, error-signature) per
 session. Fail-open.
 """
 import json

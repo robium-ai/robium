@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """SessionEnd hook — archive the agent transcript before host retention prunes
 it (spec §4.0: transcripts are Tier −1, the engine's raw record)."""
+import importlib.util
 import os
 import shutil
 import sys
 import time
+from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -32,16 +34,44 @@ def prune_seen_files(cwd: str, session_id: str, now: "float | None" = None) -> N
             pass
 
 
+def protected_archive_names(cwd: str) -> set[str]:
+    """Return pending-evidence archive names; fail closed if classifier is absent."""
+    tdir = Path(cwd) / ".robium" / "transcripts"
+    candidates = {path.name for path in tdir.glob("*.jsonl") if path.is_file()}
+    engine = Path(__file__).resolve().parents[2] / "scripts" / "engine" / "prune_transcripts.py"
+    if not engine.is_file():
+        return candidates
+    try:
+        spec = importlib.util.spec_from_file_location("robium_prune_transcripts", engine)
+        if spec is None or spec.loader is None:
+            return candidates
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = module
+        spec.loader.exec_module(module)
+        decisions = module.classify(Path(cwd))
+        return {
+            decision.path.name
+            for decision in decisions
+            if decision.reason in {"pending-queue", "pending-evidence"}
+        }
+    except Exception:
+        return candidates
+
+
 def prune_archive(cwd: str) -> None:
+    """Enforce the size ceiling without deleting pending queue/observation evidence."""
     tdir = os.path.join(cwd, ".robium", "transcripts")
     if not os.path.isdir(tdir):
         return
     files = [os.path.join(tdir, f) for f in os.listdir(tdir) if f.endswith(".jsonl")]
     total = sum(os.path.getsize(f) for f in files)
     budget = MAX_ARCHIVE_MB * 1024 * 1024
+    protected = protected_archive_names(cwd)
     for f in sorted(files, key=os.path.getmtime):
         if total <= budget:
             break
+        if os.path.basename(f) in protected:
+            continue
         total -= os.path.getsize(f)
         os.remove(f)
 

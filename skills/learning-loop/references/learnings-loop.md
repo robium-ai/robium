@@ -13,9 +13,9 @@ yet.
 
 ## What the manual loop looked like
 
-1. **Capture immediately**, in the moment friction happened, into a dated
-   learnings/YYYY-MM-DD.md file, never reconstructed from memory at session
-   end. One file per day; multiple sessions append to the same file.
+1. **Capture evidence before it evaporates**, historically by writing a dated
+   learnings entry immediately. Current installs use silent hooks and archive
+   transcripts so promotion can be batched at a natural milestone instead.
 2. **Consume** every unabsorbed learnings file in a dedicated hardening
    session, run from the robium repo itself.
 3. **Group by skill**: cluster entries by which robium skill they
@@ -48,8 +48,9 @@ The two human gates that still govern absorb today came from here
 unchanged: a candidate-selection gate (which harvested items proceed) and a
 change-summary gate (a concrete diff, reviewed, before anything commits).
 skill-updater ran both explicitly in conversation; absorb now expresses the
-first as the observation `status: ready` bar and the second as the PR merge;
-see the promotion-bar reference for the full mapping.
+first as the observation `status: ready` bar and the second as a concrete,
+verified diff under current maintainer authority; see the promotion-bar
+reference for the reviewed-PR default and explicit direct-main exception.
 
 ## Placement rule (unchanged, still load-bearing)
 
@@ -76,12 +77,12 @@ scripts/engine/placement.py now applies mechanically per observation.
   apply_deltas.py automates, so doing it by hand produces a result the
   engine's own validator will still accept.
 
-None of this is an escape hatch around the merge gate: the manual path
-removes the tooling, not the gate. A by-hand edit still lands on its own
-branch, still gets validated, and still requires the same human approval
-before it merges to main skills/** as an engine-drafted PR would; "the
-engine isn't available" changes how the diff gets produced, never who
-signs off on it landing.
+None of this is an escape hatch around the quality or authority gates: the
+manual path removes tooling, not archive/version/changelog/evidence/validation
+requirements. External, unattended, or unrequested work still uses a reviewed
+branch/PR. An explicit maintainer instruction in the current conversation may
+authorize local direct-main work, but it does not become standing authority and
+does not authorize push, deployment, or publication.
 
 The seven signal types, the three-part evidence bar, and the recurrence
 rule are unchanged from this process and are documented in full in

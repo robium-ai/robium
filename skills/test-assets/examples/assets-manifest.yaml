@@ -1,5 +1,5 @@
 # status: unverified; becomes verified when the first hardening run
-# (the robium-applications test-assets corpus build) fetches it end-to-end.
+# (the robium-apps test-assets corpus build) fetches it end-to-end.
 # Upstreams: see the skill's references/canonical-assets.md for evidence lines.
 # Revisions below say PIN-AT-ADOPTION: resolve each to a concrete
 # sha/version/revision when you first vendor (vendor_assets.py prints the

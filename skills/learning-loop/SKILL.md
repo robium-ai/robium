@@ -1,217 +1,210 @@
 ---
 name: learning-loop
-version: 0.2.1
+version: 1.0.0
 description: >
-  The session-side surface of robium's learning engine: consolidate captured
-  flags and learnings into evidence-counted observations, absorb ready
-  observations into anchor-targeted skill-edit PRs via the deterministic
-  delta pipeline, refine (prune/dedup/staleness) through the same pipeline,
-  run blind variant A/B on contested edits ('experiment', 'A/B this edit',
-  'try competing fixes'), deep-verify unverified examples in pinned fixtures
-  ('deep verify', 'verify the examples'), and report loop health. Use when:
-  'consolidate', 'absorb', 'run the loop', 'update my skills', 'absorb
-  these learnings', 'refine the skills', 'learning loop status', end-of-block
-  retros, promoting .robium/queue.jsonl flags, or drafting an absorb/refine
-  PR. Everything before git merge may run autonomously; nothing lands on
-  main skills/** without a human merge. Not for: mining external repos
-  (mining), fresh skill authoring or the quality bar (skill-author),
-  building robot applications (architect).
+  Robium's explicit learning engine: consolidate capture-only queue flags and
+  transcript evidence into observations; absorb ready observations through
+  deterministic anchor-targeted skill deltas; refine, A/B contested edits,
+  deep-verify examples, prune landed transcript evidence, and report loop
+  health. Use when: "consolidate", "absorb", "run the loop", "update my
+  skills", "refine the skills", "learning loop status", "A/B this edit",
+  "deep verify", or "clean transcripts". Never recalls or injects observations
+  into new prompts. Not for external-repo mining, fresh skill authoring, or app
+  implementation.
 ---
 
-# Learning loop: consolidate, absorb, refine
+# Learning loop: capture, consolidate, absorb, retain
 
-The engine's session-side pipeline (spec: docs/superpowers/specs/2026-08-01-learning-engine-design.md
-§5–§10). Capture happens automatically (plugin hooks); this skill turns what
-was captured into observations, and observations into reviewable skill-edit
-PRs. The human gate is git merge.
+Robium captures possible signals silently and preserves enough transcript
+evidence to evaluate them later. Consolidation and absorption happen only when
+invoked or at a natural milestone; nothing from memory, observations, or the
+queue is inserted into a new prompt automatically.
 
 ## When to use this skill
 
-- Promoting queue flags and completing dated learnings entries ("consolidate",
-  a Stop-hook nudge, end of a work block).
-- Drafting skill edits from ready observations ("absorb", "update my skills",
-  "run the loop"): output is always a PR branch, never a direct edit.
-- Catalog hygiene passes ("refine the skills"): prune/dedup/staleness through
-  the same delta pipeline, report-first.
-- Contested or structural edits ("experiment", "A/B this edit", "try
-  competing fixes"): description rewrites, restructures, competing fixes
-  where the right answer isn't obvious enough for a single draft.
-- Scheduled example verification ("deep verify", "verify the examples"):
-  promoting pinned examples/references content from status: unverified
-  once its evals.yaml fixture passes.
-- Loop health ("learning loop status"): queue depth, unabsorbed backlog,
-  eval-suite size, ledger totals.
-- For distilling external repos, use the mining skill; for authoring a new
-  skill from scratch, skill-author.
+- Consolidating the .robium queue, archived transcript windows, and dated
+  learnings into evidence-counted observations.
+- Absorbing `status: ready` observations into versioned skill deltas.
+- Refining skill content for duplication, staleness, harmful guidance, or
+  growth through the same deterministic pipeline.
+- Running blind delta variants for a genuinely contested edit, or deep-verifying
+  a pinned example fixture.
+- Reporting queue/backlog/eval/ledger health or pruning transcript evidence
+  after linked changes have landed.
+- Route external repository research to `mining`; route fresh skill creation
+  and direct-edit quality mechanics to `skill-author`.
 
 ## Key directives
 
-- Delegation posture: **embed**; the workflows live here; the deterministic
-  tools live at scripts/engine/ (apply_deltas.py, run_trigger_evals.py,
-  ledger.py, mine_transcripts.py, skill_metrics.py, observations.py,
-  placement.py, run_variants.py, deep_verify.py, run_task_checks.py) and
-  in the plugin hooks (recall).
-- **Scripts hold the pen.** <!-- id: scripts-hold-the-pen --> LLM roles draft
-  deltas and diagnose; apply_deltas.py applies them (snapshot, bump,
-  changelog, sidecars). Never hand-edit a skill during absorb; never bypass
-  the script's refusals; a refusal is a design signal, not an obstacle.
-- **Consolidation never touches skills/ content.** <!-- id: consolidate-write-surface -->
-  Its write surface is learnings/, learnings/observations/, and the
-  evidence/evals sidecars; that boundary is what makes it autonomous-safe.
-- **Absorb consumes status: ready only.** <!-- id: absorb-ready-only --> The
-  ready bar (proof ≥ 2 | user-correction | three-part evidence | external
-  official) is enforced by the observations lint; do not absorb around it.
-- **Merge is the gate.** <!-- id: merge-is-the-gate --> Every absorb/refine
-  run ends in a PR with the evidence table; no agent merges to main
-  skills/**. Mid-build sessions capture; they never edit skills directly.
-- **Dedup against everything seen** <!-- id: dedup-against-rejected -->,
-  including absorbed and rejected observations, or judged-rejected findings
-  reappear forever.
-- **One self-check round** <!-- id: one-self-check-round --> on consolidator
-  and absorber output: re-read the draft against the source transcript
-  window for misattribution, missed dead-ends, wrong anchors, before writing.
-- **Variants are deltas, never rewrites.** <!-- id: variants-are-deltas -->
-  Full-file candidate rewrites are forbidden (context collapse); a variant
-  that apply_deltas refuses is a broken candidate, not a contender.
+- **Delegation posture: embed.** This skill owns the workflows; deterministic
+  mechanics live in the repository's scripts/engine directory and capture
+  hooks live under the repository's hooks directory.
+- **Capture only, never recall.** `UserPromptSubmit` may append a flag and
+  `SessionEnd` may archive a transcript; `SessionStart` is silent. Hooks must
+  never inject queue reminders, observations, memory, or recall text into a
+  prompt.
+- **Batch bookkeeping at natural milestones.** Do not interrupt implementation
+  for a manual learning entry or mandatory per-skill retro. Hooks quarantine
+  candidates; consolidation promotes useful signals and discards noise in one
+  batch.
+- **Consolidation never touches skill content.** Its write surface is
+  the repository's learnings tree, observations tier, and evidence/eval
+  sidecars.
+- **Scripts hold the pen during absorb/refine.** Draft anchor-targeted deltas;
+  use `apply_deltas.py` for archive, version, content, and changelog mechanics.
+  Never bypass a refusal. A separately requested direct skill edit still uses
+  the same archive/version/changelog/validation quality bar.
+- **Absorb consumes `status: ready` only.** Read the source transcript window,
+  apply the promotion bar, deduplicate against tentative/ready/absorbed/rejected
+  observations, and perform one attribution/evidence self-check.
+- **Review route depends on current authority.** External contributors,
+  unattended automation, and unrequested absorption use a branch, PR, and human
+  merge. A maintainer may explicitly authorize local direct-main work in the
+  current conversation; that removes only the branch/PR ceremony, never the
+  archive, evidence, version, changelog, eval, or validation requirements.
+- **Preserve evidence until it is no longer needed.** A transcript linked by a
+  pending queue flag or tentative/ready observation cannot be pruned. Once all
+  linked observations are absorbed or rejected and the corresponding change
+  has landed, prune it deterministically. Unreferenced transcripts expire after
+  14 days; the archive size ceiling is only the final safeguard.
+- **Variants are deltas, never full-file rewrites.** A candidate refused by
+  `apply_deltas.py` is broken, not a contender.
 
 ## Quick start
 
-Consolidate (autonomous-safe), then absorb to a PR:
+Inspect loop health without changing anything:
 
 ```bash
-# status: what's pending?
-wc -l .robium/queue.jsonl                 # flags
-grep -rc "status: ready" learnings/observations/*.md
-uv run scripts/engine/skill_metrics.py    # catalog health
+wc -l .robium/queue.jsonl
+rg -l '^status: ready' learnings/observations
+uv run scripts/engine/skill_metrics.py
+uv run scripts/engine/prune_transcripts.py --dry-run
+```
 
-# consolidate: promote flags + complete entries + merge into observations
-# (LLM workflow; see Decision guidance; writes learnings/ + sidecars only)
+After batched consolidation, absorb ready observations:
 
-# absorb: draft deltas from ready observations, then:
-uv run scripts/engine/apply_deltas.py deltas.yaml --dry-run   # review the report
-git checkout -b loop/absorb-$(date +%F)
-uv run scripts/engine/apply_deltas.py deltas.yaml
+```bash
+uv run scripts/engine/apply_deltas.py learnings/deltas/<file>.yaml --dry-run
+uv run scripts/engine/apply_deltas.py learnings/deltas/<file>.yaml
 uv run skills/skill-author/scripts/validate_skills.py
 uv run scripts/engine/run_trigger_evals.py --skills <touched...> \
   --flip-gate-baseline archive/<skill>/<old-version> --flip-skill <skill>
-gh pr create --title "loop: absorb <topic>" --body-file report.md
+```
+
+For the default reviewed route, create the branch before applying and open a PR
+with the evidence table. Under an explicit maintainer direct-main instruction,
+apply and verify on local `main`, then commit there. Neither route authorizes a
+push, merge, deployment, publication, or paid action that was not requested.
+
+After the absorb/refine change has landed and observation statuses are terminal:
+
+```bash
+uv run scripts/engine/prune_transcripts.py --dry-run
+uv run scripts/engine/prune_transcripts.py --apply
 ```
 
 ## Decision guidance
 
-**Consolidate** (spec §6). Inputs: queue flags, miner output
-(scripts/engine/mine_transcripts.py over .robium/transcripts/), unconsolidated
-learnings entries; each resolved to its archived-transcript window and read in
-full context. Steps: promote flags that clear the noise bar into schema-v2
-entries (verbatim text preserved); complete hand-written entries (evidence,
-skill tags, recurrence); merge into observations per the schema README's
-merge-on-same-finding and evolve-don't-overwrite rules; increment ledgers
-(scripts/engine/ledger.py) with sources; harvest eval cases (no-skill-fired →
-triggers.positive of the right skill, misfires → triggers.negative); draft
-the end-of-block retro for human sign-off; attribute successes (green blocks
-credit helpful to the anchors whose guidance shaped the actions; best-effort,
-neutral by default). Then the self-check round.
+### Consolidate
 
-**Absorb** (spec §7.1). On ready observations: branch loop/absorb-YYYY-MM-DD;
-draft deltas feedback-conditioned (current SKILL.md + observation's symptom/
-fix/dead-ends + smallest-edit directive + placement rule; run
-scripts/engine/placement.py per finding); apply via apply_deltas.py; verify
-(validator → trigger evals → flip gate); scoped dup check over touched skills;
-PR with the evidence table (per edit: skill, anchor, op, observation link,
-sources, eval results). See the delta-format reference for op semantics.
+Read each queue candidate in its archived transcript window. Promote only flags
+that name a real signal and have enough context to say what was expected and
+what happened; discard shell noise, false positives, and context-free fragments.
+Complete evidence fields where the transcript supports them, merge on the same
+finding, preserve recurrence, and harvest trigger cases. Missing proof stays
+tentative. A user correction is the strongest single-observation signal, but it
+still needs accurate attribution and a useful proposed fix.
 
-**Refine**: the five passes (see the refine-passes reference) re-armed on
-ledgers: prune harmful>0 ∧ helpful=0 first; dedup seeds from
-skill_metrics.py --dupes; staleness (90-day windows) unchanged; usage reads
-retro lines; growth review reads the archive. Output: retire/move/annotate
-deltas through the same pipeline → PR. Scoped refine after every absorb; full
-refine ~monthly.
+Consolidation is intentionally batched. A compact milestone summary is useful;
+a ritual line for every skill that merely loaded is not required. Record a clean
+result only when it adds evidence, such as a non-trivial example working exactly
+as documented.
 
-**Experiment** (spec §9). Trigger: contested or structural edits where the
-right answer isn't obvious enough for a single draft: description
-rewrites, restructures, competing fixes. Flow: draft 2–3 feedback-
-conditioned DELTA variants (never full-file rewrites) against the
-observation, each its own deltas file, alongside the implicit baseline;
-scripts/engine/run_variants.py builds a whole-catalog scratch copy per
-candidate, applies its deltas through apply_deltas, and scores every
-variant deterministically: trigger pass-rate, flip-gate count, task
-pass-rate (only with --with-tasks, since task checks are real subprocess
-runs and never run silently), and token count; unless --no-llm, a blind
-judge (shelling to claude -p with shuffled candidate labels) offers a
-content pick that degrades to "skipped" on any failure rather than
-fabricate one. A candidate apply_deltas refuses never reaches scoring;
-it is reported as a build failure, a broken candidate, not a contender
-(the variants-are-deltas directive). Fitness ordering: trigger pass-rate
-desc, then task pass-rate desc (an unrun None never discriminates either
-side), then token count asc; leanness is the tiebreaker. Post the
-printed score table straight into the PR body; the "recommendation:"
-line is the engine's rank only; the human picks by merging the winning
-variant's deltas through the normal absorb path, never by the tool
-selecting unattended. --archive-losers then copies every non-winning
-variant (skill dir, deltas file, scores) to
-archive/<skill>/variants/<date>/<name>/: branch points kept for later,
-not garbage. Worked walkthrough and score-table reading: the
-experiment-recipes reference.
+### Absorb
 
-**Deep-verify** (spec §8 layer 4). A scheduled lane, not a per-PR gate: pinned
-status: unverified examples/references get promoted mechanically when the
-skill's evals.yaml carries a tasks: fixture whose example: field names the
-file (skill-relative path). scripts/engine/deep_verify.py --inventory
-lists every unverified file across the catalog and whether it has a
-matching fixture (an unfixtured file is a coverage gap to close, not a
-failure); --run --skills <names...> actually runs each matched fixture
-(via the same run_task_checks primitive the task-check runner uses) and,
-on PASS, emits an annotate op flipping the marker to
-"status: verified <date> (deep-verify: <task>)"; nothing is written to
-skills/** directly, the emitted learnings/deltas/<date>-deep-verify.yaml
-file goes through the normal apply_deltas review like any other delta. A
-FAIL is a finding for the printed report, not a fatal error: the CLI
-always exits 0, because a stale example is something to fix later, not a
-gate to block on. Run it on a schedule (per-build or monthly, alongside
-refine), not as part of every absorb.
+For each ready observation, choose the lowest owning skill and the smallest edit
+that carries the knowledge. Prefer updating an existing anchor to adding a
+bullet, and adding a bullet to creating a section. Draft a delta from the
+observation's symptom, fix, dead ends, anchors, and source evidence; preview it;
+apply through the engine; run validator, trigger evals, flip gate, task checks as
+applicable, and a scoped duplicate check. The review artifact or direct-main
+commit should include the same evidence table and verification results.
 
-**Recall** runs without invocation (UserPromptSubmit hook): ready
-observations matching the prompt inject as [robium-recall] context, citing
-ids. A wrong recall is capture signal: name the id and correct it; the
-consolidator counts it harmful.
+### Refine
+
+Run the five evidence-armed hygiene passes from the refine reference: harmful
+guidance first, duplication, staleness, usage/trigger fitness, then growth.
+Produce deltas through the normal pipeline. A scoped pass follows absorption;
+a catalog-wide pass is periodic, not an interruption to every build.
+
+### Experiment
+
+For a contested structural or trigger edit, draft two or three small DELTA
+variants plus the baseline. `run_variants.py` applies each to an isolated
+catalog, runs deterministic trigger/task/token scoring, and may ask a blind
+judge when configured. The printed recommendation is evidence for the human,
+not permission for unattended selection or merge.
+
+### Deep-verify
+
+`deep_verify.py --inventory` lists unverified examples and fixture coverage.
+Running it executes only configured task fixtures; a pass emits an annotation
+delta, while a failure remains a finding. Promotion still goes through the same
+apply/validation/review route.
+
+### Transcript retention
+
+`prune_transcripts.py` reports every keep/delete decision and defaults to a dry
+run. It protects queue-linked evidence and any transcript tied to a nonterminal
+or not-yet-consolidated learning. It deletes terminal linked evidence only when
+all linked observations are absorbed/rejected, and otherwise deletes only
+unreferenced files older than 14 days. Review the report before `--apply`.
 
 ## Platform gotchas
 
-- apply_deltas refuses an op whose archive dir already exists: that means a
-  prior run bumped without merging. Rebase/merge the pending PR first.
-- The trigger-eval judge shells to the claude CLI; offline or in CI without
-  a key, pass --no-llm for the deterministic fallback (results are then
-  keyword-based: good for gating, weaker for judging close calls).
-- evidence.yaml and evals.yaml are engine-written; hand-edits will be
-  overwritten and break increment audit trails.
+- Capture flags are pointers, not conclusions. Command failures often contain
+  expected probes or path misses and should be discarded when they teach
+  nothing.
+- `apply_deltas.py` refuses an existing archive slot; resolve the prior pending
+  change rather than overwriting history.
+- Trigger judging may use an external model. In offline CI, use the documented
+  deterministic/no-LLM path and report that limitation.
+- Transcript references must retain the exact archive filename and source ID;
+  vague prose cannot be protected or cleaned deterministically.
+- The archive size ceiling can remove old evidence under pressure. Normal
+  operation should keep the archive below that point through status-aware
+  cleanup rather than relying on the ceiling.
 
 ## Customization
 
-- User tier (Phase 4): same modes with observations under .robium/ and the
-  absorb destination an overlay under .claude/skills/; the workflows are
-  path-parameterized, nothing else changes.
-- Eval-case harvest thresholds and the recall budget are constants in the
-  hook scripts; tune per install, not per session.
+- **Contributor/unattended mode:** always use the branch/PR/human-review route.
+- **Explicit maintainer mode:** local direct-main is allowed only when the
+  current conversation says so; do not persist that authority into future work.
+- **User-local learning:** path-parameterize observations and deltas into a
+  user overlay, but retain capture-only prompts and the same promotion bar.
+- **Retention window:** keep 14 days as the default. A different window is an
+  explicit repository policy choice and must never weaken pending-evidence
+  protection.
 
 ## References
 
-- `references/delta-format.md`: op semantics, deltas.yaml schema, refusal rules.
-- `references/promotion-bar.md`: queue→facts→observations promotion criteria.
-- `references/refine-passes.md`: the five hygiene passes, evidence-armed.
-- `references/learnings-loop.md`: the pre-engine hardening process (history + the manual fallback).
-- `references/experiment-recipes.md`: the variant A/B walkthrough, the
-  contrastive-rollouts recipe, and when not to experiment.
-- Engine tools (repo root): scripts/engine/ (apply_deltas.py,
-  run_trigger_evals.py, ledger.py, mine_transcripts.py, skill_metrics.py,
-  observations.py, placement.py, run_variants.py, deep_verify.py,
-  run_task_checks.py).
-- Spec: docs/superpowers/specs/2026-08-01-learning-engine-design.md §5–§10.
+- `references/delta-format.md` - delta schema, operations, and refusals.
+- `references/promotion-bar.md` - queue to learning to observation to delta.
+- `references/refine-passes.md` - five evidence-armed hygiene passes.
+- `references/learnings-loop.md` - historical/manual fallback context.
+- `references/experiment-recipes.md` - small-variant evaluation recipes.
+- Engine tools in the repository's scripts/engine directory: apply_deltas,
+  run_trigger_evals, observations, placement, run_variants, deep_verify,
+  run_task_checks, skill_metrics, mine_transcripts, and prune_transcripts.
 
 ## Changelog
 
+- 1.0.0 (2026-08-27): remove recall and all prompt injection; make hooks
+  capture-only and SessionStart silent; batch consolidation instead of immediate
+  bookkeeping/mandatory retros; add evidence-aware transcript retention; and
+  document the explicit maintainer direct-main exception while preserving all
+  quality gates.
 - 0.2.1 (2026-08-03): style pass; removed em dashes throughout (no content changes).
-- 0.2.0 (2026-08-02): experiment + deep-verify modes land (run_variants, deep_verify, task checks); experiment-recipes reference incl. contrastive-rollouts recipe (Phase 3, spec §9).
-- 0.1.1 (2026-08-02): delta-format documents the learnings/deltas/ location convention (#81)
-- 0.1.0 (2026-08-02): initial skill, consolidate/absorb/refine/status modes
-  over the Phase 2b delta pipeline; absorbs skill-updater's promotion bar and
-  skill-refiner's five passes as references (learning-engine Phase 2b, §13).
+- 0.2.0 (2026-08-02): add experiment and deep-verify modes and their engine tools.
+- 0.1.1 (2026-08-02): document the learnings/deltas location convention.
+- 0.1.0 (2026-08-02): initial consolidate/absorb/refine/status pipeline.

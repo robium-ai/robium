@@ -1,6 +1,6 @@
 ---
 name: test-assets
-version: 1.0.3
+version: 1.0.4
 description: >
   Canonical test assets and fixture sourcing for robotics testing: which
   worlds, robot models, sample datasets, and recordings to test against for a
@@ -194,10 +194,12 @@ Expensive to regenerate (long sim, GPU-gated)?    → Hub-hosted MCAP escape hat
 
 <!-- One dated line per battle-tested change, added by skill-author hardening sessions. -->
 
+- 1.0.4 (2026-08-27): replace the stale robium-applications corpus reference
+  with the current robium-apps repository.
 - 1.0.3 (2026-08-03): style pass; removed em dashes throughout (no content changes).
 - 1.0.2 (2026-08-01): decision-table rows anchored (learning-engine Phase 1 follow-up); no content changes.
 - 1.0.1 (2026-08-01): anchor IDs added to claim-bearing items (learning-engine Phase 1); no content changes.
 - 1.0.0 (2026-07-18): initial authoring: robot-type suitability matrix,
   sourcing-mode funnel, layout reference, canonical-assets catalog, vendor
-  script. Hardening pending: the robium-applications test-assets corpus
+  script. Hardening pending: the `robium-ai/robium-apps` test-assets corpus
   build is this skill's first trial run.

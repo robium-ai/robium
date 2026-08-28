@@ -1,216 +1,244 @@
 ---
 name: huggingface
-version: 1.1.2
+version: 2.0.0
 description: >
-  HuggingFace ecosystem for robotics projects: hub datasets and models for
-  robot learning, and demo Spaces. DELEGATES: for hub mechanics
-  (download/upload/auth/jobs), install HuggingFace's own skills (/plugin
-  marketplace add huggingface/skills, then /plugin install
-  hf-cli@huggingface-skills) and defer to them; this skill adds only the
-  robotics-specific layer (which datasets and models matter for manipulation
-  and navigation, robotics dataset conventions on the hub). Use when: HF hub
-  operations inside a robotics project, 'huggingface dataset for robots',
-  'upload the policy to the hub', and the HF skills aren't installed yet.
-  Pairs with lerobot and data.
+  Hugging Face Hub operations for robotics projects: inspect, download, create,
+  upload, authenticate safely, explore Dataset Viewer data, run and diagnose
+  Jobs, and inspect Spaces. Use when: "Hugging Face", "HF Hub", "hf download",
+  "hf upload", "Hub dataset", "Hub model", "Dataset Viewer", "HF Jobs", or
+  "Space logs" in a robotics workflow. Self-contained for the common path;
+  checks live `hf --help` and official docs for volatile flags. Pairs with
+  `lerobot` for LeRobot-specific formats and training, and `data` for sourcing.
 ---
 
 # huggingface
 
-The robotics-specific Hub layer for robium; this skill deliberately does
-*not* teach Hub mechanics itself. HuggingFace ships and maintains its own
-skill catalog (`huggingface/skills` on GitHub, 25 skills as of 2026-07-10,
-counted directly from the repo's README skills table, fetched directly
-on 2026-07-10) covering
-auth, download/upload, repo management, Jobs, and every other Hub operation
-in depth and kept current with the live `hf` CLI. Re-teaching any of that
-here would drift out of sync with the upstream catalog almost immediately,
-so the first thing this skill does, every time, is make sure that catalog is
-actually installed, then get out of the way. What's left for this skill to
-own is narrow: which datasets and models matter for robium's two verticals
-(manipulation, navigation), and the Hub-side conventions robotics data
-follows there.
+The lean, self-contained Hub layer for Robium. Use the installed CLI as the
+executable source of truth, keep robotics-specific artifact checks visible,
+and pause before publishing, paid compute, destructive operations, or handling
+credentials beyond the user's explicit authority.
 
 ## When to use this skill
 
-- Any Hub operation inside a robotics project where the HuggingFace skills
-  aren't installed yet: install them first (see Key directives), then use
-  them directly rather than working around this skill.
-- Deciding *which* dataset or model on the Hub fits a manipulation or
-  navigation task, or understanding the Hub-side conventions
-  (`LeRobot` tag, dataset card fields) a robotics dataset follows.
-- The trigger phrases in the description: HF hub operations inside a
-  robotics project, 'huggingface dataset for robots', 'upload the policy to
-  the hub'.
-- Cross-references: go to the sibling skill instead when the question is:
-  - **Any actual Hub mechanic** (auth, `hf download`/`hf upload`, repo
-    creation, Jobs, Spaces deployment) → the installed HuggingFace skills
-    (`hf-cli` and whichever others `hf skills add` pulls in). This skill
-    only gets you there; it does not re-teach the commands.
-  - **The LeRobotDataset format itself** (directory layout, recording,
-    training/eval CLI) → `lerobot`. This skill only covers the Hub-side
-    conventions a LeRobot dataset follows once it's there, not the format's
-    internals.
-  - **Whether to source data from the Hub at all vs. sim-generation or
-    teleop** → the `data` umbrella skill. This skill assumes "use the Hub"
-    is already the answer and covers what to look for once there.
-  - **The whole-stack decision this feeds into** → `architect` (routes
-    here).
+- Inspecting, downloading, creating, or uploading a robotics dataset or model
+  repository on the Hugging Face Hub.
+- Exploring a dataset before downloading it, including its subsets, rows,
+  Parquet exports, size, or statistics through Dataset Viewer.
+- Listing available Hub Jobs hardware or, after explicit authority, running,
+  monitoring, inspecting, or cancelling a Job.
+- Inspecting a Space's metadata, runtime, build logs, or run logs.
+- Route LeRobotDataset structure, recording, policy training, checkpoint
+  semantics, and evaluation to `lerobot`; route source-selection strategy to
+  `data`; route whole-application choices to `architect`.
 
 ## Key directives
 
-- **Delegation posture: delegate.** This is robium's delegation showcase:
-  install HuggingFace's own skill catalog before doing any Hub mechanic, and
-  defer to it completely rather than approximating a command from memory.
-  This skill's own content is limited to the robotics-specific layer on top
-  (Usage patterns below); it is not a substitute for the upstream skills.
-- **Install the upstream catalog before any Hub operation, if not already
-  present:** <!-- id: install-upstream-catalog -->
-
-  ```
-  /plugin marketplace add huggingface/skills
-  /plugin install hf-cli@huggingface-skills
-  ```
-
-  `hf-cli` is the recommended bootstrap skill: it's generated from the
-  locally installed `hf` CLI, so it stays current across CLI releases rather
-  than going stale the way a hand-written command list would. Confirmed via
-  direct fetch of the `huggingface/skills` repo's README and its
-  `.claude-plugin/marketplace.json` on 2026-07-10: the marketplace manifest's
-  `name` field is `huggingface-skills`, which is the identifier the
-  `@huggingface-skills` suffix above resolves against once the marketplace is
-  registered (the README's own prose examples elsewhere in that repo show
-  `@huggingface/skills`, the GitHub path, instead; the manifest's `name`
-  field is the one that actually resolves, and the 2026-07-10 session's own
-  environment, which already has that marketplace's skills installed, shows
-  them namespaced `huggingface-skills:<skill>` rather than
-  `huggingface/skills:<skill>`, corroborating it; re-verify against the live
-  manifest before relying on either form in a script).
-- **Pull in additional upstream skills on demand, not all at once.** <!-- id: pull-additional-skills-on-demand --> Once
-  `hf-cli` is installed, `hf skills add <skill-name>` installs any other
-  skill from the same catalog (e.g. a Spaces or dataset-viewer skill),
-  confirmed via direct fetch of the upstream README on 2026-07-10. Install
-  only what a given task needs rather than the whole catalog up front.
-- **Never re-teach Hub auth, transfer, or Jobs mechanics in this skill.** <!-- id: never-reteach-hub-mechanics -->
-  If a task needs `hf auth login`, `hf download`, `hf upload`, or a Jobs
-  invocation, that command comes from the installed upstream skill, not from
-  this one; even a single-line example here would drift out of sync with
-  the CLI faster than the upstream generated skill does.
-- **Never write dataset/model facts (episode counts, licensing, which
-  datasets exist under a tag) from memory.** <!-- id: no-dataset-facts-from-memory --> Hub content changes constantly;
-  confirm a specific dataset or model's current state against its Hub page
-  or the searches below before planning a project around it, the same
-  standard `data` holds sourcing decisions to.
+- **Delegation posture: embed + links.** Embed the stable common path below;
+  consult live `hf <group> --help` and official documentation for flags and
+  uncommon operations. The external Hugging Face skill catalog is optional,
+  not a dependency.
+- **Inspect before transfer.** Check the repo card, file tree, revision,
+  license, access status, and robotics embodiment/schema before downloading a
+  large artifact or planning around it.
+- **Keep secrets out of prompts, commands, logs, and commits.** Prefer the
+  browser/device flow from `hf auth login` or an already configured `HF_TOKEN`.
+  Never echo a token, place it directly on a command line, or print it through
+  `hf auth token` during an agent session.
+- **External mutations need authority.** Creating a repo, uploading or changing
+  visibility, starting paid compute, restarting a Space, cancelling another
+  process, or deleting/moving content requires explicit user authorization for
+  the concrete action. Inspection and public downloads are read-only.
+- **Do not copy a generated CLI inventory into Robium.** Run `hf --help` and
+  the relevant subgroup's help immediately before using a version-sensitive
+  flag. The installed CLI and current official docs outrank examples here.
+- **Never infer dataset/model facts from memory.** Verify current contents,
+  licensing, access, file sizes, and task/robot compatibility against the Hub.
 
 ## Quick start
 
-**1. Check whether the upstream HuggingFace skills are already installed** <!-- id: check-upstream-installed -->
-for this project/session: if `hf-cli` (or another `huggingface-skills:*`
-skill) is already available, skip straight to step 3.
+### 1. Inspect the local CLI
 
-**2. If not installed, run the two commands in Key directives** to register
-the marketplace and install `hf-cli`.
+```bash
+hf version
+hf --help
+hf auth whoami
+```
 
-**3. Use the installed skill directly** <!-- id: use-installed-skill-directly --> for the actual Hub operation (auth,
-download, upload, search); this skill's job ends here for mechanics.
+If `hf` is unavailable, use an isolated current CLI with `uvx hf ...` or install
+the project-compatible `huggingface_hub` package. Do not upgrade a locked
+environment merely to obtain a newer CLI without checking compatibility.
 
-**4. For the robotics-specific question** ("which dataset/model fits this
-task", "what does a LeRobot dataset's Hub listing look like"), see Usage
-patterns below.
+### 2. Inspect before downloading
+
+```bash
+hf models info ORG/MODEL
+hf models ls --search QUERY --limit 10
+hf datasets info ORG/DATASET
+hf datasets ls --search QUERY --limit 10
+hf download ORG/MODEL config.json
+hf download ORG/DATASET --repo-type dataset --include 'meta/**'
+```
+
+Use `hf models info --help`, `hf datasets info --help`, and
+`hf download --help` if the installed CLI rejects an option. Pin `--revision`
+when reproducibility matters and record that immutable revision.
+
+### 3. Authenticate only when necessary
+
+```bash
+hf auth login
+hf auth whoami
+```
+
+Use the least-privileged token that can perform the authorized operation. A
+public inspection or download should not be made dependent on a private token.
+
+### 4. Create or upload only after explicit authorization
+
+```bash
+hf repos create ORG/NAME --repo-type dataset --private --exist-ok
+hf upload ORG/NAME ./data . --repo-type dataset
+hf upload ORG/MODEL ./checkpoint .
+```
+
+Before running either command, present the destination repo ID, type,
+visibility, local source, and expected changed content. Use a PR revision when
+review is appropriate. Do not add delete/sync flags unless deletion was
+specifically authorized.
 
 ## Usage patterns
 
-**Finding a manipulation dataset or model.** <!-- id: find-manipulation-dataset-lerobot-tag --> Search the Hub's `LeRobot` tag
-(`huggingface.co/datasets?other=LeRobot`, confirmed via direct fetch this
-session to be a live, populated filter) for datasets already in the
-LeRobotDataset format; Open X-Embodiment datasets converted to that format
-are collected under the `lerobot/open-x-embodiment` collection specifically
-(confirmed via direct fetch of that collection page on 2026-07-10: roughly
-60 contributed datasets from multiple institutions, in LeRobot format).
-Pretrained manipulation policies (ACT, Diffusion, Pi0-family, SmolVLA and
-others) are hosted the same way, under repo IDs like `lerobot/diffusion_pusht`;
-the exact policy families and hub-hosted checkpoints are `lerobot`'s
-territory to enumerate (see that skill's Quick start); this skill's job is
-pointing at the tag/collection, not re-listing every checkpoint.
+### Explore a dataset without pulling it
 
-**Finding a navigation dataset.** <!-- id: find-navigation-dataset --> Navigation has no single equivalent of the
-`LeRobot` tag: search the Hub's general robotics/SLAM-tagged datasets
-instead, and check embodiment/sensor fit before committing, per `data`'s
-embodiment-match directive. Don't assume a manipulation-oriented search
-pattern (the `LeRobot` tag, a single owning collection) transfers directly.
+Use the Hub page and Dataset Viewer first. Its REST API can enumerate subsets
+and splits, preview initial rows, fetch row slices, expose Parquet files, report
+size, and return statistics. The `/rows` endpoint limits a request to 100 rows;
+gated datasets require an authorization header. See `references/hub-operations.md`
+for the endpoint checklist.
 
-**Reading a robotics dataset's Hub-side shape before pulling it.** <!-- id: read-dataset-hub-metadata --> A
-LeRobotDataset repo on the Hub carries its `info.json`/dataset-card metadata
-(robot type, fps, camera/state/action feature shapes) alongside the
-Parquet+MP4 data files; inspect that metadata (via the installed
-`huggingface-datasets`/`hf-cli` skill, or the Hub's own dataset viewer)
-before assuming a dataset's action space matches the target robot; `lerobot`
-owns the format's internals once you're inside it.
+For robotics data, verify at least:
 
-**Uploading a trained policy or dataset.** <!-- id: upload-policy-dataset-tagging --> Once a policy or dataset exists
-locally, the actual push is a Hub mechanic: use the installed `hf-cli`
-skill's upload command. This skill's only addition on top is: tag it so it's
-discoverable the way the datasets above were found (the `LeRobot` tag for a
-LeRobotDataset-format push, a clear model card for a policy checkpoint).
+- robot/embodiment and task;
+- observation, action, camera, state, and timing features;
+- episode/split structure and format version;
+- license, gating, and provenance;
+- expected transfer size before downloading media or checkpoints.
 
-**Self-hosting a Gradio demo without HF Spaces.** <!-- id: gradio-self-hosting-no-spaces --> Gradio has no HuggingFace
-dependency: it's a plain Python web app (FastAPI + uvicorn, default port
-7860); HF Spaces is one deployment target for it, not a prerequisite. Three
-self-hosting mechanics (verified against current Gradio docs): (1) mount into
-an existing FastAPI app with `gr.mount_gradio_app(app, io, path="/ui")`: one
-process, one port, so a demo gateway can host the UI without standing up a
-second service; (2) reverse-proxy it at a subpath via nginx: forward the
-WebSocket `Upgrade`/`Connection` headers and set `proxy_buffering off`, or the
-UI silently breaks; (3) embed it anywhere with `<iframe>` or the
-`<gradio-app src="…">` web component (lazy-loads, auto-heights); `src` can be
-any URL, it does not have to be `*.hf.space`. Re-verify against Gradio's own
-docs before hardcoding a call signature.
+The `LeRobot` dataset tag is a useful discovery filter, not proof that an
+artifact matches the target robot. Route format-level checks to `lerobot`.
+
+### Download reproducibly
+
+Inspect first, choose the smallest necessary include set, and pin a commit SHA
+or immutable revision for application fixtures and training inputs. Prefer the
+Hub cache for reusable artifacts and `--local-dir` when the application needs a
+clear project-local copy. Record repo ID, revision, and relevant include/exclude
+rules in the app's decision record or data manifest.
+
+### Publish a dataset or policy
+
+Treat publication as an external side effect. Confirm the repository owner,
+name, type, visibility, license/card content, and exact local tree. For a
+LeRobot artifact, also validate its repo ID, metadata/version, processor and
+checkpoint files, and discoverability fields with `lerobot` before upload.
+
+### Run and diagnose Hub Jobs
+
+Jobs are paid remote compute. Inspection is safe:
+
+```bash
+hf jobs hardware
+hf jobs list
+hf jobs inspect JOB_ID
+hf jobs logs JOB_ID
+```
+
+After explicit approval of the hardware, namespace, image or UV command,
+timeout, and expected cost exposure, use the live help before starting:
+
+```bash
+hf jobs run --help
+hf jobs uv run --help
+```
+
+Monitor with `hf jobs logs`, `hf jobs inspect`, `hf jobs stats`, or
+`hf jobs wait`. Cancelling is mutating; confirm the exact job ID and namespace,
+then use `hf jobs cancel`. Debug the same command locally with Docker or uv when
+possible before paying for another run.
+
+### Diagnose a Space
+
+Start with read-only state and logs:
+
+```bash
+hf spaces info ORG/SPACE
+hf spaces logs ORG/SPACE --build
+hf spaces logs ORG/SPACE --tail 100
+```
+
+Check the runtime state, SDK, repository files, build logs, and run logs before
+changing anything. Restart, factory reboot, pause, hardware changes, and uploads
+are external mutations and need explicit authorization.
+
+### Self-host a Gradio demo
+
+Gradio does not require Spaces. It can run as a Python service, mount into an
+existing FastAPI process with `gr.mount_gradio_app`, sit behind a reverse proxy,
+or be embedded by iframe/web component. Verify the current Gradio API and proxy
+requirements before hardcoding signatures or headers.
 
 ## Platform gotchas
 
-- **The upstream skill catalog is a separate plugin install, not bundled
-  with robium.** <!-- id: upstream-catalog-separate-install --> A fresh environment needs the two commands in Key
-  directives run once before any Hub mechanic works through skills at all;
-  don't assume `hf-cli` is present just because this skill is.
-- **Auth is entirely the upstream skill's territory.** <!-- id: auth-is-upstream-territory --> Whether Hub access
-  needs a token, which scopes it needs, and how it's configured locally are
-  all `hf-cli`'s concerns; this skill has no auth guidance of its own to
-  fall back on if that skill isn't installed.
+- `hf` command names and flags evolve. This skill was checked against official
+  CLI documentation and local `hf` 1.24.0 help on 2026-08-27; run live help in
+  the target environment before execution.
+- Authentication stored by the CLI may silently select a personal or org
+  identity. Always run `hf auth whoami` before an authorized mutation.
+- Dataset Viewer supports inspection, not every storage format or gated dataset
+  without credentials. A viewer failure does not prove the repo is invalid.
+- Uploading a folder may create a missing repository. Do not use that convenience
+  to bypass the explicit destination and visibility check.
+- Spaces logs distinguish build and runtime failures. Inspect both before a
+  restart; a restart can repeat the same broken build and consume resources.
 
 ## Customization
 
-- **Different embodiment or task:** re-run the `LeRobot`-tag/Open
-  X-Embodiment search (manipulation) or the general robotics/SLAM search
-  (navigation) for the new target, and re-check embodiment fit; a dataset
-  found for one robot/task pairing is not assumed to transfer, per `data`'s
-  embodiment-match directive.
-- **Private or org-scoped datasets/models:** access and visibility are Hub
-  auth mechanics, handled entirely by the installed upstream skills, not
-  by anything in this one.
+- **Private/org artifacts:** confirm namespace membership and least-privileged
+  access without exposing credentials. Keep private repo IDs out of public
+  fixtures and examples when confidentiality matters.
+- **Large datasets:** inspect metadata and Parquet/size endpoints, download a
+  small representative slice, then authorize the full transfer separately.
+- **CI or unattended work:** inject a scoped secret through the CI secret store,
+  avoid interactive login, pin revisions and CLI/package versions, and default
+  mutations to a reviewed branch or pull request.
+- **Alternative deployment:** self-host Gradio or the model service when Spaces
+  is not required; `integration` owns service boundaries and containers.
 
 ## References
 
-- Upstream: [huggingface/skills GitHub
-  repo](https://github.com/huggingface/skills) (install story, skill
-  catalog, and marketplace manifest, fetched directly on 2026-07-10,
-  including its `.claude-plugin/marketplace.json`), [Hub dataset filter:
-  LeRobot tag](https://huggingface.co/datasets?other=LeRobot) (fetched
-  directly on 2026-07-10), [Open X-Embodiment (LeRobot format)
-  collection](https://huggingface.co/collections/lerobot/open-x-embodiment)
-  (fetched directly on 2026-07-10), [Hugging Face Hub dataset docs](https://huggingface.co/docs/hub/en/datasets-adding)
-  (upload/format conventions, fetched directly on 2026-07-10), [Gradio
-  docs](https://www.gradio.app/docs) (self-hosting mechanics:
-  mount_gradio_app, nginx reverse-proxy, iframe/web-component embed;
-  verified via ctx7 on 2026-07-15). Sibling
-  skills: `lerobot` (LeRobotDataset format, training/eval, and the policies
-  hosted under the `lerobot` Hub org), `data` (sourcing strategy: decides
-  *whether* the Hub is the right source before this skill's search patterns
-  apply), `architect` (routes here).
+- `references/hub-operations.md` - compact Dataset Viewer and CLI checklist.
+- [Hugging Face CLI guide](https://huggingface.co/docs/huggingface_hub/en/guides/cli)
+  and [CLI reference](https://huggingface.co/docs/huggingface_hub/en/package_reference/cli),
+  checked directly on 2026-08-27.
+- [Dataset Viewer quickstart](https://huggingface.co/docs/dataset-viewer/en/quick_start),
+  checked directly on 2026-08-27.
+- [Jobs overview](https://huggingface.co/docs/hub/jobs-overview) and
+  [Jobs management](https://huggingface.co/docs/hub/jobs-manage), checked
+  directly on 2026-08-27.
+- Content strategy was informed by the
+  [huggingface/skills](https://github.com/huggingface/skills) project
+  (Apache-2.0); Robium embeds only a lean common path and remains independently
+  usable.
+- Siblings: `lerobot`, `data`, `architect`, and `integration`.
 
 ## Changelog
 
-<!-- One dated line per battle-tested change, added by skill-author hardening sessions. -->
-
+- 2.0.0 (2026-08-27): make the robotics Hub skill self-contained; add lean CLI,
+  authentication, inspection, transfer, Dataset Viewer, Jobs, and Spaces paths;
+  retain explicit gates for publication, paid compute, destructive actions, and
+  credentials; replace the mandatory external skill-catalog dependency with
+  live CLI help and official documentation.
 - 1.1.2 (2026-08-03): style pass; removed em dashes throughout (no content changes).
 - 1.1.1 (2026-08-01): anchor IDs added to claim-bearing items (learning-engine Phase 1); no content changes.
-- 1.1.0 (2026-07-15): add Gradio self-hosting mechanics (mount_gradio_app, nginx reverse-proxy headers, iframe/web-component embed) to Usage patterns; corrects the assumption that a Gradio demo requires HuggingFace; HF Spaces is one deployment target, not a prerequisite. Verified against current Gradio docs via ctx7.
-- 1.0.1 (2026-07-12): skill-refiner run 1: provenance claims date-stamped ('this session' → 2026-07-10, the authoring session) so the staleness sweep can age them.
+- 1.1.0 (2026-07-15): add Gradio self-hosting mechanics and correct the assumption that a Gradio demo requires Hugging Face Spaces.
+- 1.0.1 (2026-07-12): date-stamp provenance claims during the first refinement pass.

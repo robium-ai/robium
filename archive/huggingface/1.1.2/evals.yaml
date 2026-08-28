@@ -1,0 +1,5 @@
+triggers:
+  positive:
+    - phrase: if we use gradio do we need to host it on hugging face? can we just host it on our server and demo window would show the application?
+      source: learnings/2026-07-13.md
+tasks: []

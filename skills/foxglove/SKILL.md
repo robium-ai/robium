@@ -1,6 +1,6 @@
 ---
 name: foxglove
-version: 1.5.2
+version: 1.5.3
 description: >
   Foxglove for robotics visualization: foxglove_bridge setup for live ROS 2
   robots, layouts, MCAP recording and playback, and remote/web visualization
@@ -156,8 +156,9 @@ JSON files (Layout menu → Export/Import from file), so an app repo can
 commit one that pre-sets the display frame, topic visibility, and the
 Publish-tool topics: one import and the robot is drivable by click,
 account-persistent thereafter. Verified 2026-07-11 (nav-trial:
-`apps/nav-trial/foxglove/nav-trial-layout.json` in robium-applications is a
-working sample, incl. `publish: {poseTopic: "/goal_pose"}`).
+the navigation reference app in `robium-ai/robium-apps` includes a working
+layout sample with `publish: {poseTopic: "/goal_pose"}`; consult its registry
+card for the current path before bootstrapping.
 
 **Teleop-drive and fire actions from the app.** <!-- id: teleop-panel-actions-limitation --> The Teleop panel publishes
 `geometry_msgs/Twist` to `/cmd_vel`: hold-to-drive a real base straight from
@@ -311,6 +312,9 @@ for a one-off debugging session.
 ## Changelog
 
 <!-- One dated line per battle-tested change, added by skill-author hardening sessions. -->
+
+- 1.5.3 (2026-08-27): replace the stale robium-applications path with the
+  current robium-apps reference repository and registry lookup.
 
 - 1.5.2 (2026-08-03): style pass; removed em dashes throughout (no content changes).
 
