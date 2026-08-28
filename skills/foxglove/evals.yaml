@@ -1,0 +1,12 @@
+triggers:
+  positive:
+    - phrase: should I use Lichtblick or Foxglove for this ROS 2 dashboard
+    - phrase: connect Lichtblick to foxglove_bridge on my remote robot
+    - phrase: I need an open-source self-hosted browser viewer for ROS 2 topics
+    - phrase: record this ROS 2 session as MCAP and inspect it with Foxglove
+  negative:
+    - phrase: debug this TF tree locally in RViz2
+      expect: rviz2
+    - phrase: visualize policy tensors and embeddings from a non-ROS ML rollout
+      expect: rerun
+tasks: []
