@@ -1,0 +1,16 @@
+triggers:
+  positive:
+    - phrase: the ACT app is tested; publish its overview, live page, guide, social card, and system diagram in the Robium style
+    - phrase: rewrite this finished app article so it sounds human, uses the product-lab voice, and shares a theme with its demo
+    - phrase: create the real-run hero and article assets for this verified reference application without presenting generated art as output
+    - phrase: apply the Robium article writing style, cobalt theme, and reusable project shell to this existing application
+  negative:
+    - phrase: brainstorm a new robot application and choose the simulator, model, robot, and visualization
+      expect: architect
+    - phrase: the published project page exists, but its gateway claim and Cloud Run session teardown are broken
+      expect: live-demo
+    - phrase: generate a standalone concept illustration that is not part of publishing a Robium application
+      expect: imagegen
+    - phrase: fix this existing ROS 2 QoS mismatch
+      expect: ros2
+tasks: []

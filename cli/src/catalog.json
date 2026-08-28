@@ -2,8 +2,13 @@
   "source": "robium-ai/robium",
   "skills": [
     {
-      "name": "architect",
+      "name": "app-publishing",
       "version": "2.0.0",
+      "description": "Publish an implemented, smoke-tested Robium application as one coherent public project: write or revise its product-lab article, prepare real-run media and explanatory assets, apply the Robium editorial cobalt theme, and compose catalog, overview, live, guide, and social surfaces from repository-owned facts. Use when: 'publish this finished application', 'make this article sound human', 'unify the demo and guide', 'create article assets', 'apply the Robium writing style', or 'turn this tested app into a showcase'. Load only after the application smoke passes. Not for: planning or coding robot behavior (architect), generic site design, nor gateway, orchestrator, or cloud runtime mechanics (live-demo)."
+    },
+    {
+      "name": "architect",
+      "version": "2.1.0",
       "description": "Entry-point skill for shaping new robotics applications: lightweight brainstorming, project ideation, requirement/risk discovery, stack selection, comparing or choosing simulators/models/visualization, a first user-visible slice, and a concise architecture decision record. Use when: starting a new robotics app; 'brainstorm a robot app', 'build a robot app', 'which robotics stack', 'choose between simulators', 'decide the simulator, model, robot, and visualization', 'what robotics project can we build', 'cheapest useful demo', 'rethink the architecture', genuine re-architecture, 'scaffold a robotics project', 'mobile robot', 'robot arm', 'manipulation policy', 'navigation stack', 'let's do demo 1', or when requirements exist but the stack is unchosen. Load first for a new app, then route to domain skills. Excludes narrow maintenance work after stack selection and skill authoring (skill-author)."
     },
     {
@@ -63,8 +68,8 @@
     },
     {
       "name": "live-demo",
-      "version": "1.3.3",
-      "description": "Turn a working robium app into a public, interactive web demo: a mission-control demo page (start/stop instance buttons, live boot terminal, fleet budget), per-visitor simulator instances on Cloud Run (scale-to-zero), and a visualizer handoff (Foxglove deep link or self-hosted viewer). Use when: 'live demo', 'demo page', 'let visitors drive the robot', 'try it live on the website', 'demo instance start/stop', 'host the sim for the demo', choosing the demo visualizer, or budgeting/deploying demo backends. Load after an app passes its smoke test (testing): a demo hosts a finished app. Pairs with foxglove (bridge/viewer mechanics) and integration (container patterns). Not for: developer-facing visualization during a build (foxglove/rviz2) or general website building."
+      "version": "2.0.0",
+      "description": "Add safe hosted-session runtime to a working robium app: per-visitor instances, a capability-protected gateway, start/status/stop lifecycle, boot logs, fleet budgets, Cloud Run or RunPod drivers, and a Gradio, Lichtblick, or Foxglove viewer handoff. Use when: 'live demo', 'start a private demo instance', 'demo gateway', 'all robots busy', 'host the sim', 'Cloud Run demo', 'RunPod demo', or 'viewer will not connect'. Load after the app smoke test passes; pair with app-publishing for the public project page and article. This skill starts only after robot behavior already works. Not for: planning or building that behavior (architect), website/article composition (app-publishing), developer visualization (foxglove/rviz2), or generic containers (integration)."
     },
     {
       "name": "mining",

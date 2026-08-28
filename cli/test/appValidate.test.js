@@ -110,11 +110,13 @@ test('app new: scaffolds by copy, resets metadata, excludes artifacts', async ()
   const root = mkdtempSync(path.join(tmpdir(), 'robium-new-'));
   writeFileSync(path.join(root, 'REGISTRY.md'), '# r\n');
   mkdirSync(path.join(root, 'good-app', 'src'), { recursive: true });
+  mkdirSync(path.join(root, 'good-app', 'docs'));
   mkdirSync(path.join(root, 'good-app', '.venv'));
   mkdirSync(path.join(root, 'good-app', 'outputs'));
   writeFileSync(path.join(root, 'good-app', 'robium-app.yaml'), GOOD);
   writeFileSync(path.join(root, 'good-app', 'Makefile'), 'demo:\n\techo hi\n');
   writeFileSync(path.join(root, 'good-app', 'src', 'main.py'), 'print(1)\n');
+  writeFileSync(path.join(root, 'good-app', 'docs', 'case-study.md'), 'Good app production claims that must not be copied.\n');
   writeFileSync(path.join(root, 'good-app', '.venv', 'junk'), 'x');
   writeFileSync(path.join(root, 'good-app', 'outputs', 'big.bin'), 'x');
 
@@ -125,11 +127,19 @@ test('app new: scaffolds by copy, resets metadata, excludes artifacts', async ()
   assert.ok(existsSync(path.join(root, 'new-thing', 'src', 'main.py')));
   assert.ok(!existsSync(path.join(root, 'new-thing', '.venv')));
   assert.ok(!existsSync(path.join(root, 'new-thing', 'outputs')));
+  const article = readFileSync(path.join(root, 'new-thing', 'docs', 'case-study.md'), 'utf8');
+  assert.match(article, /app: new-thing/);
+  assert.match(article, /voice: product-lab/);
+  assert.match(article, /TODO - a natural headline about the result or decision/);
+  assert.match(article, /Where Robium changed the build/);
+  assert.doesNotMatch(article, /—/);
+  assert.doesNotMatch(article, /Good app production claims/);
   const yaml = parseAppYaml(readFileSync(path.join(root, 'new-thing', 'robium-app.yaml'), 'utf8'));
   assert.equal(yaml.id, 'new-thing');
   assert.equal(yaml.version, '0.1.0');
   assert.equal(yaml.status, 'experimental');
   assert.ok(lines.some((l) => l.includes('REGISTRY.md')));
+  assert.ok(lines.some((l) => l.includes('case-study.md')));
 
   // guards
   assert.equal(scaffoldApp({ appsDir: root, id: 'new-thing', from: 'good-app', log: () => {} }), 1); // exists

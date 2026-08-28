@@ -1,0 +1,13 @@
+triggers:
+  positive:
+    - phrase: the ACT application is implemented and smoke is green; publish its catalog card, overview, article, and source links with one shared project identity
+    - phrase: unify the existing app's public overview and guide and generate both from its manifest and case-study metadata
+    - phrase: turn this verified reference application into a robium.ai showcase and article without copying its runtime facts into page code
+  negative:
+    - phrase: brainstorm a new robot application and choose the simulator, model, robot, and visualization
+      expect: architect
+    - phrase: the published project page exists, but its gateway claim and Cloud Run session teardown are broken
+      expect: live-demo
+    - phrase: fix this existing ROS 2 QoS mismatch
+      expect: ros2
+tasks: []

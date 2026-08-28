@@ -1,0 +1,13 @@
+triggers:
+  positive:
+    - phrase: the robot app works and smoke is green; add private Cloud Run instances with start, status, boot logs, gateway claims, and stop
+    - phrase: debug why the existing hosted demo allocates an instance but the protected Gradio viewer never becomes ready
+    - phrase: add a RunPod-backed ten-minute policy session with a hard lifetime, daily budget, and reliable delete
+  negative:
+    - phrase: the application is verified; publish its overview, catalog card, article, and shared project navigation
+      expect: app-publishing
+    - phrase: brainstorm a new mobile robot app and choose its stack before implementation
+      expect: architect
+    - phrase: configure RViz2 to inspect a ROS topic during development
+      expect: rviz2
+tasks: []

@@ -1,12 +1,12 @@
 triggers:
   positive:
-    - phrase: lets do demo 1 from the project ideas; first help choose the robot, simulator, model, visualization, and cheapest working slice
+    - phrase: lets do demo 1
       source: learnings/2026-07-13.md
     - phrase: i actually meant to have ml vla based arm control here… lets decide the simulator, model, robot and how to visualize
       source: learnings/2026-07-13.md
-    - phrase: we'll create a new TurtleBot3 application that does not exist yet. Before any live-demo or publishing work, help brainstorm the architecture, choose the stack, and plan the cheapest navigation-only first slice; teleoperation, camera transfer, and mapping come later.
+    - phrase: we'll create a new application. I have turtlebot3 robot real robot, want to get it working and want to have a teleoperation demo page.. when run it should connet we should be able to navigate round first, lets do only navigation. later we'll do the cmaera transfer, later, we'll do mapping.. lets do the plannoing brainstorming and start working on it.
       source: learnings/2026-08-02.md
-    - phrase: i want to learn isaac lab through a new robotics project; compare project ideas and choose the robot, task, simulator, visualization, and cheapest first slice before we start
+    - phrase: i think we can work on isaac lab skills now. want to do some project at the same time learn isaac lab.. what projects we can do, also how to do it.. i have my macbook air onmlu
       source: learnings/2026-08-02.md
     - phrase: help me choose between Gazebo and Isaac Sim for a new warehouse robot app, then start with the cheapest useful demo
     - phrase: we are changing this arm application from scripted control to a VLA and need to rethink the architecture

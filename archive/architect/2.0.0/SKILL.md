@@ -1,6 +1,6 @@
 ---
 name: architect
-version: 2.1.0
+version: 2.0.0
 description: >
   Entry-point skill for shaping new robotics applications: lightweight
   brainstorming, project ideation, requirement/risk discovery, stack selection,
@@ -120,7 +120,6 @@ conversation. Normal new-app design stays in the main conversation.
 | ML/data timelines | `rerun` |
 | Test strategy and smoke bar | `testing` |
 | Fixtures/worlds/datasets | `test-assets` |
-| Publish app overview, live surface, article voice, and media | `app-publishing` |
 | Public interactive demo | `live-demo` |
 | Cloud Run deployment mechanics | `cloud-run` |
 | RunPod GPU execution | `runpod` |
@@ -171,11 +170,6 @@ conversation. Normal new-app design stays in the main conversation.
 
 ## Changelog
 
-- 2.1.0 (2026-08-28): routing table gained app-publishing for the public app
-  overview/live/article composition that follows a green application smoke;
-  live-demo remains the hosted runtime lifecycle owner. Clarified two legacy
-  trigger fixtures whose missing conversational context made project selection
-  indistinguishable from downstream tool or publishing work.
 - 2.0.0 (2026-08-27): absorbed lightweight brainstorming into architect;
   replaced global classification/repeated approval with one direction gate;
   made the brief a scalable decision record; added risk-first/user-visible
