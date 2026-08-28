@@ -23,7 +23,7 @@
     },
     {
       "name": "foxglove",
-      "version": "1.5.3",
+      "version": "1.5.4",
       "description": "Foxglove for robotics visualization: foxglove_bridge setup for live ROS 2 robots, layouts, MCAP recording and playback, and remote/web visualization of robots running on servers. Use when: 'foxglove', 'mcap', visualizing a robot running on a remote server, sharing visualization with others, or recording sessions for later analysis. The remote-viz answer in the robium stack; key to the local-vs-remote workflow (cross-ref environments). Not for: ROS desktop debugging (rviz2) or ML logging (rerun)."
     },
     {
@@ -53,7 +53,7 @@
     },
     {
       "name": "learning-loop",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "Robium's explicit learning engine: consolidate capture-only queue flags and transcript evidence into observations; absorb ready observations through deterministic anchor-targeted skill deltas; refine, A/B contested edits, deep-verify examples, prune landed transcript evidence, and report loop health. Use when: \"consolidate\", \"absorb\", \"run the loop\", \"update my skills\", \"refine the skills\", \"learning loop status\", \"A/B this edit\", \"deep verify\", or \"clean transcripts\". Never recalls or injects observations into new prompts. Not for external-repo mining, fresh skill authoring, or app implementation."
     },
     {

@@ -38,7 +38,7 @@ deltas:
     op: annotate
     file: examples/costmap.yaml   # path stays inside the skill dir
     find: "status: unverified"
-    replace: "status: verified (2026-08-27, robium-apps/robot-navigation)"
+    replace: "status: verified (2026-08-02, apps/nav-trial)"
     reason: obs-nav2-013
 bump: {nav2: minor}         # optional per-skill override: build|minor|major
 evals_confirmed: []         # skills whose major bump has had evals.yaml re-confirmed

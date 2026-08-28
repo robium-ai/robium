@@ -25,6 +25,14 @@ Evidence-aware transcript cleanup protects queued/tentative/ready sources,
 prunes terminal evidence after landing, expires unreferenced transcripts after
 14 days, and defaults to a report-only dry run. Plugin manifests are 0.3.0.
 
+Contributor guidance now shows the sibling `robium` and `robium-apps` workspace
+layout and a transcript-free path for reporting sanitized build findings. The
+privacy checklist excludes credentials, customer data, proprietary material,
+private infrastructure identifiers, and unfiltered logs; resulting skill edits
+still use versioned, archived, human-reviewed pull requests. Active application
+examples now point to the current Robot Navigation and Robot Teleoperation
+paths in `robium-apps`.
+
 ## 2026-08-24: Generic RunPod operations skill
 
 Added `runpod` as the provider-specific owner for safe inventory, GPU/region

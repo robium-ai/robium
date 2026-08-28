@@ -18,7 +18,7 @@ file would collide). Plain `YYYY-MM-DD.md` only for non-app work.
       fix: added inflation_layer, cost_scaling_factor 3.0 — check: nav smoke test passed
       dead-ends: tuning robot_radius (no effect — wrong layer)
       anchors: nav2#costmap-inflation
-      source: transcript a1b2c3#turn-142..158 (apps/nav-trial, 2026-07-10)
+      source: transcript a1b2c3#turn-142..158 (robium-apps/robot-navigation, 2026-08-27)
 
 Rules:
 - First line: `[skill-name]` or `[none]`, one of the seven signal types

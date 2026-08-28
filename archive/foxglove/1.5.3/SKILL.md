@@ -1,6 +1,6 @@
 ---
 name: foxglove
-version: 1.5.4
+version: 1.5.3
 description: >
   Foxglove for robotics visualization: foxglove_bridge setup for live ROS 2
   robots, layouts, MCAP recording and playback, and remote/web visualization
@@ -170,8 +170,7 @@ trigger topic (`std_msgs/Empty`) and forwards the goal to the action; a
 Publish panel then becomes the button. Verified 2026-07-24 (tb4-teleop: a real
 TurtleBot 4 driven + docked/undocked from the browser via a `teleop_actions.py`
 helper and Publish-panel buttons; layout at
-`robot-teleoperation/foxglove/tb4-teleop-layout.json` in the sibling
-[`robium-apps`](https://github.com/robium-ai/robium-apps) repository).
+`apps/tb4-teleop/foxglove/tb4-teleop-layout.json`).
 
 **Share a view via a launcher deep-link.** <!-- id: launcher-deep-link-share --> For a free, no-self-hosting way to
 hand someone a preconfigured connection, use a launcher deep-link rather than a
@@ -313,9 +312,6 @@ for a one-off debugging session.
 ## Changelog
 
 <!-- One dated line per battle-tested change, added by skill-author hardening sessions. -->
-
-- 1.5.4 (2026-08-27): replace the remaining former in-repo teleoperation
-  layout path with the current sibling robium-apps path.
 
 - 1.5.3 (2026-08-27): replace the stale robium-applications path with the
   current robium-apps reference repository and registry lookup.

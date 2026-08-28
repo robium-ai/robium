@@ -42,75 +42,41 @@ video below embeds the same terminal beat as its middle act.
 
 ## Part 2 — the full 60–90s video (human screen-recording)
 
-### Which app to film for the payoff: **nav-trial** (recommended)
+### Which app to film for the payoff: **Robot Navigation** (recommended)
 
-Film **`apps/nav-trial/`** — TurtleBot 3 Burger navigating in Gazebo with Nav2,
-viewed in browser Foxglove. Two reasons, and they both matter:
+Film **`robot-navigation/`** in the sibling
+[`robium-apps`](https://github.com/robium-ai/robium-apps) checkout: TurtleBot 3
+Waffle Pi navigating in Gazebo with Nav2, viewed in the bundled browser
+dashboard. Two reasons, and they both matter:
 
 1. **Most legible payoff.** "A robot drives around obstacles to a goal" reads
    instantly to a non-robotics audience — a moving robot + a planned path on a
    map is self-explanatory. An arm is less obvious on a small social thumbnail.
-2. **It actually works, end to end.** `make smoke` is a green pass bar
-   (verified 2026-07-11, REGISTRY.md). By contrast, **do not film vla-trial for
-   the payoff**: per `apps/vla-trial/README.md` the pipeline is validated but
-   **no policy has been trained** — the only checkpoint is a 100-step pipe-test
-   that scores ~0%. Filming "language → arm" today would show an arm that does
-   **not** follow the instruction. That's a great demo *later* (it's the higher
-   "wow" ceiling once `make train-full` runs), but it's not honest footage now.
+2. **It works end to end without special hardware.** The current registry
+   records local and Cloud Run runtime validation, and the app needs no GPU,
+   physical robot, or local ROS installation.
 
-Keep vla-trial as the sequel demo; ship the nav-trial video first.
+The VLA and manipulation apps are strong sequel demos, but Robot Navigation
+remains the clearest general-audience introduction.
 
-### Exact bring-up to reach the visible payoff (from `apps/nav-trial/README.md`)
+### Exact bring-up to reach the visible payoff
 
-All commands run from `apps/nav-trial/`. It's Docker-only (arm64), headless,
-Foxglove in the browser. There is no on-host RViz window — **the visible payoff
-is the Foxglove browser view**, so that's what you screen-record.
+All commands run from the sibling app checkout. The Docker path includes
+Gazebo, ROS 2, Nav2, Lichtblick, and the Robium Dashboard; no on-host RViz
+window is required.
 
 ```bash
-cd apps/nav-trial
-
-# 0. One-time: build the image (bakes in the saved map).
-make build
-
-# 1. Bring up navigation on the saved map. Foreground; Ctrl-C to stop.
-make nav
-#    'make nav' runs the Nav2 stack and waits for goals from send_goals.py
-#    or from Foxglove. It publishes /scan, /tf, /map, /plan, and costmaps
-#    on the Foxglove bridge at ws://localhost:8765.
+git clone https://github.com/robium-ai/robium-apps ../robium-apps  # once
+cd ../robium-apps/robot-navigation
+./app doctor
+./app run
 ```
 
-Then, in a browser (**use Chrome** — Safari blocks `ws://localhost` from the
-https app):
-
-1. Open `https://app.foxglove.dev` → **Open connection** → `ws://localhost:8765`.
-2. Import the preconfigured layout once:
-   **Layout menu → Import from file…** → `apps/nav-trial/foxglove/nav-trial-layout.json`.
-   It sets display frame `map` and shows /map, /scan, /plan and the global
-   costmap, with the Publish tool pointed at Nav2's `/goal_pose`.
-3. Drop a goal: use the Foxglove **Publish** (goal) tool to set a pose, or run
-   the scripted goal client in a second terminal:
-
-   ```bash
-   # second terminal, from apps/nav-trial/
-   make nav        # (already running) — send goals via the helper the smoke path uses:
-   # the smoke scenario drives send_goals.py automatically; for a hands-free
-   # take, record `make smoke` instead (see below).
-   ```
-
-**Recommended hands-free take:** record `make smoke`. It rebuilds via `--build`,
-runs the nav scenario **plus the goal client**, and exits 0 on success — so the
-robot drives the route on its own while you capture Foxglove, no manual goal
-clicks. Bound the run with `SMOKE_TIMEOUT` (default 180s) if needed. This is the
-same green pass bar in REGISTRY.md, so the footage is guaranteed-reproducible.
-
-Reset / teardown between takes: `make stop` (tears down all profiles).
-
-Map-frame gotcha for framing goals: the SLAM map origin is the robot's start
-pose, so world `(-2.0, -0.5)` = map `(0, 0)` (README "Visualization" note).
-
-> Note: this app is macOS/arm64 Docker-headless. If you have a Linux + display
-> box, an on-host RViz2 window is an alternative capture surface, but the
-> committed, verified path here is Foxglove-in-browser — film that.
+Open `http://localhost:8080`, load a saved map, choose **Load & localize**, and
+send a goal from the 3D view. The global plan is cyan and the local controller
+plan is orange. For an autonomous take, use `./app demo`; use `./app stop`
+between takes. Consult the app's current README and `./app help` before filming
+because the application owns its launch interface.
 
 ### Shot list (sums to ~75s; trim sleeps to hit 60s, extend payoff to reach 90s)
 
@@ -121,8 +87,8 @@ pose, so world `(-2.0, -0.5)` = map `(0, 0)` (README "Visualization" note).
 | 3 | 0:12–0:20 | **Install.** The terminal GIF beat: `npx robium-ai install` running for real. | "One command." · `npx robium-ai install` |
 | 4 | 0:20–0:27 | `npx robium-ai doctor` scrolling its real checks. | "Checks your machine for robotics work." |
 | 5 | 0:27–0:34 | **The prompt.** Type the natural-language ask into the agent. Hold on the typed line. | `> build me a mobile robot that navigates a warehouse in simulation` |
-| 6 | 0:34–1:05 | **The payoff.** Foxglove: TurtleBot 3 driving the route on the map — /scan sweeping, the green /plan path, the robot following it around obstacles to the goal. This is the emotional beat; give it the most time. | "…and the skills route the agent from stack choice → build → sim → test." (fade) then "TurtleBot 3 · Nav2 · Gazebo · all in sim, on a laptop." |
-| 7 | 1:05–1:15 | **Closing card.** Logo + calls to action. | "robium.ai" · `npx robium-ai install` · "23 hand-crafted robotics skills for your coding agent." |
+| 6 | 0:34–1:05 | **The payoff.** Lichtblick: TurtleBot 3 driving the route on the map, lidar sweeping, planned paths visible, and the robot following the route around obstacles. This is the emotional beat; give it the most time. | "…and the skills route the agent from stack choice → build → sim → test." (fade) then "TurtleBot 3 · Nav2 · Gazebo · all in sim, on a laptop." |
+| 7 | 1:05–1:15 | **Closing card.** Logo + calls to action. | "robium.ai" · `npx robium-ai install` · "25 hand-crafted robotics skills for your coding agent." |
 
 If you must hit a hard 60s: compress shots 3–4 (reuse the terminal GIF at
 1.25×) and keep shot 6 at ≥25s — the navigation is what people share.
@@ -159,7 +125,7 @@ If you must hit a hard 60s: compress shots 3–4 (reuse the terminal GIF at
 - "Your coding agent is lost in robotics. robium fixes that."
 - "One command: `npx robium-ai install`."
 - "Ask in plain language. Get a robot navigating in sim."
-- "23 versioned robotics skills — ROS 2, Nav2, Gazebo, LeRobot, Isaac, MuJoCo."
+- "25 versioned robotics skills — ROS 2, Nav2, Gazebo, LeRobot, Isaac, MuJoCo."
 - "Tested against real builds, not vibes."
 - Closing: "robium.ai · `npx robium-ai install`"
 
@@ -170,6 +136,7 @@ If you must hit a hard 60s: compress shots 3–4 (reuse the terminal GIF at
 - [ ] `node --version` ≥ 18 and network access (for the `npx` beat).
 - [ ] Claude Code installed (`claude --version`) so `install`/`doctor` show real success lines.
 - [ ] `vhs --version` present (`brew install vhs`) to render the terminal GIF.
-- [ ] `cd apps/nav-trial && make build` succeeds (Docker running, arm64).
-- [ ] `make smoke` exits 0 (this is the exact motion you'll film).
-- [ ] Chrome open on `https://app.foxglove.dev`, layout `nav-trial-layout.json` imported, connected to `ws://localhost:8765`.
+- [ ] `cd ../robium-apps/robot-navigation && ./app doctor` passes.
+- [ ] `./app run` opens the Dashboard and the selected map loads.
+- [ ] A goal sent from the 3D view produces visible plans and robot motion.
+- [ ] `./app stop` cleanly tears down the application between takes.

@@ -1,6 +1,6 @@
 ---
 name: learning-loop
-version: 1.0.1
+version: 1.0.0
 description: >
   Robium's explicit learning engine: consolidate capture-only queue flags and
   transcript evidence into observations; absorb ready observations through
@@ -198,9 +198,6 @@ unreferenced files older than 14 days. Review the report before `--apply`.
   run_task_checks, skill_metrics, mine_transcripts, and prune_transcripts.
 
 ## Changelog
-
-- 1.0.1 (2026-08-27): update the delta-format example to name the current
-  sibling robot-navigation application instead of its former in-repo path.
 
 - 1.0.0 (2026-08-27): remove recall and all prompt injection; make hooks
   capture-only and SessionStart silent; batch consolidation instead of immediate

@@ -33,6 +33,24 @@ cd ~/robium                       # or the path supplied with --dir
 git switch -c my-skill-fix
 ```
 
+Reference applications live in a separate sibling checkout. A typical
+workspace looks like this:
+
+```text
+~/repos/
+├── robium/          # plugin, CLI, skills, and learning engine
+└── robium-apps/     # reference robotics applications
+```
+
+```bash
+git clone https://github.com/robium-ai/robium ~/repos/robium
+git clone https://github.com/robium-ai/robium-apps ~/repos/robium-apps
+```
+
+Keep application code in `robium-apps` (or your own application repository)
+and reusable guidance in `robium`. Cross-reference evidence rather than
+copying application trees, transcripts, or project data between repositories.
+
 ## Contribute a skill in five steps
 
 ### 1. Pick a tool you know
@@ -148,6 +166,36 @@ Learning-engine absorption still opens a reviewable PR rather than merging a
 skill change automatically. See
 `skills/learning-loop/references/learnings-loop.md` for the full hardening
 process maintainers use.
+
+## Contributing a sanitized build finding
+
+External users do not need to share a session transcript to improve Robium.
+Open a [wrong or stale guidance issue](https://github.com/robium-ai/robium/issues/new/choose)
+with the smallest reproducible finding:
+
+1. Name the affected skill and public tool or application.
+2. Describe the symptom, root cause, working fix, and the check that passed.
+3. Include useful dead ends when they explain why the fix matters.
+4. Link public upstream documentation or a minimal public reproduction when
+   one is available.
+
+Before posting, apply this privacy checklist:
+
+- Do not attach raw agent transcripts, prompts, `.robium/transcripts/`, or
+  unfiltered terminal logs.
+- Remove credentials, tokens, cookies, private URLs, hostnames, IP addresses,
+  account identifiers, and environment-variable values.
+- Remove customer names and data, proprietary code or datasets, and internal
+  project details that are not required to understand the finding.
+- Replace local paths and private resource names with neutral placeholders.
+- Re-read snippets and screenshots for secrets and identifying metadata.
+- Share only facts and excerpts needed to reproduce and verify the guidance.
+
+If the finding warrants a skill edit, make that change on a branch and open a
+focused pull request using the version, archive, changelog, and validation
+steps above. An agent may prepare the patch, but a human review and merge is
+still required; a learning report never writes directly to the published
+skill catalog.
 
 ## Reporting bugs and requesting skills
 

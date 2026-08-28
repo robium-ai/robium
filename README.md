@@ -87,7 +87,9 @@ coding agent handles architecture, implementation, simulation, testing, and
 deployment.
 
 Captured build learnings can improve future skill versions. See the workflow
-at [robium.ai](https://robium.ai/#how-it-fits).
+at [robium.ai](https://robium.ai/#how-it-fits). External users can contribute a
+[sanitized build finding](./CONTRIBUTING.md#contributing-a-sanitized-build-finding)
+without sharing a raw agent transcript.
 
 ## What's inside
 
