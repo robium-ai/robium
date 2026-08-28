@@ -1,62 +1,78 @@
 # The standard test-assets layout
 
-The folder format for a repo's owned test data (worlds, models, datasets,
-recordings, goldens), with provenance for every asset. Works in both sourcing
-modes: **vendored** (data committed under a size budget) and **pointer**
-(data gitignored, only README + MANIFEST committed).
+Use one small catalog plus one manifest directory per asset. Pointer mode is
+the default for large worlds, models, and datasets: Git owns metadata and
+license evidence, while an ignored cache holds downloaded bytes.
 
 ## Layout
 
     test-assets/
-      README.md      # human inventory: what each asset is, why it's here,
-                     # license, size; states the sourcing mode + size budget
-      MANIFEST.yaml  # machine provenance, one entry per asset (schema below)
-      worlds/        # SDF/USD scenes, flattened to load offline
-      models/        # robot descriptions: URDF/SDF/MJCF + meshes
-      datasets/      # dataset slices (LeRobot format stays loadable)
-      bags/          # recorded telemetry (rosbag2/MCAP), self-recorded
-      goldens/       # tolerance-band reference outputs per app/scenario
+      README.md
+      catalog.yaml
+      scripts/fetch_assets.py
+      worlds/
+        example-world/
+          asset.yaml
+          LICENSE
+      cache/                 # ignored in pointer mode
+      datasets/              # per-asset manifests follow the same pattern
+      bags/                  # seeded project recordings, not arbitrary downloads
+      goldens/               # tolerance-band outputs from verified scenarios
 
-`bags/` and `goldens/` start empty and fill from seeded runs; they are
-outputs of the project's own verified scenarios, not downloads.
+## Catalog schema
 
-## MANIFEST.yaml schema
+    schema_version: "1"
+    assets:
+      - id: world.example
+        kind: world
+        name: Example World
+        storage: pointer
+        manifest: worlds/example-world/asset.yaml
 
-    - name: tb3_house                # unique id, snake_case
-      path: worlds/tb3_house        # destination inside test-assets/
-      kind: github                  # github | fuel | hf-dataset
-      upstream: https://github.com/ROBOTIS-GIT/turtlebot3_simulations
-      subpath: turtlebot3_gazebo/worlds/turtlebot3_house.world   # github only
-      revision: <commit sha | Fuel version number | HF revision>
-      fetched: 2026-07-18           # date of last fetch/refresh
-      license: Apache-2.0           # read from upstream AT VENDOR TIME
-      notes: verbatim               # or list every local modification/trim
-      deps: []                      # fuel only: extra model URIs the world needs
-      allow_patterns: []            # hf-dataset only: file globs for a slice
+IDs are stable and names are human-facing. The resolver verifies that the
+catalog and manifest agree on `id`, `kind`, `name`, and `storage`.
+
+## Per-asset manifest schema
+
+    schema_version: "1"
+    id: world.example
+    kind: world
+    name: Example World
+    revision: "1"           # local schema revision
+    storage: pointer
+    license:
+      id: SPDX-ID
+      file: LICENSE          # checked-in evidence beside asset.yaml
+      url: https://upstream.example/license
+    verification:
+      date: "2026-08-27"
+      method: Clean-cache archive fetch, SHA-256, entrypoint, and license check.
+    source:
+      type: git-archive
+      repository: https://upstream.example/project
+      revision: immutable-upstream-revision
+      url: https://upstream.example/archive.tar.gz
+      sha256: 64-lowercase-hex-characters
+      archive: tar.gz        # tar.gz | zip
+      strip_prefix: project-revision
+    entrypoints:
+      world: worlds/example.world
 
 Rules:
 
-- `revision` is always pinned, never a branch name. The vendor script
-  records the resolved value after fetching.
-- `license` is read from the upstream repo/dataset card at vendor time, never
-  from memory. An asset whose license forbids redistribution is NOT vendored;
-  it stays pointer-mode and the README flags it.
-- Every local modification to a vendored file is listed in `notes`; otherwise
-  files are verbatim upstream. This is what makes refresh = re-fetch + diff.
+- Pin an immutable upstream revision and the exact archive SHA-256. A branch,
+  `latest`, or download URL without a checksum is not a pointer lock.
+- Keep a license record next to every manifest. Compare it with the pinned
+  upstream source at adoption time; restrictive assets remain pointer-only.
+- Record the verification date and concrete method. A clean-cache fetch must
+  validate safe extraction and every declared entrypoint.
+- Do not add a fixture without an active application or test consumer.
+- Vendored mode may commit bytes only under a documented size budget and with
+  redistribution terms that permit it.
 
-## Slice conventions (datasets)
+## Dataset slices and goldens
 
-- Deterministic slices: the **first N episodes**, never a random sample.
-- Size each slice for its job (a pipeline-smoke slice rarely needs more than
-  a handful of episodes; keep each slice small enough for the repo's budget).
-- Record N and the source revision in the entry's `notes`.
-- A slice must remain a loadable dataset; for LeRobot data, metadata must
-  stay consistent with the reduced episode count (validation tooling: the
-  `lerobot` skill).
-
-## Mode mechanics
-
-- **Vendored:** commit everything; state the total size budget in README; the
-  vendor script's size summary is the budget check on every refresh.
-- **Pointer:** add `worlds/ models/ datasets/ bags/` to .gitignore; commit
-  README + MANIFEST + goldens only; every clone runs the vendor script once.
+- Take deterministic slices, such as the first N episodes, and record N and
+  the source revision. Confirm the reduced dataset still loads.
+- Compare simulated goldens with explicit tolerances and seeds. Exact byte
+  checks apply only to pure replay, not re-run physics.

@@ -1,0 +1,23 @@
+schema_version: "1"
+id: world.tugbot-warehouse
+kind: world
+name: Tugbot in Warehouse
+revision: "1"
+storage: pointer
+license:
+  id: CC-BY-NC-ND-4.0
+  file: LICENSE
+  url: https://creativecommons.org/licenses/by-nc-nd/4.0/
+verification:
+  date: "2026-08-27"
+  method: Clean-cache Fuel archive fetch, SHA-256 verification, entrypoint check, and Fuel world-details license check.
+source:
+  type: fuel-world-zip
+  repository: https://fuel.gazebosim.org/1.0/OpenRobotics/worlds/Tugbot%20in%20Warehouse
+  revision: "2"
+  url: https://fuel.gazebosim.org/1.0/OpenRobotics/worlds/Tugbot%20in%20Warehouse/2/Tugbot%20in%20Warehouse.zip
+  sha256: 22af262814fe01326723b4e21457869470d1d3aaa10db7abc47e3536d13adfbb
+  archive: zip
+  strip_prefix: null
+entrypoints:
+  world: tugbot_warehouse.sdf

@@ -113,8 +113,8 @@
     },
     {
       "name": "test-assets",
-      "version": "1.0.4",
-      "description": "Canonical test assets and fixture sourcing for robotics testing: which worlds, robot models, sample datasets, and recordings to test against for a given robot type; the standard test-assets folder layout with a provenance manifest; pointer vs vendored sourcing modes; fixture and golden policy (tolerance bands, seeded generation). Use when: 'test assets', 'test world', 'test fixture', 'download a test dataset', 'sample rosbag', 'which world should I test in', 'robot model for simulation tests', 'golden output', 'regression fixture', 'data for unit tests', setting up test data for any new robotics project. Load alongside testing when the test pyramid needs data. Not for: training-data sourcing (data), test structure and pass bars (testing), simulator selection rationale (simulation)."
+      "version": "1.1.0",
+      "description": "Canonical test assets and fixture sourcing for robotics testing: which worlds, robot models, sample datasets, and recordings to test against for a given robot type; the standard test-assets folder layout with a provenance catalog and per-asset manifests; pointer vs vendored sourcing modes; fixture and golden policy (tolerance bands, seeded generation). Use when: 'test assets', 'test world', 'test fixture', 'download a test dataset', 'sample rosbag', 'which world should I test in', 'robot model for simulation tests', 'golden output', 'regression fixture', 'data for unit tests', setting up test data for any new robotics project. Load alongside testing when the test pyramid needs data. Not for: training-data sourcing (data), test structure and pass bars (testing), simulator selection rationale (simulation)."
     },
     {
       "name": "testing",
