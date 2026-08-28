@@ -187,6 +187,57 @@ def test_build_variant_raises_on_zero_applied_ops(tmp_path):
     assert not (tmp_path / "work" / "noop").exists()
 
 
+def test_cli_cleans_automatically_created_workdir(tmp_path, monkeypatch):
+    skills = mk_catalog(tmp_path)
+    spec = tmp_path / "spec.yaml"
+    spec.write_text(yaml.safe_dump({
+        "skill": "nav2",
+        "variants": [{"name": "A", "deltas": variant_a_deltas(tmp_path)}],
+    }))
+    owned = tmp_path / "owned-work"
+
+    def fake_mkdtemp(prefix):
+        owned.mkdir()
+        return str(owned)
+
+    monkeypatch.setattr(rv.tempfile, "mkdtemp", fake_mkdtemp)
+    rc = rv.main([str(spec), "--no-llm", "--skills-dir", skills])
+    assert rc == 0
+    assert not owned.exists()
+
+
+def test_cli_preserves_explicit_workdir(tmp_path):
+    skills = mk_catalog(tmp_path)
+    spec = tmp_path / "spec.yaml"
+    spec.write_text(yaml.safe_dump({
+        "skill": "nav2",
+        "variants": [{"name": "A", "deltas": variant_a_deltas(tmp_path)}],
+    }))
+    explicit = tmp_path / "explicit-work"
+    rc = rv.main([
+        str(spec), "--no-llm", "--skills-dir", skills,
+        "--workdir", str(explicit),
+    ])
+    assert rc == 0
+    assert (explicit / "A" / "skills" / "nav2" / "SKILL.md").exists()
+
+
+def test_cli_cleans_automatic_workdir_when_run_raises(tmp_path, monkeypatch):
+    spec = tmp_path / "spec.yaml"
+    spec.write_text(yaml.safe_dump({"skill": "nav2", "variants": []}))
+    owned = tmp_path / "owned-work"
+
+    def fake_mkdtemp(prefix):
+        owned.mkdir()
+        return str(owned)
+
+    monkeypatch.setattr(rv.tempfile, "mkdtemp", fake_mkdtemp)
+    monkeypatch.setattr(rv, "_run_main", lambda *args: (_ for _ in ()).throw(RuntimeError("boom")))
+    with pytest.raises(RuntimeError, match="boom"):
+        rv.main([str(spec), "--no-llm"])
+    assert not owned.exists()
+
+
 # --- score_variant -------------------------------------------------------
 
 def test_score_variant_a_beats_b_on_triggers(tmp_path):

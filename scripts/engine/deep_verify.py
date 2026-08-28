@@ -48,6 +48,20 @@ _STATUS_UNVERIFIED = "status: unverified"
 _ARTIFACT_DIRS = ("examples", "references")
 
 
+class UnknownSkillError(ValueError):
+    """Raised when deep verification names a skill outside the catalog."""
+
+
+def _require_skill(skill, skills_dir):
+    skill_dir = os.path.join(skills_dir, skill)
+    if not os.path.isdir(skill_dir):
+        available = ", ".join(_list_skills(skills_dir)) or "none"
+        raise UnknownSkillError(
+            f"unknown skill '{skill}' in {skills_dir} (available: {available})"
+        )
+    return skill_dir
+
+
 def _list_skills(skills_dir):
     if not os.path.isdir(skills_dir):
         return []
@@ -114,7 +128,7 @@ def run_for_skill(skill, skills_dir, repo_root, date):
     - unfixtured: [{"skill", "file"}] — no evals.yaml task's `example:`
       matches this file.
     """
-    skill_dir = os.path.join(skills_dir, skill)
+    skill_dir = _require_skill(skill, skills_dir)
     fixtures = _fixture_map(skill, skills_dir)
     deltas, passed, failed, unfixtured = [], [], [], []
 
@@ -194,6 +208,14 @@ def main(argv=None):
         if not args.skills:
             ap.error("--run requires --skills <names...>")
         date = args.date or datetime.date.today().isoformat()
+
+        try:
+            for skill in args.skills:
+                _require_skill(skill, args.skills_dir)
+                run_task_checks.load_tasks(skill, args.skills_dir)
+        except (UnknownSkillError, run_task_checks.TaskSchemaError) as exc:
+            print(f"deep-verify: error: {exc}", file=sys.stderr)
+            return 2
 
         agg = {"deltas": [], "passed": [], "failed": [], "unfixtured": []}
         for skill in args.skills:

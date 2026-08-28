@@ -1,5 +1,9 @@
+import os
+import signal
 import textwrap
 import time
+
+import pytest
 
 import run_task_checks as rtc
 
@@ -15,7 +19,7 @@ EVALS = textwrap.dedent("""\
         command: python3 -c "import sys; sys.exit(2)"
         pass_criteria: ".*"
       - name: timeout-task
-        command: python3 -c "import time; time.sleep(5)"
+        command: python3 -c "import time; print('before-timeout', flush=True); time.sleep(5)"
         pass_criteria: ".*"
         timeout: 1
     """)
@@ -82,6 +86,59 @@ def test_run_task_timeout(tmp_path):
     assert res["pass"] is False
     assert res["exit"] is None
     assert "timeout" in res["tail"].lower()
+    assert "before-timeout" in res["tail"]
+
+
+@pytest.mark.skipif(os.name != "posix", reason="POSIX process-group regression")
+def test_run_task_timeout_stops_spawned_child_process(tmp_path):
+    child = tmp_path / "child.py"
+    child.write_text(
+        "import signal\nimport time\n"
+        "signal.signal(signal.SIGTERM, signal.SIG_IGN)\n"
+        "time.sleep(30)\n"
+    )
+    pid_file = tmp_path / "child.pid"
+    parent = tmp_path / "parent.py"
+    parent.write_text(textwrap.dedent(f"""\
+        import subprocess
+        import sys
+        import time
+
+        child = subprocess.Popen(
+            [sys.executable, {str(child)!r}],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        open({str(pid_file)!r}, "w").write(str(child.pid))
+        time.sleep(30)
+        """))
+    task = {
+        "name": "child-timeout",
+        "command": f"python3 {parent}",
+        "pass_criteria": ".*",
+        "timeout": 1,
+    }
+
+    res = rtc.run_task(task, str(tmp_path))
+    child_pid = int(pid_file.read_text())
+    try:
+        deadline = time.time() + 2
+        while True:
+            try:
+                os.kill(child_pid, 0)
+            except ProcessLookupError:
+                break
+            if time.time() >= deadline:
+                pytest.fail("spawned child survived the task timeout")
+            time.sleep(0.05)
+    finally:
+        # Prevent a leaking regression from contaminating the test host.
+        try:
+            os.kill(child_pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+    assert res["pass"] is False
+    assert "timeout" in res["tail"].lower()
 
 
 def test_run_task_dry_run_executes_nothing(tmp_path):
@@ -145,3 +202,18 @@ def test_cli_task_filter_miss_is_error_not_skip(tmp_path, capsys):
     assert "no task named 'nonexistent-task'" in out
     assert "SKIPPED (no tasks yet" not in out
     assert rc == 1
+
+
+@pytest.mark.parametrize("evals, message", [
+    ("tasks: nope\n", "tasks must be a list"),
+    ("tasks:\n  - name: Bad_Name\n    command: echo hi\n    pass_criteria: hi\n",
+     "kebab-case"),
+    ("tasks:\n  - name: okay\n    command: echo hi\n    pass_criteria: hi\n    timeout: 0\n",
+     "positive integer"),
+    ("tasks:\n  - name: okay\n    command: echo hi\n    pass_criteria: hi\n    app: ../private\n",
+     "repo-root-relative"),
+])
+def test_load_tasks_rejects_invalid_schema(tmp_path, evals, message):
+    skills_dir = _mk_skill(tmp_path, evals=evals)
+    with pytest.raises(rtc.TaskSchemaError, match=message):
+        rtc.load_tasks("lerobot", skills_dir)

@@ -4,11 +4,12 @@
 # ///
 """Task-check runner: executes evals.yaml `tasks:` fixtures (spec §4.3).
 
-Each task is a shell command run with an explicit timeout, cwd scoped to
+Each validated task is a shell command run with an explicit timeout, cwd scoped to
 the named app directory (repo-root-relative) or the repo root — NEVER
 inside skills/. PASS requires exit 0 AND a regex match against the
 combined stdout+stderr. Never run as root; never alters state outside its
-own cwd; a timeout aborts the subprocess rather than hanging the run.
+own cwd; a timeout terminates the full task process group rather than leaving
+children behind.
 
 `run_task` is the reusable primitive: the deep-verify lane (Task 5) will
 import it directly to score fixture-verified examples without going
@@ -17,11 +18,14 @@ through this module's CLI.
 import argparse
 import os
 import re
+import signal
 import subprocess
 import sys
 import time
 
 import yaml
+
+from task_schema import TaskSchemaError, validate_tasks
 
 DEFAULT_TIMEOUT_S = 300
 TAIL_MAX_LINES = 5
@@ -33,7 +37,13 @@ def load_tasks(skill, skills_dir):
     if not os.path.exists(path):
         return []
     data = yaml.safe_load(open(path, encoding="utf-8")) or {}
-    return list(data.get("tasks") or [])
+    if not isinstance(data, dict):
+        raise TaskSchemaError(f"{path}: top level must be a mapping")
+    tasks = data.get("tasks", [])
+    try:
+        return list(validate_tasks(tasks))
+    except TaskSchemaError as exc:
+        raise TaskSchemaError(f"{path}: {exc}") from exc
 
 
 def _tail(text):
@@ -43,6 +53,43 @@ def _tail(text):
     if len(tail) > TAIL_MAX_CHARS:
         tail = tail[-TAIL_MAX_CHARS:]
     return tail
+
+
+def _stop_process_group(proc):
+    """Terminate the task shell and every child it launched."""
+    if os.name == "posix":
+        try:
+            os.killpg(proc.pid, signal.SIGTERM)
+        except ProcessLookupError:
+            return proc.communicate()
+    else:
+        # /T is the Windows equivalent of killing the complete process tree.
+        subprocess.run(
+            ["taskkill", "/PID", str(proc.pid), "/T", "/F"],
+            capture_output=True,
+            timeout=5,
+            check=False,
+        )
+
+    output = (None, None)
+    try:
+        output = proc.communicate(timeout=0.5)
+    except subprocess.TimeoutExpired:
+        pass
+
+    if os.name == "posix":
+        # The group can outlive its leader when a child ignores SIGTERM, so
+        # send the final signal even when communicate() already reaped the
+        # shell process.
+        try:
+            os.killpg(proc.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+    elif proc.poll() is None:
+        proc.kill()
+    if proc.poll() is None:
+        output = proc.communicate()
+    return output
 
 
 def run_task(task, repo_root, dry_run=False):
@@ -59,19 +106,26 @@ def run_task(task, repo_root, dry_run=False):
                 "seconds": 0.0, "tail": "dry-run: not executed"}
 
     start = time.time()
+    popen_opts = {"start_new_session": True} if os.name == "posix" else {
+        "creationflags": subprocess.CREATE_NEW_PROCESS_GROUP,
+    }
+    proc = subprocess.Popen(
+        command, shell=True, cwd=cwd, stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE, text=True, **popen_opts
+    )
     try:
-        proc = subprocess.run(command, shell=True, cwd=cwd,
-                               capture_output=True, text=True, timeout=timeout)
+        stdout, stderr = proc.communicate(timeout=timeout)
         seconds = time.time() - start
-        combined = (proc.stdout or "") + (proc.stderr or "")
+        combined = (stdout or "") + (stderr or "")
         matched = re.search(pass_criteria, combined) is not None
         ok = proc.returncode == 0 and matched
         return {"name": name, "pass": ok, "exit": proc.returncode,
                 "matched": matched, "seconds": seconds, "tail": _tail(combined)}
-    except subprocess.TimeoutExpired as exc:
+    except subprocess.TimeoutExpired:
+        stdout, stderr = _stop_process_group(proc)
         seconds = time.time() - start
-        combined = (exc.stdout or "") + (exc.stderr or "")
         note = f"TIMEOUT after {timeout}s"
+        combined = (stdout or "") + (stderr or "")
         if combined.strip():
             note += f" — {_tail(combined)}"
         return {"name": name, "pass": False, "exit": None, "matched": False,
@@ -89,7 +143,12 @@ def main(argv=None):
 
     passed = failed = skipped = 0
     for skill in args.skills:
-        all_tasks = load_tasks(skill, args.skills_dir)
+        try:
+            all_tasks = load_tasks(skill, args.skills_dir)
+        except TaskSchemaError as exc:
+            failed += 1
+            print(f"{skill}: invalid task schema: {exc}")
+            continue
         tasks = all_tasks
         if args.task:
             tasks = [t for t in all_tasks if t.get("name") == args.task]

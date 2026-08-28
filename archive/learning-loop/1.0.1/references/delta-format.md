@@ -55,20 +55,16 @@ destination.
   trailing blank lines before the next heading are skipped so new content
   lands right after existing content rather than after the gap). No
   `anchor` field; the anchor id lives inside `content` itself. Missing
-  section → no-op. Block boundaries are normalized to one blank line where
-  Markdown requires separation; adjacent list items and table rows remain
-  contiguous.
+  section → no-op.
 - **update**: replaces the full anchor block (the bulleted line plus any
   more-indented continuation lines) found by `anchor`. `content` **must**
   still carry that same anchor id comment; dropping it is a refusal, not
   a no-op, because it would silently orphan the ledger entry. Missing
-  anchor → no-op. Replacement content has blank edge lines trimmed and its
-  Markdown boundaries normalized.
+  anchor → no-op.
 - **retire**: deletes an anchor block outright. Refused when the skill's
   evidence.yaml shows `helpful > 0` for that anchor, unless the op sets
   `force: true`; a block with proven value can't be silently deleted.
-  Ledger key is removed on apply. The remaining neighboring blocks retain one
-  canonical separator rather than accumulating blank lines.
+  Ledger key is removed on apply.
 - **move**: relocates an anchor block (and its ledger entry) from the
   source skill to the `to_skill` and `to_section` fields. Every move in a batch that shares
   a `to_skill` merges into **one** destination write: one archive snapshot,

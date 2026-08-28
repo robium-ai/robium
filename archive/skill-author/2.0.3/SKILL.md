@@ -1,6 +1,6 @@
 ---
 name: skill-author
-version: 2.0.4
+version: 2.0.3
 description: >
   Author new robium skills and enforce the catalog quality bar. Owns the
   authoring workflow from templates/skill, the quality bar
@@ -143,9 +143,6 @@ learning-loop skill, mining in the mining skill.
 ## Changelog
 
 <!-- One dated line per battle-tested change, added by skill-author hardening sessions. -->
-
-- 2.0.4 (2026-08-27): share the canonical eval task schema with the runtime
-  runner and reject nonpositive timeouts and escaping task paths.
 
 - 2.0.3 (2026-08-07): moved the authoring skeleton out of `skills/` so native
   Codex plugin validation sees only installable skill directories.

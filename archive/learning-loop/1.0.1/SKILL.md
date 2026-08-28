@@ -1,6 +1,6 @@
 ---
 name: learning-loop
-version: 1.1.0
+version: 1.0.1
 description: >
   Robium's explicit learning engine: consolidate capture-only queue flags and
   transcript evidence into observations; absorb ready observations through
@@ -150,9 +150,7 @@ not permission for unattended selection or merge.
 `deep_verify.py --inventory` lists unverified examples and fixture coverage.
 Running it executes only configured task fixtures; a pass emits an annotation
 delta, while a failure remains a finding. Promotion still goes through the same
-apply/validation/review route. Task fixtures use the schema in
-`references/task-checks.md`; the validator and runtime runner share that schema,
-and unknown skill names are errors rather than empty successful runs.
+apply/validation/review route.
 
 ### Transcript retention
 
@@ -195,17 +193,11 @@ unreferenced files older than 14 days. Review the report before `--apply`.
 - `references/refine-passes.md` - five evidence-armed hygiene passes.
 - `references/learnings-loop.md` - historical/manual fallback context.
 - `references/experiment-recipes.md` - small-variant evaluation recipes.
-- `references/task-checks.md` - canonical eval task schema, validation, timeout,
-  and result semantics.
 - Engine tools in the repository's scripts/engine directory: apply_deltas,
   run_trigger_evals, observations, placement, run_variants, deep_verify,
   run_task_checks, skill_metrics, mine_transcripts, and prune_transcripts.
 
 ## Changelog
-
-- 1.1.0 (2026-08-27): harden engine task execution and invalid-input handling,
-  clean owned variant workdirs, normalize delta block spacing, and document the
-  shared eval task schema.
 
 - 1.0.1 (2026-08-27): update the delta-format example to name the current
   sibling robot-navigation application instead of its former in-repo path.

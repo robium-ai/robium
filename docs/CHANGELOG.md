@@ -33,6 +33,11 @@ still use versioned, archived, human-reviewed pull requests. Active application
 examples now point to the current Robot Navigation and Robot Teleoperation
 paths in `robium-apps`.
 
+Learning-engine reliability work now terminates complete task process groups on
+timeout, removes only automatically owned variant workdirs, rejects unknown
+deep-verification skills, preserves canonical Markdown block spacing, and uses
+one validated task-check schema across the runner and skill validator.
+
 ## 2026-08-24: Generic RunPod operations skill
 
 Added `runpod` as the provider-specific owner for safe inventory, GPU/region

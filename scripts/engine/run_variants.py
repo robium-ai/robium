@@ -324,7 +324,7 @@ def _load_observation_text(observation_id, repo_root):
     return observation_id
 
 
-def main(argv=None):
+def _parse_args(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("spec")
     ap.add_argument("--no-llm", action="store_true")
@@ -336,15 +336,14 @@ def main(argv=None):
     ap.add_argument("--winner", default=None)
     ap.add_argument("--date", default=None)
     ap.add_argument("--archive-dir", default="archive")
-    args = ap.parse_args(argv)
+    return ap.parse_args(argv)
 
-    with open(args.spec, encoding="utf-8") as f:
-        spec = yaml.safe_load(f) or {}
+
+def _run_main(args, spec, workdir):
     skill = spec["skill"]
     observation = spec.get("observation", "")
     variants_spec = spec.get("variants") or []
 
-    workdir = args.workdir or tempfile.mkdtemp(prefix="robium-variants-")
     os.makedirs(workdir, exist_ok=True)
 
     scores = []
@@ -415,6 +414,20 @@ def main(argv=None):
         archive_losers(skill, date, winner, workdir, args.archive_dir)
 
     return 0  # scores are information, not gates — always exit 0
+
+
+def main(argv=None):
+    args = _parse_args(argv)
+    with open(args.spec, encoding="utf-8") as f:
+        spec = yaml.safe_load(f) or {}
+
+    owns_workdir = args.workdir is None
+    workdir = args.workdir or tempfile.mkdtemp(prefix="robium-variants-")
+    try:
+        return _run_main(args, spec, workdir)
+    finally:
+        if owns_workdir:
+            shutil.rmtree(workdir, ignore_errors=True)
 
 
 if __name__ == "__main__":

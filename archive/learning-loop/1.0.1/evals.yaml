@@ -1,0 +1,16 @@
+triggers:
+  positive:
+    - phrase: consolidate the pending Robium learning flags at this milestone
+    - phrase: absorb these ready observations into the skills
+    - phrase: show me the learning loop status without changing anything
+    - phrase: clean transcripts whose observations have already landed
+    - phrase: A/B this contested skill edit before we absorb it
+    - phrase: deep verify the unverified examples
+  negative:
+    - phrase: mine the upstream Nav2 repository for reusable patterns
+      expect: mining
+    - phrase: write a brand new Robium skill for depth cameras
+      expect: skill-author
+    - phrase: build a new mobile robot application
+      expect: architect
+tasks: []

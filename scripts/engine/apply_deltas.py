@@ -184,7 +184,61 @@ def _body_line_count(lines):
 
 
 def _content_lines(content):
-    return content.rstrip("\n").split("\n")
+    lines = content.splitlines()
+    while lines and not lines[0].strip():
+        lines.pop(0)
+    while lines and not lines[-1].strip():
+        lines.pop()
+    return lines
+
+
+def _block_kind(line):
+    stripped = line.lstrip()
+    if re.match(r"([-*]|\d+\.)\s", stripped):
+        return "list"
+    if stripped.startswith("|"):
+        return "table"
+    return "paragraph"
+
+
+def _needs_blank(left, right):
+    if not left or not right:
+        return False
+    return not (_block_kind(left) == _block_kind(right) == "list"
+               or _block_kind(left) == _block_kind(right) == "table")
+
+
+def _splice_block(lines, start, end, block_lines):
+    """Replace a Markdown block while canonicalizing only its boundaries."""
+    block = list(block_lines)
+    while block and not block[0].strip():
+        block.pop(0)
+    while block and not block[-1].strip():
+        block.pop()
+
+    prefix = lines[:start]
+    suffix = lines[end:]
+    while prefix and not prefix[-1].strip():
+        prefix.pop()
+    while suffix and not suffix[0].strip():
+        suffix.pop(0)
+
+    out = prefix
+    if block:
+        if _needs_blank(out[-1] if out else "", block[0]):
+            out.append("")
+        out.extend(block)
+    if suffix:
+        left = out[-1] if out else ""
+        if _needs_blank(left, suffix[0]):
+            out.append("")
+        out.extend(suffix)
+    return out
+
+
+def _inside_frontmatter(lines, index):
+    delimiters = [i for i, line in enumerate(lines) if line.strip() == "---"]
+    return len(delimiters) >= 2 and delimiters[0] < index < delimiters[1]
 
 
 def _insert_at_section_bottom(lines, sec, block_lines):
@@ -192,7 +246,7 @@ def _insert_at_section_bottom(lines, sec, block_lines):
     insert_at = e
     while insert_at > s + 1 and not lines[insert_at - 1].strip():
         insert_at -= 1
-    return lines[:insert_at] + block_lines + lines[insert_at:]
+    return _splice_block(lines, insert_at, insert_at, block_lines)
 
 
 def _apply_one(lines, op, report):
@@ -207,7 +261,9 @@ def _apply_one(lines, op, report):
             report["refused"].append(_item(op, "content drops the anchor id"))
             return None
         start, end = loc
-        return lines[:start] + _content_lines(op["content"]) + lines[end:]
+        if _inside_frontmatter(lines, start):
+            return lines[:start] + _content_lines(op["content"]) + lines[end:]
+        return _splice_block(lines, start, end, _content_lines(op["content"]))
     if kind == "update" or kind == "annotate":
         report["refused"].append(_item(op, f"op {kind} missing required field 'anchor'"))
         return None
@@ -220,22 +276,7 @@ def _apply_one(lines, op, report):
         insert_at = s + 1 if op.get("position") == "top" else e
         while insert_at > s + 1 and not lines[insert_at - 1].strip():
             insert_at -= 1
-        content_lines = _content_lines(op["content"])
-        # Bottom-inserting PARAGRAPH content (not a list item) directly
-        # against a preceding non-blank block glues the two together —
-        # find_anchor_block's paragraph scan runs to the first blank line,
-        # so a new paragraph landing flush against the section's existing
-        # prose tail gets swallowed into the PRECEDING anchor's block (see
-        # learnings/deltas/2026-08-02-nav2-ab-A.yaml). List items don't
-        # need this: sibling bullets are bounded by indent, not blank
-        # lines, so bullet adds stay flush exactly as before.
-        first_stripped = content_lines[0].lstrip() if content_lines else ""
-        is_list_item = bool(re.match(r"([-*]|\d+\.)\s", first_stripped))
-        if (not is_list_item and insert_at > s + 1
-                and lines[insert_at - 1].strip() and content_lines
-                and content_lines[0].strip()):
-            return lines[:insert_at] + [""] + content_lines + lines[insert_at:]
-        return lines[:insert_at] + content_lines + lines[insert_at:]
+        return _splice_block(lines, insert_at, insert_at, _content_lines(op["content"]))
     report["refused"].append(_item(op, f"unknown op {kind!r} (core)"))
     return None
 
@@ -252,7 +293,7 @@ def _apply_retire(working, op, skill_dir):
     if int(entry.get("helpful", 0)) > 0 and not op.get("force"):
         return ("refused", "anchor has helpful>0 — retire needs force: true", None)
     start, end = loc
-    return ("applied", "applied", working[:start] + working[end:])
+    return ("applied", "applied", _splice_block(working, start, end, []))
 
 
 def _apply_annotate_file(skill_dir, op):
@@ -451,7 +492,7 @@ def apply_file(deltas_path, skills_dir="skills", archive_dir="archive",
                     continue
                 start, end = loc
                 block = working[start:end]
-                working = working[:start] + working[end:]
+                working = _splice_block(working, start, end, [])
                 buf["working"] = _insert_at_section_bottom(buf["working"], sec, block)
                 buf["moves"].append({"anchor": anchor, "reason": op.get("reason")})
                 dest_buffers[to_skill] = buf

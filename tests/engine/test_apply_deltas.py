@@ -869,3 +869,86 @@ def test_add_bullet_after_bullet_tail_unchanged(tmp_path):
     # and no blank line actually separates them in the raw section text
     raw = section.split("- Existing pattern. <!-- id: existing-pattern -->", 1)[1]
     assert not raw.startswith("\n\n")
+
+
+def test_add_paragraph_at_section_top_has_canonical_spacing(tmp_path):
+    d = tmp_path / "skills" / "nav2"
+    d.mkdir(parents=True)
+    (d / "SKILL.md").write_text(PARA_SKILL.format(name="nav2"))
+    (tmp_path / "archive").mkdir()
+    rep = run(tmp_path, [{
+        "skill": "nav2", "op": "add", "section": "Usage patterns",
+        "position": "top",
+        "content": "**New first paragraph.** <!-- id: first-para -->\nIts body.\n",
+        "reason": "obs-nav2-201",
+    }])
+    assert rep["applied"] and not rep["refused"]
+    section = (d / "SKILL.md").read_text().split("## Usage patterns", 1)[1].split("## ", 1)[0]
+    assert section.startswith("\n\n**New first paragraph.**")
+    assert "Its body.\n\n- Existing pattern." in section
+
+
+def test_update_paragraph_before_heading_inserts_separator(tmp_path):
+    skill = SKILL_MD.replace(
+        "## Usage patterns\n\n- Existing pattern. <!-- id: existing-pattern -->\n\n## Changelog",
+        "## Usage patterns\n\n**Old paragraph.** <!-- id: old-para -->\n"
+        "Body immediately before heading.\n## Changelog",
+    )
+    d = tmp_path / "skills" / "nav2"
+    d.mkdir(parents=True)
+    (d / "SKILL.md").write_text(skill.format(name="nav2"))
+    (tmp_path / "archive").mkdir()
+    rep = run(tmp_path, [{
+        "skill": "nav2", "op": "update", "anchor": "old-para",
+        "content": "**New paragraph.** <!-- id: old-para -->\nNew body.\n",
+        "reason": "obs-nav2-202",
+    }])
+    assert rep["applied"] and not rep["refused"]
+    text = (d / "SKILL.md").read_text()
+    assert "New body.\n\n## Changelog" in text
+
+
+def test_retire_middle_paragraph_does_not_leave_double_blank(tmp_path):
+    skill = SKILL_MD.replace(
+        "## Usage patterns\n\n- Existing pattern. <!-- id: existing-pattern -->",
+        "## Usage patterns\n\n"
+        "**First paragraph.** <!-- id: first-para -->\nFirst body.\n\n"
+        "**Retire paragraph.** <!-- id: retire-para -->\nRetire body.\n\n"
+        "**Last paragraph.** <!-- id: last-para -->\nLast body.",
+    )
+    d = tmp_path / "skills" / "nav2"
+    d.mkdir(parents=True)
+    (d / "SKILL.md").write_text(skill.format(name="nav2"))
+    (tmp_path / "archive").mkdir()
+    rep = run(tmp_path, [{
+        "skill": "nav2", "op": "retire", "anchor": "retire-para",
+        "reason": "obs-nav2-203",
+    }])
+    assert rep["applied"] and not rep["refused"]
+    section = (d / "SKILL.md").read_text().split("## Usage patterns", 1)[1].split("## ", 1)[0]
+    assert "Retire paragraph" not in section
+    assert "First body.\n\n**Last paragraph.**" in section
+    assert "\n\n\n" not in section
+
+
+def test_move_paragraph_preserves_source_and_destination_spacing(tmp_path):
+    src = tmp_path / "skills" / "nav2"
+    dst = tmp_path / "skills" / "ros2"
+    src.mkdir(parents=True)
+    dst.mkdir(parents=True)
+    src.joinpath("SKILL.md").write_text(PARA_SKILL.format(name="nav2"))
+    dst.joinpath("SKILL.md").write_text(SKILL_MD.format(name="ros2"))
+    (tmp_path / "archive").mkdir()
+    rep = run(tmp_path, [{
+        "skill": "nav2", "op": "move", "anchor": "para-anchor",
+        "to_skill": "ros2", "to_section": "Usage patterns",
+        "reason": "obs-nav2-204",
+    }])
+    assert rep["applied"] and not rep["refused"]
+    src_section = src.joinpath("SKILL.md").read_text().split(
+        "## Usage patterns", 1)[1].split("## ", 1)[0]
+    dst_text = dst.joinpath("SKILL.md").read_text()
+    dst_section = dst_text.split("## Usage patterns", 1)[1].split("## ", 1)[0]
+    assert "\n\n\n" not in src_section
+    assert "existing-pattern -->\n\n**Custom planner plugin" in dst_section
+    assert "same paragraph.\n\n## Changelog" in dst_text

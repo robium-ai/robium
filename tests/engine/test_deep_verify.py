@@ -1,5 +1,6 @@
 import textwrap
 
+import pytest
 import yaml
 
 import apply_deltas as ad
@@ -104,6 +105,12 @@ def test_run_for_skill_task_with_no_matching_example_leaves_file_unfixtured(tmp_
     res = dv.run_for_skill("nav2", str(tmp_path / "skills"), str(tmp_path), "2026-08-05")
     assert res["unfixtured"] == [{"skill": "nav2", "file": "examples/x.py"}]
     assert res["deltas"] == []
+
+
+def test_run_for_skill_unknown_skill_is_error(tmp_path):
+    (tmp_path / "skills").mkdir()
+    with pytest.raises(dv.UnknownSkillError, match="unknown skill 'ghost'"):
+        dv.run_for_skill("ghost", str(tmp_path / "skills"), str(tmp_path), "2026-08-05")
 
 
 # ---------------------------------------------------------------------------
@@ -244,3 +251,18 @@ def test_cli_run_never_applies_only_writes_out_path(tmp_path, capsys):
     after = (d / "examples" / "x.py").read_text()
     assert before == after  # file under skills/ is untouched
     assert out_path.exists()
+
+
+def test_cli_run_unknown_skill_fails_without_writing_output(tmp_path, capsys):
+    _mk_examples_skill(tmp_path, tasks=[PASS_TASK])
+    out_path = tmp_path / "out.yaml"
+    rc = dv.main([
+        "--run", "--skills", "nav2", "ghost",
+        "--skills-dir", str(tmp_path / "skills"),
+        "--repo-root", str(tmp_path),
+        "--out", str(out_path),
+    ])
+    err = capsys.readouterr().err
+    assert rc == 2
+    assert "unknown skill 'ghost'" in err
+    assert not out_path.exists()

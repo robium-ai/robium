@@ -121,3 +121,17 @@ def test_tasks_entry_valid_regex_pass_criteria_passes(tmp_path):
     evals = "tasks:\n  - name: my-task\n    command: echo hi\n    pass_criteria: '^OK$'\n"
     errs = vs.check_skill(_mk_skill(tmp_path, dirname="c7", evals=evals))
     assert errs == []
+
+
+def test_tasks_entry_nonpositive_timeout_fails_consistently(tmp_path):
+    evals = ("tasks:\n  - name: my-task\n    command: echo hi\n"
+             "    pass_criteria: hi\n    timeout: 0\n")
+    errs = vs.check_skill(_mk_skill(tmp_path, dirname="c8", evals=evals))
+    assert any("positive integer" in e for e in errs)
+
+
+def test_tasks_entry_parent_app_path_fails_consistently(tmp_path):
+    evals = ("tasks:\n  - name: my-task\n    command: echo hi\n"
+             "    pass_criteria: hi\n    app: ../private\n")
+    errs = vs.check_skill(_mk_skill(tmp_path, dirname="c9", evals=evals))
+    assert any("repo-root-relative" in e for e in errs)
