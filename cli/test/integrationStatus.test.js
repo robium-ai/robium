@@ -13,8 +13,8 @@ import {
 
 test('integrationVersions loads CLI, plugin, and skill release versions', async () => {
   const versions = await integrationVersions();
-  assert.equal(versions.cli, '0.10.0');
-  assert.equal(versions.plugin, '0.4.0');
+  assert.equal(versions.cli, '0.11.0');
+  assert.equal(versions.plugin, '0.5.0');
   assert.match(versions.skills.nav2, /^\d+\.\d+\.\d+$/);
 });
 

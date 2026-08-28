@@ -14,7 +14,7 @@ npx robium-ai setup
 npx robium-ai setup --agent codex      # claude | codex | gemini | cursor
 npx robium-ai setup --dir ~/src/robium
 npx robium-ai setup -y                 # accept defaults (CI / agent-driven)
-npx robium-ai setup --copy             # copy skills from the repo instead of symlinking
+npx robium-ai setup --copy             # copy integration files instead of symlinking
 
 # Pull the checkout and refresh every detected integration
 npx robium-ai update
@@ -73,8 +73,10 @@ or uses the checkout you're already inside, then wires it in per agent:
   `gemini extensions link <clone> --consent`. Gemini auto-loads the skills,
   architect subagent, and capture hooks from the extension. Setup removes only
   legacy Robium-managed skill links; foreign skills are preserved.
-- **Cursor**: each Agent Skill is linked from the checkout into
-  `~/.cursor/skills`, one of Cursor's documented native skill directories.
+- **Cursor**: the checkout is linked as a native Cursor Plugin at
+  `~/.cursor/plugins/local/robium`. Cursor auto-loads the complete skill
+  catalog, architect agent, and Cursor-native capture hooks. Setup removes only
+  legacy Robium-managed skill links; foreign skills and plugins are preserved.
 
 `npx robium-ai update` pulls the checkout, repairs links, and refreshes native
 plugins. Symlink-based installs see the new files immediately. Native plugin
@@ -94,18 +96,19 @@ Codex Desktop on macOS is supported even when its bundled CLI is not on shell
 After setup, Robium asks each host whether the integration is active when the
 host exposes a supported status command. Claude Code and Codex report native
 plugin state and installed version; Gemini reports native extension state.
-Cursor currently exposes no skill activation-status API, so
-setup reports the limitation and asks for a new chat instead of claiming the
-skills are active. `doctor` uses the same local probes to distinguish missing,
-inactive, active, obviously outdated, and activation-unknown installations.
-Its refresh guidance names the session or task that must be restarted.
+Cursor currently exposes no local-plugin activation-status API, so setup
+reports the limitation and asks for a window reload and Customize check instead
+of claiming the plugin is active. `doctor` uses the same local probes to
+distinguish missing, inactive, active, obviously outdated, and
+activation-unknown installations. Its refresh guidance names the session or
+task that must be restarted.
 
 `npx robium-ai remove` reverses setup without deleting the repository checkout.
 Claude Code and Codex use their native plugin and marketplace removal commands.
 Gemini CLI uses `gemini extensions uninstall robium` and also cleans up legacy
-Robium-managed skill links. Cursor removes only Robium checkout symlinks and
-copied skill directories carrying the `.robium-managed` marker. Unrelated
-skills and files are preserved. Repeated removal is a successful no-op.
+Robium-managed skill links. Cursor removes only the Robium-managed local plugin
+link or marked copy plus legacy managed skill links. Unrelated plugins, skills,
+and files are preserved. Repeated removal is a successful no-op.
 
 ### Install one skill
 

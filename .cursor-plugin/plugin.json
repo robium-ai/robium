@@ -1,0 +1,23 @@
+{
+  "name": "robium",
+  "displayName": "Robium",
+  "version": "0.5.0",
+  "description": "Field-tested robotics skills, an architect agent, and fail-open learning capture for Cursor.",
+  "author": {
+    "name": "robium"
+  },
+  "homepage": "https://robium.ai",
+  "repository": "https://github.com/robium-ai/robium",
+  "license": "MIT",
+  "keywords": [
+    "robotics",
+    "physical-ai",
+    "ros2",
+    "simulation",
+    "skills"
+  ],
+  "logo": "assets/brand/robium-lockup.png",
+  "skills": "./skills/",
+  "agents": "./agents/robium-architect.md",
+  "hooks": "./hooks/cursor-hooks.json"
+}

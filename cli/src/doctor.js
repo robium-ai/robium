@@ -44,7 +44,7 @@ function integrationCheck(result, {
   return {
     ...state,
     status: 'warn',
-    detail: `installed${count}; activation status unavailable`,
+    detail: `installed${version}${count}; activation status unavailable`,
     hint: unknownHint,
   };
 }
@@ -181,16 +181,19 @@ export function buildChecks({
       },
     },
     {
-      id: 'cursor-skills', label: 'Cursor skills',
+      id: 'cursor-plugin', label: 'Cursor plugin',
       async run() {
         const detected = await support();
         if (!detected.cursor) return { status: 'skip', detail: 'Cursor not installed' };
         const expected = await versions();
-        const result = await inspectCursorIntegration({ home, skillVersions: expected.skills });
+        const result = await inspectCursorIntegration({
+          home, expectedPluginVersion: expected.plugin, skillVersions: expected.skills,
+        });
         return integrationCheck(result, {
           missingHint: 'run: npx robium-ai setup --agent cursor',
-          outdatedHint: 'run: npx robium-ai update --agent cursor; then start a new Cursor chat',
-          unknownHint: 'start a new Cursor chat; Cursor does not expose a skill activation-status API',
+          inactiveHint: 'legacy skill-only install detected; run: npx robium-ai setup --agent cursor',
+          outdatedHint: 'run: npx robium-ai update --agent cursor; then reload the Cursor window',
+          unknownHint: 'reload the Cursor window and confirm Robium under Customize; Cursor does not expose a local-plugin activation API',
         });
       },
     },

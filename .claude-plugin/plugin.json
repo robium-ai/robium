@@ -1,7 +1,7 @@
 {
   "name": "robium",
   "description": "Self-improving robotics expertise for AI agents: skills for architecting, integrating, simulating, visualizing, testing, and training physical-AI applications (ROS 2, Nav2, Gazebo, LeRobot, Isaac, HuggingFace) — captured from real builds, mined from the ecosystem, evidence-verified.",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "author": {
     "name": "robium"
   },

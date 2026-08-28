@@ -18,9 +18,9 @@ function fakeExec(table) {
 
 const ALL_GOOD = {
   'claude --version': { stdout: '2.1.211 (Claude Code)\n' },
-  'claude plugin list': { stdout: '[{"id":"robium@robium","version":"0.4.0","enabled":true}]' },
+  'claude plugin list': { stdout: '[{"id":"robium@robium","version":"0.5.0","enabled":true}]' },
   'codex --version': { stdout: 'codex-cli 0.146.0\n' },
-  'codex plugin list': { stdout: '{"installed":[{"pluginId":"robium@robium","version":"0.4.0","enabled":true}]}' },
+  'codex plugin list': { stdout: '{"installed":[{"pluginId":"robium@robium","version":"0.5.0","enabled":true}]}' },
   'docker --version': { stdout: 'Docker version 27.0.0\n' },
   'docker info': { stdout: '27.0.0\n' },
   df: { stdout: 'Filesystem 1024-blocks Used Available Capacity Mounted\n/dev/disk 999 1 209715200 1% /\n' },
@@ -70,23 +70,27 @@ test('doctor: Gemini-only setup counts as a supported coding agent', async () =>
   delete table['codex --version'];
   delete table['codex plugin list'];
   table['gemini --version'] = { stdout: '0.30.0\n' };
-  table['gemini extensions list'] = { stdout: '[{"name":"robium","version":"0.4.0","isActive":true}]' };
+  table['gemini extensions list'] = { stdout: '[{"name":"robium","version":"0.5.0","isActive":true}]' };
   const results = await runChecks({ exec: fakeExec(table), platform: 'linux', arch: 'x64', env: {}, home: '/no/such/home' });
   assert.equal(results.find((r) => r.id === 'coding-agent').status, 'pass');
   assert.equal(results.find((r) => r.id === 'gemini').status, 'pass');
   assert.equal(results.find((r) => r.id === 'gemini-extension').status, 'pass');
 });
 
-test('doctor: Cursor reports installed skills with activation unknown', async () => {
+test('doctor: Cursor reports an installed local plugin with activation unknown', async () => {
   const base = await mkdtemp(path.join(os.tmpdir(), 'robium-doctor-cursor-'));
   const home = path.join(base, 'home');
   const repo = path.join(base, 'robium');
   await mkdir(path.join(repo, '.codex-plugin'), { recursive: true });
   await writeFile(path.join(repo, '.codex-plugin', 'plugin.json'), '{}');
+  await mkdir(path.join(repo, '.claude-plugin'), { recursive: true });
+  await writeFile(path.join(repo, '.claude-plugin', 'plugin.json'), '{}');
+  await mkdir(path.join(repo, '.cursor-plugin'), { recursive: true });
+  await writeFile(path.join(repo, '.cursor-plugin', 'plugin.json'), '{"name":"robium","version":"0.5.0"}');
   await mkdir(path.join(repo, 'skills', 'nav2'), { recursive: true });
   await writeFile(path.join(repo, 'skills', 'nav2', 'SKILL.md'), '---\nname: nav2\ndescription: test\n---\n');
-  await mkdir(path.join(home, '.cursor', 'skills'), { recursive: true });
-  await symlink(path.join(repo, 'skills', 'nav2'), path.join(home, '.cursor', 'skills', 'nav2'), 'dir');
+  await mkdir(path.join(home, '.cursor', 'plugins', 'local'), { recursive: true });
+  await symlink(repo, path.join(home, '.cursor', 'plugins', 'local', 'robium'), 'dir');
   const table = { ...ALL_GOOD };
   delete table['claude --version'];
   delete table['claude plugin list'];
@@ -96,10 +100,11 @@ test('doctor: Cursor reports installed skills with activation unknown', async ()
   const results = await runChecks({ exec: fakeExec(table), platform: 'linux', arch: 'x64', env: {}, home });
   assert.equal(results.find((r) => r.id === 'coding-agent').status, 'pass');
   assert.equal(results.find((r) => r.id === 'cursor').status, 'pass');
-  const skills = results.find((r) => r.id === 'cursor-skills');
-  assert.equal(skills.status, 'warn');
-  assert.match(skills.detail, /activation status unavailable/);
-  assert.match(skills.hint, /new Cursor chat/);
+  const plugin = results.find((r) => r.id === 'cursor-plugin');
+  assert.equal(plugin.status, 'warn');
+  assert.match(plugin.detail, /v0\.5\.0/);
+  assert.match(plugin.detail, /activation status unavailable/);
+  assert.match(plugin.hint, /Customize/);
   await rm(base, { recursive: true, force: true });
 });
 
@@ -113,7 +118,7 @@ test('doctor: Claude plugin not installed → warn with install hint', async () 
 });
 
 test('doctor: plugin installed but inactive is distinct from not installed', async () => {
-  const table = { ...ALL_GOOD, 'claude plugin list': { stdout: '[{"id":"robium@robium","version":"0.4.0","enabled":false}]' } };
+  const table = { ...ALL_GOOD, 'claude plugin list': { stdout: '[{"id":"robium@robium","version":"0.5.0","enabled":false}]' } };
   const results = await runChecks({ exec: fakeExec(table), platform: 'linux', arch: 'x64', env: {} });
   const plugin = results.find((r) => r.id === 'claude-plugin');
   assert.equal(plugin.status, 'warn');

@@ -8,6 +8,7 @@ import { AGENTS, LABEL } from './setup.js';
 import { isManagedSkill } from './managedSkills.js';
 export { removeManagedSkills } from './removeManagedSkills.js';
 import { removeManagedSkills } from './removeManagedSkills.js';
+import { cursorPluginPath, isManagedCursorPlugin, removeCursorPlugin } from './cursorPlugin.js';
 
 async function exists(target) {
   try { await lstat(target); return true; } catch { return false; }
@@ -54,6 +55,9 @@ export async function remove({
         targets.push(candidate);
       }
     }
+    if (!targets.includes('cursor') && await isManagedCursorPlugin(cursorPluginPath(home))) {
+      targets.push('cursor');
+    }
   }
 
   if (!targets.length) {
@@ -77,9 +81,11 @@ export async function remove({
       });
       mergeResult(result, legacy);
     } else {
-      result = await removeManagedSkills({
-        targetDir: path.join(home, `.${target}`, 'skills'),
+      result = await removeCursorPlugin({ home });
+      const legacy = await removeManagedSkills({
+        targetDir: path.join(home, '.cursor', 'skills'),
       });
+      mergeResult(result, legacy);
     }
     mergeResult(total, result);
     const removed = result.removed.length

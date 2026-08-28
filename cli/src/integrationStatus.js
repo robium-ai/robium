@@ -2,6 +2,7 @@ import path from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { findCodexRobiumPlugin, findRobiumPlugin } from './plugins.js';
 import { listManagedSkills } from './managedSkills.js';
+import { inspectCursorPlugin } from './cursorPlugin.js';
 
 let packageInfoPromise;
 
@@ -174,7 +175,11 @@ export async function inspectGeminiIntegration({
   };
 }
 
-export async function inspectCursorIntegration({ home, skillVersions } = {}) {
+export async function inspectCursorIntegration({ home, expectedPluginVersion, skillVersions } = {}) {
+  const plugin = await inspectCursorPlugin({ home, expectedVersion: expectedPluginVersion });
+  if (plugin.state !== 'missing') return plugin;
+
+  // setup <=0.10 installed skill links only; retain detection for migration.
   const managed = await listManagedSkills(path.join(home, '.cursor', 'skills'));
   if (!managed.length) return { state: 'missing', outdated: false, apiAvailable: false };
   return {

@@ -28,7 +28,7 @@ function agentExec(present) {
     }
     if (present.includes('gemini') && cmd === 'gemini' && args[0] === 'extensions') {
       if (args[1] === 'list') {
-        return { ok: true, code: 0, stdout: '[{"name":"robium","version":"0.4.0","isActive":true}]', stderr: '' };
+        return { ok: true, code: 0, stdout: '[{"name":"robium","version":"0.5.0","isActive":true}]', stderr: '' };
       }
       return { ok: true, code: 0, stdout: '', stderr: '' };
     }
@@ -48,6 +48,16 @@ async function makeFixtures() {
   await writeFile(path.join(repo, '.claude-plugin', 'plugin.json'), '{}');
   await mkdir(path.join(repo, '.codex-plugin'), { recursive: true });
   await writeFile(path.join(repo, '.codex-plugin', 'plugin.json'), '{}');
+  await mkdir(path.join(repo, '.cursor-plugin'), { recursive: true });
+  await writeFile(path.join(repo, '.cursor-plugin', 'plugin.json'), '{"name":"robium","version":"0.5.0"}');
+  await mkdir(path.join(repo, 'agents'), { recursive: true });
+  await writeFile(path.join(repo, 'agents', 'robium-architect.md'), '---\nname: robium-architect\ndescription: test\n---\n');
+  await mkdir(path.join(repo, 'hooks'), { recursive: true });
+  await writeFile(path.join(repo, 'hooks', 'cursor-hooks.json'), '{"version":1,"hooks":{}}');
+  await mkdir(path.join(repo, 'scripts', 'engine'), { recursive: true });
+  await writeFile(path.join(repo, 'scripts', 'engine', 'prune_transcripts.py'), '');
+  await mkdir(path.join(repo, 'assets', 'brand'), { recursive: true });
+  await writeFile(path.join(repo, 'assets', 'brand', 'robium-lockup.png'), 'png');
   for (const name of ['ros2', 'gazebo']) {
     await mkdir(path.join(repo, 'skills', name, 'references'), { recursive: true });
     await writeFile(path.join(repo, 'skills', name, 'SKILL.md'), `---\nname: ${name}\nversion: 1.0.0\ndescription: test\n---\nbody\n`);
@@ -155,14 +165,52 @@ test('linkSkills: robium symlink replaced; foreign symlink skipped; broken repla
   await rm(fx.base, { recursive: true, force: true });
 });
 
-test('setup --copy: real dirs with marker, sourced from the checkout', async () => {
+test('setup --copy: installs a marked native Cursor plugin copy', async () => {
   const fx = await makeFixtures();
   const { exec } = agentExec(['cursor-agent']);
   const code = await setup(opts(fx, { exec, copy: true }));
   assert.equal(code, 0);
-  const dest = path.join(fx.home, '.cursor', 'skills', 'ros2');
+  const dest = path.join(fx.home, '.cursor', 'plugins', 'local', 'robium');
   assert.ok(!(await lstat(dest)).isSymbolicLink());
   assert.match(await readFile(path.join(dest, '.robium-managed'), 'utf8'), /robium-ai/);
+  assert.ok(await exists(path.join(dest, 'skills', 'ros2', 'SKILL.md')));
+  assert.ok(await exists(path.join(dest, 'hooks', 'cursor-hooks.json')));
+  await rm(fx.base, { recursive: true, force: true });
+});
+
+test('setup: Cursor links the native plugin and migrates only managed legacy skills', async () => {
+  const fx = await makeFixtures();
+  const legacy = path.join(fx.home, '.cursor', 'skills');
+  await mkdir(legacy, { recursive: true });
+  await symlink(path.join(fx.src, 'ros2'), path.join(legacy, 'ros2'), 'dir');
+  await mkdir(path.join(legacy, 'foreign'));
+  await writeFile(path.join(legacy, 'foreign', 'SKILL.md'), 'keep me\n');
+  const { exec } = agentExec(['cursor-agent']);
+
+  assert.equal(await setup(opts(fx, { exec, agent: 'cursor' })), 0);
+  const plugin = path.join(fx.home, '.cursor', 'plugins', 'local', 'robium');
+  assert.equal(await readlink(plugin), fx.repo);
+  assert.ok(!(await exists(path.join(legacy, 'ros2'))));
+  assert.equal(await readFile(path.join(legacy, 'foreign', 'SKILL.md'), 'utf8'), 'keep me\n');
+  await rm(fx.base, { recursive: true, force: true });
+});
+
+test('setup: Cursor refuses to replace a foreign local plugin', async () => {
+  const fx = await makeFixtures();
+  const plugin = path.join(fx.home, '.cursor', 'plugins', 'local', 'robium');
+  await mkdir(path.join(plugin, '.cursor-plugin'), { recursive: true });
+  await writeFile(path.join(plugin, '.cursor-plugin', 'plugin.json'), '{"name":"someone-else"}');
+  const { exec } = agentExec(['cursor-agent']);
+  let message = '';
+
+  assert.equal(await setup(opts(fx, {
+    exec, agent: 'cursor', error: (line) => { message += `${line}\n`; },
+  })), 1);
+  assert.match(message, /not managed by Robium/);
+  assert.equal(
+    JSON.parse(await readFile(path.join(plugin, '.cursor-plugin', 'plugin.json'), 'utf8')).name,
+    'someone-else',
+  );
   await rm(fx.base, { recursive: true, force: true });
 });
 
@@ -192,7 +240,7 @@ test('setup: Gemini confirms the native extension is active', async () => {
     if (command === 'gemini' && args.join(' ') === 'extensions list --output-format json') {
       return {
         ok: true, code: 0, stderr: '',
-        stdout: '[{"name":"robium","version":"0.4.0","isActive":true}]',
+        stdout: '[{"name":"robium","version":"0.5.0","isActive":true}]',
       };
     }
     return base.exec(command, args);

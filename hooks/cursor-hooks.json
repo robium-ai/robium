@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeSubmitPrompt": [
+      {
+        "command": "node \"./hooks/scripts/cursor_hook.mjs\" user-prompt-submit"
+      }
+    ],
+    "afterShellExecution": [
+      {
+        "command": "node \"./hooks/scripts/cursor_hook.mjs\" post-tool-use"
+      }
+    ],
+    "sessionStart": [
+      {
+        "command": "node \"./hooks/scripts/cursor_hook.mjs\" session-start"
+      }
+    ],
+    "sessionEnd": [
+      {
+        "command": "node \"./hooks/scripts/cursor_hook.mjs\" session-end"
+      }
+    ]
+  }
+}

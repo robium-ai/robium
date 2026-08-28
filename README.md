@@ -44,7 +44,7 @@ use for contributions. Choose another location with `--dir`, for example
 | Claude Code | Native Claude plugin | Robium checkout; Claude caches released plugins |
 | Codex | Native OpenAI plugin | Robium checkout; Codex caches installed plugins |
 | Gemini CLI | Native extension: skills, architect subagent, capture hooks | Linked Robium checkout |
-| Cursor | Native Agent Skills | Links to the checkout |
+| Cursor | Native Cursor plugin: skills, architect agent, capture hooks | Linked Robium checkout |
 
 Codex Desktop is detected on macOS even when its bundled `codex` executable
 is not on your shell `PATH`.
@@ -71,7 +71,7 @@ codex plugin marketplace add ~/robium && codex plugin add robium@robium
 # Gemini CLI: extension with automatic updates
 gemini extensions install https://github.com/robium-ai/robium --auto-update
 
-# Cursor: standard Agent Skills linked from the checkout
+# Cursor: local native plugin linked from the checkout
 npx robium-ai setup --agent cursor --dir ~/robium
 ```
 
@@ -79,8 +79,9 @@ The repository remains the source of truth. `npx robium-ai update` pulls it,
 repairs skill links, and refreshes native plugin installations. Start a new
 agent session after a native plugin update.
 
-Gemini-specific install, update, removal, permission, and fail-open details are
-in [docs/gemini-cli.md](./docs/gemini-cli.md).
+Host-specific install, update, removal, permission, and fail-open details are
+in [docs/gemini-cli.md](./docs/gemini-cli.md) and
+[docs/cursor.md](./docs/cursor.md).
 
 Your application stays in its own repository; Robium lives beside it. Use the
 reference apps as starting points and contribute reusable fixes back.
@@ -104,8 +105,9 @@ robium/
 ├── agents/          robium-architect: researches the stack, writes your brief
 ├── .claude-plugin/  Claude Code package
 ├── .codex-plugin/   Codex package manifest
+├── .cursor-plugin/  Cursor-native package manifest
 ├── .agents/plugins/ Codex-native repository marketplace
-├── hooks/           shared host hooks plus Gemini's native event adapter
+├── hooks/           shared hooks plus Gemini and Cursor event adapters
 ├── AGENTS.md        canonical Codex-native maintainer guidance
 ├── gemini-extension.json  Gemini CLI extension
 ├── learnings/       field evidence from real builds, input to the learning loop

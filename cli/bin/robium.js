@@ -27,7 +27,7 @@ Usage:
 Setup options:
   --agent <name>   Target one agent instead of auto-detecting
   --dir <path>     Where to clone/find the robium repo (default ~/robium)
-  --copy           Copy skills from the repo instead of symlinking
+  --copy           Copy integration files instead of symlinking
   -y, --yes        No prompts; accept defaults
 
 Options:

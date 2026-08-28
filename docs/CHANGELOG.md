@@ -51,6 +51,18 @@ reported honestly as activation-unknown because it has no supported status API.
 Outdated native plugins and managed skills receive host-specific update and
 new-session guidance, while unavailable detection APIs remain non-destructive.
 
+CLI 0.11.0 makes Cursor a first-class native client. The Cursor Plugin bundles
+all skills, the Robium architect agent, and a dedicated version-1 Cursor hook
+configuration. Setup uses Cursor's supported local-plugin directory, migrates
+legacy managed skill links, preserves foreign paths, and supports linked or
+marked-copy installs. Doctor verifies the on-disk plugin version without
+claiming activation Cursor cannot expose; removal reverses only Robium-managed
+artifacts. Cursor-native prompt, shell, session-start, and session-end payloads
+are normalized by a cross-platform fail-open adapter, with Linux, macOS, and
+Windows tests. Marketplace metadata and operational documentation cover local
+imports, workspace trust, Cloud Agent limits, review, and precedence. Plugin
+manifests are 0.5.0.
+
 CLI 0.10.0 makes Gemini CLI a first-class native client. The Gemini extension
 now bundles all skills, the Robium architect subagent, and host-native
 BeforeAgent, AfterTool, SessionStart, and SessionEnd capture adapters. Setup

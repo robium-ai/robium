@@ -21,6 +21,8 @@ async function fixture() {
   await mkdir(path.join(repo, '.codex-plugin'), { recursive: true });
   await writeFile(path.join(repo, '.claude-plugin', 'plugin.json'), '{}');
   await writeFile(path.join(repo, '.codex-plugin', 'plugin.json'), '{}');
+  await mkdir(path.join(repo, '.cursor-plugin'), { recursive: true });
+  await writeFile(path.join(repo, '.cursor-plugin', 'plugin.json'), '{"name":"robium","version":"0.5.0"}');
   for (const name of ['ros2', 'gazebo']) {
     await mkdir(path.join(repo, 'skills', name), { recursive: true });
     await writeFile(path.join(repo, 'skills', name, 'SKILL.md'), `name: ${name}\n`);
@@ -51,7 +53,7 @@ function fullExec() {
       return { ok: true, code: 0, stdout: '{"marketplaces":[{"name":"robium"}]}', stderr: '' };
     }
     if (key === 'gemini extensions list --output-format json') {
-      return { ok: true, code: 0, stdout: '[{"name":"robium","version":"0.4.0","isActive":true}]', stderr: '' };
+      return { ok: true, code: 0, stdout: '[{"name":"robium","version":"0.5.0","isActive":true}]', stderr: '' };
     }
     if (args[0] === 'extensions') return { ok: true, code: 0, stdout: '', stderr: '' };
     if (args[0] === 'plugin') return { ok: true, code: 0, stdout: '', stderr: '' };
@@ -93,7 +95,7 @@ test('remove reverses every supported setup integration and preserves checkout',
     exec, home: fx.home, cwd: fx.repo, log: () => {}, error: () => {},
   }), 0);
   assert.ok(calls.includes(`gemini extensions link ${fx.repo} --consent`));
-  assert.ok(await exists(path.join(fx.home, '.cursor', 'skills', 'ros2')));
+  assert.ok(await exists(path.join(fx.home, '.cursor', 'plugins', 'local', 'robium')));
 
   let output = '';
   const code = await remove({
@@ -105,7 +107,7 @@ test('remove reverses every supported setup integration and preserves checkout',
   assert.ok(calls.includes('codex plugin remove robium@robium --json'));
   assert.ok(calls.includes('codex plugin marketplace remove robium --json'));
   assert.ok(calls.includes('gemini extensions uninstall robium'));
-  assert.ok(!(await exists(path.join(fx.home, '.cursor', 'skills', 'ros2'))));
+  assert.ok(!(await exists(path.join(fx.home, '.cursor', 'plugins', 'local', 'robium'))));
   assert.ok(await exists(fx.repo));
   assert.match(output, /checkout was preserved/);
   await rm(fx.base, { recursive: true, force: true });
@@ -154,5 +156,19 @@ test('remove rejects unknown agents without touching files', async () => {
   assert.equal(code, 1);
   assert.match(message, /Unknown agent/);
   assert.ok(await exists(fx.repo));
+  await rm(fx.base, { recursive: true, force: true });
+});
+
+test('remove preserves a foreign plugin at the Cursor local path', async () => {
+  const fx = await fixture();
+  const plugin = path.join(fx.home, '.cursor', 'plugins', 'local', 'robium');
+  await mkdir(path.join(plugin, '.cursor-plugin'), { recursive: true });
+  await writeFile(path.join(plugin, '.cursor-plugin', 'plugin.json'), '{"name":"someone-else"}');
+  const exec = async () => ({ ok: false, code: 1, stdout: '', stderr: 'missing' });
+
+  assert.equal(await remove({
+    agent: 'cursor', exec, home: fx.home, log: () => {}, error: () => {},
+  }), 0);
+  assert.ok(await exists(plugin));
   await rm(fx.base, { recursive: true, force: true });
 });

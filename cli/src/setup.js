@@ -4,6 +4,7 @@ import { cp, lstat, mkdir, readdir, realpath, rm, stat, symlink, writeFile } fro
 import { run } from './exec.js';
 import { installClaude, installCodex, installGemini } from './install.js';
 import { removeManagedSkills } from './removeManagedSkills.js';
+import { installCursorPlugin } from './cursorPlugin.js';
 import { resolveRepo } from './repo.js';
 import { detectAgentSupport } from './agentCommands.js';
 import {
@@ -19,8 +20,7 @@ import {
   integrationVersions,
 } from './integrationStatus.js';
 
-// Claude Code, Codex, and Gemini install native bundles served from the clone.
-// Cursor receives Agent Skills symlinks in its user directory.
+// Every supported host installs a native bundle served from the checkout.
 export const AGENTS = ['claude', 'codex', 'gemini', 'cursor'];
 
 export const LABEL = {
@@ -97,7 +97,7 @@ const REFRESH_HINT = {
   claude: 'Start a new Claude Code session to load the installed plugin.',
   codex: 'Start a new Codex task to load the installed plugin.',
   gemini: 'Start a new Gemini session to load the extension.',
-  cursor: 'Start a new Cursor chat to load the installed skills.',
+  cursor: 'Reload the Cursor window, then confirm Robium under Customize.',
 };
 
 async function isFile(target) {
@@ -127,7 +127,7 @@ async function verifyIntegration({ target, support, exec, home, versions }) {
       skillVersions: versions.skills,
     });
   }
-  return inspectCursorIntegration({ home, skillVersions: versions.skills });
+  return inspectCursorIntegration({ home, expectedPluginVersion: versions.plugin, skillVersions: versions.skills });
 }
 
 export async function setup({
@@ -159,7 +159,7 @@ export async function setup({
   if (!agent) {
     log(`✓ Detected: ${targets.map((a) => LABEL[a]).join(', ')}`);
   } else if (!detected.includes(agent)) {
-    log(`! ${LABEL[agent]} not detected; installing its skills anyway.`);
+    log(`! ${LABEL[agent]} not detected; installing its integration anyway.`);
   }
 
   const repoOpts = { exec, home, cwd, dir, yes, log, error };
@@ -204,22 +204,26 @@ export async function setup({
     }
   }
 
-  const skillTargets = targets.filter((a) => a === 'cursor');
-  for (const target of skillTargets) {
-    const targetDir = path.join(home, '.cursor', 'skills');
+  if (targets.includes('cursor')) {
     try {
-      const { linked, copied } = await linkSkills({
-        src: path.join(repo, 'skills'),
-        targetDir,
-        copyMode: copy,
-        version: await cliVersion(),
-        log,
+      const installed = await installCursorPlugin({
+        repo, home, copyMode: copy, platform, version: await cliVersion(),
       });
-      const how = [linked && `${linked} linked`, copied && `${copied} copied`].filter(Boolean).join(', ');
-      log(`✓ Agent Skills installed to ${path.join('~', '.cursor', 'skills')} (${how || 'up to date'})`);
-      log(`  Read natively by ${LABEL[target]}; git pull in the repo updates them.`);
+      log(`✓ Cursor plugin ${installed.mode} at ${installed.target}`);
+      log('  Cursor now loads Robium skills, the architect agent, and capture hooks as one plugin.');
+
+      // Migrate setup <=0.10 without touching foreign user skills.
+      const legacy = await removeManagedSkills({
+        targetDir: path.join(home, '.cursor', 'skills'),
+      });
+      if (legacy.errors.length) {
+        for (const item of legacy.errors) error(`✗ Could not remove legacy Cursor skill: ${item}`);
+        failed = true;
+      } else if (legacy.removed.length) {
+        log(`✓ Removed ${legacy.removed.length} legacy Cursor skill link(s); the plugin now owns discovery.`);
+      }
     } catch (e) {
-      error(`✗ Could not install skills for ${LABEL[target]}: ${e.message}`);
+      error(`✗ Could not install the Cursor plugin: ${e.message}`);
       failed = true;
     }
   }
