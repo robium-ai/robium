@@ -148,6 +148,7 @@ def run_for_skill(skill, skills_dir, repo_root, date):
                 "file": rel,
                 "find": _STATUS_UNVERIFIED,
                 "replace": replace,
+                "status_only": True,
                 "reason": f"deep-verify-{task_name}",
             })
             passed.append({"skill": skill, "file": rel, "task": task_name})

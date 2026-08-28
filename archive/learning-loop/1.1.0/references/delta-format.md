@@ -39,7 +39,6 @@ deltas:
     file: examples/costmap.yaml   # path stays inside the skill dir
     find: "status: unverified"
     replace: "status: verified (2026-08-27, robium-apps/robot-navigation)"
-    status_only: true             # marker/evidence only; no instruction change
     reason: obs-nav2-013
 bump: {nav2: minor}         # optional per-skill override: build|minor|major
 evals_confirmed: []         # skills whose major bump has had evals.yaml re-confirmed
@@ -82,10 +81,7 @@ destination.
   (`file` + `find` + `replace`, no anchor) does a plain find/replace inside
   another file in the same skill directory, e.g. promoting an example's
   `status: unverified` marker. The path is resolved with `os.path.realpath`
-  and refused if it would escape the skill directory. Set `status_only: true`
-  only when the change is strictly a marker or evidence update and does not
-  add, remove, or alter instructions. Omit it for guidance changes; ambiguous
-  annotations deliberately default to guidance changes.
+  and refused if it would escape the skill directory.
 
 ## Refusals vs no-ops
 
@@ -109,14 +105,10 @@ nothing on either side is written unless every side is clean.
 
 ## Bump inference and the changelog
 
-Each applied operation contributes a required bump. An `annotate` operation
-with `status_only: true` contributes **build**; add/update/move/retire and
-guidance-changing or unclassified annotations contribute **minor**. A mixed
-batch chooses the highest required bump, so one guidance change makes the
-batch minor even when every sibling is status-only. **Major** is only reachable
-via the `bump:` override, and is itself refused unless the skill appears in
-`evals_confirmed`. An override can raise the inferred level but cannot lower
-it. The changelog line is inserted directly below
+Any batch where an add/update/move/retire actually applied bumps **minor**;
+a batch where only `annotate` ops applied bumps **build**; **major** is only
+reachable via the `bump:` override, and is itself refused unless the skill
+appears in `evals_confirmed`. The changelog line is inserted directly below
 the `## Changelog` heading (any blank lines or the standing
 `<!-- One dated line per battle-tested change... -->` convention comment
 already there are skipped over first, so the new entry lands right after

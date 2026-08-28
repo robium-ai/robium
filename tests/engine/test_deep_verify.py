@@ -67,6 +67,7 @@ def test_run_for_skill_pass_emits_exactly_one_annotate_op(tmp_path):
         "file": "examples/x.py",
         "find": "status: unverified",
         "replace": "status: verified 2026-08-05 (deep-verify: x-runs)",
+        "status_only": True,
         "reason": "deep-verify-x-runs",
     }
     assert res["passed"] == [{"skill": "nav2", "file": "examples/x.py", "task": "x-runs"}]

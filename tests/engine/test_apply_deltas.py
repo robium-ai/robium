@@ -323,12 +323,13 @@ def test_annotate_file_marker(tmp_path):
                           "file": "examples/x.yaml",
                           "find": "status: unverified",
                           "replace": "status: verified 2026-08-05",
+                          "status_only": True,
                           "reason": "obs-nav2-005"}])
     assert "verified 2026-08-05" in (d / "examples" / "x.yaml").read_text()
     assert rep["skills_bumped"]["nav2"] == ("1.2.3", "1.2.4")  # build bump
 
 
-def test_annotate_file_targeting_own_skill_md_bumps_and_persists(tmp_path):
+def test_guidance_annotation_targeting_own_skill_md_bumps_minor_and_persists(tmp_path):
     # Regression: annotate+file targeting the skill's OWN SKILL.md used to
     # have its find/replace correctly applied, but a stale disk-read write
     # (file_effects, computed before the bump) unconditionally overwrote
@@ -347,9 +348,62 @@ def test_annotate_file_targeting_own_skill_md_bumps_and_persists(tmp_path):
     }])
     text = (d / "SKILL.md").read_text()
     assert "Corrected pattern text." in text
-    assert rep["skills_bumped"]["nav2"] == ("1.2.3", "1.2.4")  # build bump
-    assert "version: 1.2.4" in text
-    assert "1.2.4 (2026-08-05)" in text  # changelog line actually landed
+    assert rep["skills_bumped"]["nav2"] == ("1.2.3", "1.3.0")
+    assert "version: 1.3.0" in text
+    assert "1.3.0 (2026-08-05)" in text  # changelog line actually landed
+
+
+def test_status_only_anchor_annotation_bumps_build(tmp_path):
+    d = mk_skill(tmp_path)
+    rep = run(tmp_path, [{
+        "skill": "nav2", "op": "annotate", "anchor": "existing-pattern",
+        "content": (
+            "- Existing pattern. Verified 2026-08-05. "
+            "<!-- id: existing-pattern -->\n"
+        ),
+        "status_only": True,
+        "reason": "deep-verify-existing-pattern",
+    }])
+    text = (d / "SKILL.md").read_text()
+    assert "Verified 2026-08-05" in text
+    assert rep["skills_bumped"]["nav2"] == ("1.2.3", "1.2.4")
+
+
+def test_mixed_status_and_guidance_annotations_choose_minor(tmp_path):
+    d = mk_skill(tmp_path)
+    (d / "examples").mkdir()
+    (d / "examples" / "x.yaml").write_text("# status: unverified\nkey: v\n")
+    rep = run(tmp_path, [
+        {"skill": "nav2", "op": "annotate", "file": "examples/x.yaml",
+         "find": "status: unverified", "replace": "status: verified 2026-08-05",
+         "status_only": True, "reason": "deep-verify-x"},
+        {"skill": "nav2", "op": "annotate", "anchor": "existing-pattern",
+         "content": "- New user guidance. <!-- id: existing-pattern -->\n",
+         "reason": "obs-nav2-011"},
+    ])
+    assert rep["skills_bumped"]["nav2"] == ("1.2.3", "1.3.0")
+
+
+def test_override_can_raise_but_not_lower_required_bump(tmp_path):
+    d = mk_skill(tmp_path)
+    rep = run(tmp_path, [{
+        "skill": "nav2", "op": "annotate", "anchor": "existing-pattern",
+        "content": "- New user guidance. <!-- id: existing-pattern -->\n",
+        "reason": "obs-nav2-012",
+    }], bump={"nav2": "build"})
+    assert rep["skills_bumped"]["nav2"] == ("1.2.3", "1.3.0")
+
+    # Use a fresh fixture because the first apply consumed this version's
+    # archive slot and changed the live version.
+    other = mk_skill(tmp_path, "ros2")
+    (other / "examples").mkdir()
+    (other / "examples" / "x.yaml").write_text("status: unverified\n")
+    rep = run(tmp_path, [{
+        "skill": "ros2", "op": "annotate", "file": "examples/x.yaml",
+        "find": "status: unverified", "replace": "status: verified",
+        "status_only": True, "reason": "deep-verify-x",
+    }], bump={"ros2": "minor"})
+    assert rep["skills_bumped"]["ros2"] == ("1.2.3", "1.3.0")
 
 
 def test_annotate_file_own_skill_md_composes_with_sibling_anchor_op(tmp_path):

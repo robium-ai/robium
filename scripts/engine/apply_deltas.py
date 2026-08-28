@@ -36,8 +36,9 @@ here:
   - annotate with file/find/replace (no anchor): a plain find/replace in
     a file elsewhere in the skill directory (e.g. promoting an example's
     `status: unverified` marker). Path is resolved with os.path.realpath
-    and must stay inside the skill directory. Counts as a build-level
-    change for bump-kind purposes, same as anchor-annotate.
+    and must stay inside the skill directory. An annotation counts as a
+    build-level change only when it explicitly sets `status_only: true`;
+    annotations that add or change user-facing guidance count as minor.
 
 Also here: the co-evolving-evals rule (a `major` bump — reachable only via
 an explicit `bump:` override — is refused unless the skill is listed in
@@ -63,6 +64,7 @@ _ANCHOR_ID_RE = re.compile(r"<!-- id: ([a-z0-9][a-z0-9-]*) -->")
 _VER_RE = re.compile(r"^version:\s*(\d+)\.(\d+)\.(\d+)\s*$")
 _OBS_ID_RE = re.compile(r"^obs-(.+)-\d{3}$")
 BODY_CAP = 500
+_BUMP_RANK = {"build": 0, "minor": 1, "major": 2}
 
 
 def find_anchor_block(lines, anchor):
@@ -171,6 +173,29 @@ def bump_version(ver, kind):
     if kind == "minor":
         return f"{major}.{minor + 1}.0"
     return f"{major}.{minor}.{build + 1}"
+
+
+def _infer_bump_kind(ops):
+    """Return the highest bump required by the applied operations.
+
+    Status-only annotations are verification markers or evidence metadata
+    that do not change instructions. Every other operation, including an
+    unclassified annotation, changes or may change user-facing guidance and
+    therefore requires a minor bump. Defaulting ambiguity upward prevents a
+    substantive edit from being mislabeled as a build-only correction.
+    """
+    return "build" if all(
+        op.get("op") == "annotate" and op.get("status_only") is True
+        for op in ops
+    ) else "minor"
+
+
+def _select_bump_kind(ops, override=None):
+    """Select the higher of the inferred requirement and an override."""
+    inferred = _infer_bump_kind(ops)
+    if override is None:
+        return inferred
+    return max((inferred, override), key=_BUMP_RANK.__getitem__)
 
 
 def _body_line_count(lines):
@@ -426,7 +451,7 @@ def apply_file(deltas_path, skills_dir="skills", archive_dir="archive",
                 report["refused"].append(_item(op, f"archive {snap} exists — bump upstream first"))
             continue
 
-        working, applied_here, kinds = lines, [], set()
+        working, applied_here = lines, []
         log_ops = []  # parallel to applied_here; changelog-safe op descriptions
         pending = {"applied": [], "noop": [], "refused": []}
         retire_anchors = []
@@ -445,7 +470,6 @@ def apply_file(deltas_path, skills_dir="skills", archive_dir="archive",
                 else:
                     working = new_lines
                     applied_here.append(op)
-                    kinds.add("retire")
                     pending["applied"].append(_item(op, "applied"))
                     retire_anchors.append(op["anchor"])
                     log_ops.append(op)
@@ -497,7 +521,6 @@ def apply_file(deltas_path, skills_dir="skills", archive_dir="archive",
                 buf["moves"].append({"anchor": anchor, "reason": op.get("reason")})
                 dest_buffers[to_skill] = buf
                 applied_here.append(op)
-                kinds.add("move")
                 pending["applied"].append(_item(op, "applied"))
                 log_ops.append({"op": "move-out", "anchor": f"{anchor} to {to_skill}",
                                 "reason": op.get("reason")})
@@ -517,7 +540,6 @@ def apply_file(deltas_path, skills_dir="skills", archive_dir="archive",
                     else:
                         working = new_lines
                         applied_here.append(op)
-                        kinds.add("annotate")
                         pending["applied"].append(_item(op, "applied"))
                         log_ops.append(op)
                     continue
@@ -528,7 +550,6 @@ def apply_file(deltas_path, skills_dir="skills", archive_dir="archive",
                     pending["refused"].append(_item(op, note))
                 else:
                     applied_here.append(op)
-                    kinds.add("annotate")
                     pending["applied"].append(_item(op, "applied"))
                     file_effects.append({"path": path, "content": content})
                     log_ops.append(op)
@@ -538,7 +559,6 @@ def apply_file(deltas_path, skills_dir="skills", archive_dir="archive",
             if new is not None:
                 working = new
                 applied_here.append(op)
-                kinds.add(op["op"])
                 pending["applied"].append(_item(op, "applied"))
                 log_ops.append(op)
 
@@ -555,8 +575,7 @@ def apply_file(deltas_path, skills_dir="skills", archive_dir="archive",
                 report[k].extend(pending[k])
             continue
 
-        bump_kind = overrides.get(skill) or (
-            "build" if kinds <= {"annotate"} else "minor")
+        bump_kind = _select_bump_kind(applied_here, overrides.get(skill))
 
         # Co-evolving-evals rule: a major bump requires the skill to be
         # listed in evals_confirmed, checked after bump-kind resolution.
@@ -586,7 +605,8 @@ def apply_file(deltas_path, skills_dir="skills", archive_dir="archive",
         # unless every side is clean.
         dest_breach = None
         for to_skill, buf in dest_buffers.items():
-            dest_bump_kind = overrides.get(to_skill) or "minor"
+            dest_bump_kind = _select_bump_kind(
+                [{"op": "move"}], overrides.get(to_skill))
             if dest_bump_kind == "major" and to_skill not in evals_confirmed:
                 dest_breach = "major bump without evals_confirmed (co-evolving-evals rule)"
                 break

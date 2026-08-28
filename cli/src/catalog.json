@@ -53,7 +53,7 @@
     },
     {
       "name": "learning-loop",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "description": "Robium's explicit learning engine: consolidate capture-only queue flags and transcript evidence into observations; absorb ready observations through deterministic anchor-targeted skill deltas; refine, A/B contested edits, deep-verify examples, prune landed transcript evidence, and report loop health. Use when: \"consolidate\", \"absorb\", \"run the loop\", \"update my skills\", \"refine the skills\", \"learning loop status\", \"A/B this edit\", \"deep verify\", or \"clean transcripts\". Never recalls or injects observations into new prompts. Not for external-repo mining, fresh skill authoring, or app implementation."
     },
     {

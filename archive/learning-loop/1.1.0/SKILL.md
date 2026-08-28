@@ -1,6 +1,6 @@
 ---
 name: learning-loop
-version: 1.2.0
+version: 1.1.0
 description: >
   Robium's explicit learning engine: consolidate capture-only queue flags and
   transcript evidence into observations; absorb ready observations through
@@ -202,9 +202,6 @@ unreferenced files older than 14 days. Review the report before `--apply`.
   run_task_checks, skill_metrics, mine_transcripts, and prune_transcripts.
 
 ## Changelog
-
-- 1.2.0 (2026-08-27): distinguish status-only annotations from guidance
-  changes so delta batches select the highest required version bump.
 
 - 1.1.0 (2026-08-27): harden engine task execution and invalid-input handling,
   clean owned variant workdirs, normalize delta block spacing, and document the
