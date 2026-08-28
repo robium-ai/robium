@@ -24,6 +24,15 @@ what this guide walks through. App and infrastructure work follows the mode
 rules in `AGENTS.md`; open an issue first so we can point you at the right
 starting app.
 
+If you installed Robium with `npx robium-ai setup`, you already have a Git
+checkout and do not need to clone again:
+
+```bash
+cd ~/robium                       # or the path supplied with --dir
+./scripts/bootstrap.sh
+git switch -c my-skill-fix
+```
+
 ## Contribute a skill in five steps
 
 ### 1. Pick a tool you know
@@ -93,12 +102,12 @@ reviews enforce:
 - **Backticks are for local files only.** Backtick a path only when the file
   lives inside your own skill's directory; another skill's file is prose.
 
-### 4. Pass the validator
+### 4. Run the checks
 
-The validator is the pre-PR check. It must print a PASS line and exit 0:
+One command validates the skills, plugin manifests, and CLI tests:
 
 ```bash
-uv run skills/skill-author/scripts/validate_skills.py
+./scripts/check.sh
 ```
 
 Expected output:
@@ -107,19 +116,12 @@ Expected output:
 Checked 25 skills: PASS
 ```
 
-(The count goes up by one when you add a skill.) The validator enforces the
+(The count goes up by one when you add a skill.) The skill validator enforces the
 mechanical rules: frontmatter fields, version format, section presence, body
 line count, and that every backtick-quoted `references/`, `scripts/`, or
 `examples/` path actually exists. The judgment items in the quality bar
 (is the description a good trigger surface? is the delegation posture right?)
 are checked by a human in review.
-
-Manifest sanity check, if you touched either agent plugin manifest or the
-shared hooks configuration:
-
-```bash
-python3 -c "import json; [json.load(open(p)) for p in ('.claude-plugin/plugin.json', '.claude-plugin/marketplace.json', '.codex-plugin/plugin.json', '.agents/plugins/marketplace.json', 'hooks/hooks.json')]; print('OK')"
-```
 
 ### 5. Open a PR
 
@@ -142,9 +144,8 @@ welcome. A few extra rules apply because skills are versioned like software:
 - **Add a `## Changelog` line** starting with the new version:
   `- <new-version> (YYYY-MM-DD): <what changed and why>`.
 
-When working through Codex or Claude Code, note that the STRICT skill-update policy
-in `AGENTS.md` means skills are never edited automatically; a human always
-selects and approves the change. See
+Learning-engine absorption still opens a reviewable PR rather than merging a
+skill change automatically. See
 `skills/learning-loop/references/learnings-loop.md` for the full hardening
 process maintainers use.
 

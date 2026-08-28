@@ -2,7 +2,7 @@
 # robium dev bootstrap — run from a clone:  ./scripts/bootstrap.sh
 #
 # DEFAULT (anyone, incl. public contributors — NO secrets, NO Doppler needed):
-#   installs uv + npm deps and runs the skill validator. That's all you need to
+#   installs uv + npm deps and runs the repository check. That's all you need to
 #   author skills and work on the CLI locally.
 #     ./scripts/bootstrap.sh
 #
@@ -32,7 +32,7 @@ fi
 
 # 2) Sanity check the core dev loop works (no secrets) -----------------------
 if command -v uv >/dev/null 2>&1; then
-  say "Validating skills…"; uv run skills/skill-author/scripts/validate_skills.py || true
+  say "Running repository checks…"; ./scripts/check.sh
 fi
 # 3) Secrets (maintainer-only, opt-in) ---------------------------------------
 if [ "$WITH_SECRETS" = "1" ]; then
@@ -59,6 +59,6 @@ fi
 cat <<DONE
 
 ▸ robium ready.
-  Contribute (no secrets):  uv run skills/skill-author/scripts/validate_skills.py
+  Contribute (no secrets):  ./scripts/check.sh
   Privileged tasks:         doppler run -- <command>   (after --secrets setup)
 DONE

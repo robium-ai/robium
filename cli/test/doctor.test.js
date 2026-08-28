@@ -1,5 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import os from 'node:os';
+import path from 'node:path';
+import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import { runChecks, doctor } from '../src/doctor.js';
 
 // Fake exec keyed on "cmd arg0" prefixes; everything unlisted fails as missing.
@@ -44,6 +47,57 @@ test('doctor: Codex-only setup is healthy', async () => {
   assert.equal(results.find((r) => r.id === 'codex-plugin').status, 'pass');
   const code = await doctor({ exec: fakeExec(table), platform: 'linux', arch: 'x64', env: {}, log: () => {} });
   assert.equal(code, 0);
+});
+
+test('doctor: finds Codex Desktop when codex is not on PATH', async () => {
+  const desktop = '/Applications/ChatGPT.app/Contents/Resources/codex';
+  const table = { ...ALL_GOOD };
+  delete table['claude --version'];
+  delete table['claude plugin list'];
+  delete table['codex --version'];
+  delete table['codex plugin list'];
+  table[`${desktop} --version`] = { stdout: 'codex-cli desktop\n' };
+  table[`${desktop} plugin list`] = { stdout: '{"installed":[{"pluginId":"robium@robium","enabled":true}]}' };
+  const results = await runChecks({ exec: fakeExec(table), platform: 'darwin', arch: 'arm64', env: {}, home: '/Users/test' });
+  assert.match(results.find((r) => r.id === 'codex').detail, /Codex Desktop/);
+  assert.equal(results.find((r) => r.id === 'codex-plugin').status, 'pass');
+});
+
+test('doctor: Gemini-only setup counts as a supported coding agent', async () => {
+  const table = { ...ALL_GOOD };
+  delete table['claude --version'];
+  delete table['claude plugin list'];
+  delete table['codex --version'];
+  delete table['codex plugin list'];
+  table['gemini --version'] = { stdout: '0.30.0\n' };
+  table['gemini extensions list'] = { stdout: 'robium 0.3.0 enabled\n' };
+  const results = await runChecks({ exec: fakeExec(table), platform: 'linux', arch: 'x64', env: {}, home: '/no/such/home' });
+  assert.equal(results.find((r) => r.id === 'coding-agent').status, 'pass');
+  assert.equal(results.find((r) => r.id === 'gemini').status, 'pass');
+  assert.equal(results.find((r) => r.id === 'gemini-skills').status, 'pass');
+});
+
+test('doctor: Cursor-only setup and linked Robium skills are healthy', async () => {
+  const base = await mkdtemp(path.join(os.tmpdir(), 'robium-doctor-cursor-'));
+  const home = path.join(base, 'home');
+  const repo = path.join(base, 'robium');
+  await mkdir(path.join(repo, '.codex-plugin'), { recursive: true });
+  await writeFile(path.join(repo, '.codex-plugin', 'plugin.json'), '{}');
+  await mkdir(path.join(repo, 'skills', 'nav2'), { recursive: true });
+  await writeFile(path.join(repo, 'skills', 'nav2', 'SKILL.md'), '---\nname: nav2\ndescription: test\n---\n');
+  await mkdir(path.join(home, '.cursor', 'skills'), { recursive: true });
+  await symlink(path.join(repo, 'skills', 'nav2'), path.join(home, '.cursor', 'skills', 'nav2'), 'dir');
+  const table = { ...ALL_GOOD };
+  delete table['claude --version'];
+  delete table['claude plugin list'];
+  delete table['codex --version'];
+  delete table['codex plugin list'];
+  table['cursor-agent --version'] = { stdout: 'cursor-agent 1.0.0\n' };
+  const results = await runChecks({ exec: fakeExec(table), platform: 'linux', arch: 'x64', env: {}, home });
+  assert.equal(results.find((r) => r.id === 'coding-agent').status, 'pass');
+  assert.equal(results.find((r) => r.id === 'cursor').status, 'pass');
+  assert.equal(results.find((r) => r.id === 'cursor-skills').status, 'pass');
+  await rm(base, { recursive: true, force: true });
 });
 
 test('doctor: Claude plugin not installed → warn with install hint', async () => {

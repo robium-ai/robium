@@ -4,6 +4,7 @@ import { cp, lstat, mkdir, readdir, realpath, rm, stat, symlink, writeFile } fro
 import { run } from './exec.js';
 import { installClaude, installCodex } from './install.js';
 import { resolveRepo } from './repo.js';
+import { detectAgentSupport } from './agentCommands.js';
 
 // Claude Code and Codex install the native plugin (skills + capture hooks),
 // served from the clone. Gemini and Cursor receive Agent Skills symlinks in
@@ -23,28 +24,12 @@ const LABEL = {
 // ever clobbering someone else's same-named skill.
 const MARKER = '.robium-managed';
 
-async function isDir(p) {
-  try { return (await stat(p)).isDirectory(); } catch { return false; }
-}
 async function isFile(p) {
   try { return (await stat(p)).isFile(); } catch { return false; }
 }
 
-export async function detectAgents({ exec = run, home = homedir() } = {}) {
-  const [claude, codex, gemini, cursorAgent, cursorBin, cursorDir] = await Promise.all([
-    exec('claude', ['--version']),
-    exec('codex', ['--version']),
-    exec('gemini', ['--version']),
-    exec('cursor-agent', ['--version']),
-    exec('cursor', ['--version']),
-    isDir(path.join(home, '.cursor')),
-  ]);
-  const found = [];
-  if (claude.ok) found.push('claude');
-  if (codex.ok) found.push('codex');
-  if (gemini.ok) found.push('gemini');
-  if (cursorAgent.ok || cursorBin.ok || cursorDir) found.push('cursor');
-  return found;
+export async function detectAgents(opts = {}) {
+  return (await detectAgentSupport(opts)).agents;
 }
 
 // A path is "ours" when it resolves to a skill dir inside a robium checkout.
@@ -123,6 +108,7 @@ export async function setup({
   error = console.error,
   home = homedir(),
   cwd = process.cwd(),
+  platform = process.platform,
   interactive,
   ask,
 } = {}) {
@@ -131,7 +117,8 @@ export async function setup({
     return 1;
   }
 
-  const detected = await detectAgents({ exec, home });
+  const support = await detectAgentSupport({ exec, home, platform });
+  const detected = support.agents;
   const targets = agent ? [agent] : detected;
   if (!targets.length) {
     error(NONE_FOUND);
@@ -157,7 +144,13 @@ export async function setup({
   }
 
   if (targets.includes('codex')) {
-    const rc = await installCodex({ exec, log, error, marketplaceRef: repo });
+    const rc = await installCodex({
+      exec,
+      log,
+      error,
+      marketplaceRef: repo,
+      command: support.codex?.command ?? 'codex',
+    });
     if (rc !== 0) failed = true;
   }
 
@@ -173,8 +166,8 @@ export async function setup({
         log,
       });
       const how = [linked && `${linked} linked`, copied && `${copied} copied`].filter(Boolean).join(', ');
-      log(`✓ Skills installed to ${path.join('~', target === 'gemini' ? '.gemini' : '.cursor', 'skills')} (${how || 'up to date'})`);
-      log(`  Read automatically by ${LABEL[target]}; git pull in the repo updates them.`);
+      log(`✓ Agent Skills installed to ${path.join('~', target === 'gemini' ? '.gemini' : '.cursor', 'skills')} (${how || 'up to date'})`);
+      log(`  Read natively by ${LABEL[target]}; git pull in the repo updates them.`);
     } catch (e) {
       error(`✗ Could not install skills for ${LABEL[target]}: ${e.message}`);
       failed = true;
@@ -184,8 +177,8 @@ export async function setup({
   if (!failed) {
     log(`
 Done. The robium repo is your skill source: ${repo}
-  update:      git -C ${repo} pull && npx robium-ai setup -y
-  contribute:  edit skills there and open a PR
+  update:      npx robium-ai update
+  contribute:  cd ${repo} && ./scripts/bootstrap.sh
 
 Open your agent and try:
 

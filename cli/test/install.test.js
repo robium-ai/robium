@@ -60,6 +60,26 @@ test('installClaude: marketplace already exists → falls back to update', async
   assert.ok(calls.includes('claude plugin marketplace update robium'));
 });
 
+test('installClaude: an existing plugin is updated instead of silently reused', async () => {
+  const { exec, calls } = recordingExec({
+    ...HAPPY,
+    'claude plugin install': { ok: false, stderr: 'Plugin already installed' },
+    'claude plugin update': {},
+  });
+  assert.equal(await installClaude({ exec, log: () => {}, error: () => {} }), 0);
+  assert.ok(calls.includes('claude plugin update robium@robium --scope user'));
+});
+
+test('installClaude: enables an installed but disabled Robium plugin', async () => {
+  const { exec, calls } = recordingExec({
+    ...HAPPY,
+    'claude plugin list': { stdout: '[{"id":"robium@robium","enabled":false}]' },
+    'claude plugin enable': {},
+  });
+  assert.equal(await installClaude({ exec, log: () => {}, error: () => {} }), 0);
+  assert.ok(calls.includes('claude plugin enable robium@robium --scope user'));
+});
+
 test('installCodex: happy path runs marketplace add → plugin add → verify', async () => {
   const { exec, calls } = recordingExec(CODEX_HAPPY);
   const code = await installCodex({ exec, log: () => {}, error: () => {} });
@@ -89,4 +109,17 @@ test('installCodex: missing binary is actionable', async () => {
   const code = await installCodex({ exec, log: () => {}, error: (s) => { err += s; } });
   assert.equal(code, 1);
   assert.match(err, /setup --agent codex/);
+});
+
+test('installCodex: uses an explicitly resolved desktop command', async () => {
+  const desktop = '/Applications/ChatGPT.app/Contents/Resources/codex';
+  const { exec, calls } = recordingExec({
+    [`${desktop} --version`]: { stdout: 'codex-cli desktop\n' },
+    [`${desktop} plugin marketplace add`]: {},
+    [`${desktop} plugin add`]: {},
+    [`${desktop} plugin list`]: { stdout: '{"installed":[{"pluginId":"robium@robium","enabled":true}]}' },
+  });
+  assert.equal(await installCodex({ exec, command: desktop, log: () => {}, error: () => {} }), 0);
+  assert.ok(calls.includes(`${desktop} plugin add robium@robium --json`));
+  assert.ok(!calls.some((call) => call.startsWith('codex ')));
 });

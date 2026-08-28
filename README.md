@@ -24,15 +24,35 @@ for Claude Code, Codex, Gemini CLI, and Cursor.
 
 ## Install
 
-**Quick**: clone the repository and install the native plugin or skills for
-every supported agent detected on your machine:
+**Quick**: clone the repository once and install Robium for every supported
+agent detected on your machine:
 
 ```bash
 npx robium-ai setup                  # auto-detects your agents
 npx robium-ai setup --agent codex    # or target one
+npx robium-ai update                 # pull Robium and refresh integrations
 ```
 
-The default clone lives at `~/robium`. Target one agent with `--agent`.
+The default clone lives at `~/robium` and is a normal Git checkout you can
+use for contributions. Choose another location with `--dir`, for example
+`npx robium-ai setup --dir ~/repos/robium`.
+
+| Agent | Full Robium integration | Live skill source |
+| --- | --- | --- |
+| Claude Code | Native Claude plugin | Robium checkout; Claude caches released plugins |
+| Codex | Native OpenAI plugin | Robium checkout; Codex caches installed plugins |
+| Gemini CLI | Native Agent Skills; Gemini extension manifest included | Links to the checkout |
+| Cursor | Native Agent Skills | Links to the checkout |
+
+Codex Desktop is detected on macOS even when its bundled `codex` executable
+is not on your shell `PATH`.
+
+To install only one portable skill instead of the full Robium integration:
+
+```bash
+npx skills add robium-ai/robium -g --skill nav2 --agent codex
+npx skills update -g
+```
 
 **Native install**: clone the repository, then use your agent's own package
 flow where one is available:
@@ -49,13 +69,13 @@ codex plugin marketplace add ~/robium && codex plugin add robium@robium
 # Gemini CLI: extension with automatic updates
 gemini extensions install https://github.com/robium-ai/robium --auto-update
 
-# Cursor: versioned skills
-mkdir -p ~/.cursor/skills && ln -s ~/robium/skills/* ~/.cursor/skills/
+# Cursor: standard Agent Skills linked from the checkout
+npx robium-ai setup --agent cursor --dir ~/robium
 ```
 
-The repository remains the source of truth. Pull it to update symlink-based
-installs; for native plugins, re-run `npx robium-ai setup -y` and start a new
-session so the host refreshes its installed cache.
+The repository remains the source of truth. `npx robium-ai update` pulls it,
+repairs skill links, and refreshes native plugin installations. Start a new
+agent session after a native plugin update.
 
 Your application stays in its own repository; Robium lives beside it. Use the
 reference apps as starting points and contribute reusable fixes back.
@@ -124,10 +144,19 @@ change shape. robium is built to notice:
 ## Contributing
 
 The contribution unit is small on purpose: **one skill, no build system**.
-Pick a robotics tool you know, copy the template, pass the validator:
+If you installed Robium with `npx robium-ai setup`, reuse its checkout—do not
+clone it again:
 
 ```bash
-uv run skills/skill-author/scripts/validate_skills.py
+cd ~/robium                       # or the location supplied with --dir
+./scripts/bootstrap.sh
+git switch -c my-skill-fix
+```
+
+Pick a robotics tool you know, edit its skill, and run the repository check:
+
+```bash
+./scripts/check.sh
 ```
 
 [CONTRIBUTING.md](./CONTRIBUTING.md) has the five-step walkthrough;

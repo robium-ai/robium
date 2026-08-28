@@ -46,9 +46,8 @@ the repository that owns the output; cross-reference rather than duplicate.
 
 ```bash
 ./scripts/bootstrap.sh
-uv run skills/skill-author/scripts/validate_skills.py
+./scripts/check.sh
 uv run --with pyyaml --with pytest python -m pytest tests/engine
-python3 -c "import json; [json.load(open(p)) for p in ('.claude-plugin/plugin.json', '.claude-plugin/marketplace.json', '.codex-plugin/plugin.json', '.agents/plugins/marketplace.json', 'hooks/hooks.json')]; print('OK')"
 ```
 
 Maintainer credentials live in Doppler (`robium/dev`) and never in git. Use

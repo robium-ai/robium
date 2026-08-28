@@ -1,11 +1,56 @@
 import os from 'node:os';
+import path from 'node:path';
+import { readFile, readdir, realpath, stat } from 'node:fs/promises';
 import { run } from './exec.js';
 import { findCodexRobiumPlugin, findRobiumPlugin } from './plugins.js';
+import { detectAgentSupport } from './agentCommands.js';
 
 const GLYPH = { pass: '✓', warn: '!', fail: '✗', info: '·', skip: '-' };
+const AGENT_LABEL = {
+  claude: 'Claude Code',
+  codex: 'Codex',
+  gemini: 'Gemini CLI',
+  cursor: 'Cursor',
+};
 
-export function buildChecks({ exec = run, platform = process.platform, arch = process.arch, env = process.env } = {}) {
+async function isRobiumSkill(skillDir) {
+  try {
+    await readFile(path.join(skillDir, '.robium-managed'));
+    return true;
+  } catch { /* linked installs do not need a marker */ }
+  try {
+    const resolved = await realpath(skillDir);
+    return (await stat(path.join(resolved, '..', '..', '.codex-plugin', 'plugin.json'))).isFile();
+  } catch { return false; }
+}
+
+async function countRobiumSkills(root) {
+  let entries;
+  try { entries = await readdir(root, { withFileTypes: true }); } catch { return 0; }
+  let count = 0;
+  for (const entry of entries) {
+    if (!entry.isDirectory() && !entry.isSymbolicLink()) continue;
+    try {
+      const skillDir = path.join(root, entry.name);
+      if ((await stat(path.join(skillDir, 'SKILL.md'))).isFile() && await isRobiumSkill(skillDir)) count++;
+    } catch { /* broken or incomplete skill link */ }
+  }
+  return count;
+}
+
+export function buildChecks({
+  exec = run,
+  platform = process.platform,
+  arch = process.arch,
+  env = process.env,
+  home = os.homedir(),
+} = {}) {
   const appleSilicon = platform === 'darwin' && arch === 'arm64';
+  let supportPromise;
+  const support = () => {
+    supportPromise ??= detectAgentSupport({ exec, home, platform });
+    return supportPromise;
+  };
   return [
     {
       id: 'platform', label: 'Platform',
@@ -22,27 +67,26 @@ export function buildChecks({ exec = run, platform = process.platform, arch = pr
     {
       id: 'coding-agent', label: 'Coding agent',
       async run() {
-        const [claude, codex] = await Promise.all([
-          exec('claude', ['--version']),
-          exec('codex', ['--version']),
-        ]);
-        const found = [claude.ok && 'Claude Code', codex.ok && 'Codex'].filter(Boolean);
+        const detected = await support();
+        const found = detected.agents.map((name) => AGENT_LABEL[name]);
         return found.length
           ? { status: 'pass', detail: found.join(', ') }
-          : { status: 'fail', detail: 'neither Claude Code nor Codex found on PATH', hint: 'install one, then run: npx robium-ai setup' };
+          : { status: 'fail', detail: 'Claude Code, Codex, Gemini CLI, and Cursor were not detected', hint: 'install one, then run: npx robium-ai setup' };
       },
     },
     {
       id: 'claude', label: 'Claude Code',
       async run() {
-        const r = await exec('claude', ['--version']);
-        if (!r.ok) return { status: 'skip', detail: 'not installed (optional)' };
-        return { status: 'pass', detail: r.stdout.trim() };
+        const detected = await support();
+        if (!detected.claude) return { status: 'skip', detail: 'not installed (optional)' };
+        return { status: 'pass', detail: detected.claude.version.stdout.trim() };
       },
     },
     {
       id: 'claude-plugin', label: 'Claude plugin',
       async run() {
+        const detected = await support();
+        if (!detected.claude) return { status: 'skip', detail: 'Claude Code not installed' };
         const r = await exec('claude', ['plugin', 'list', '--json']);
         if (!r.ok) return { status: 'skip', detail: 'could not query plugin list' };
         const plugin = findRobiumPlugin(r.stdout);
@@ -56,22 +100,66 @@ export function buildChecks({ exec = run, platform = process.platform, arch = pr
     {
       id: 'codex', label: 'Codex',
       async run() {
-        const r = await exec('codex', ['--version']);
-        if (!r.ok) return { status: 'skip', detail: 'not installed (optional)' };
-        return { status: 'pass', detail: r.stdout.trim() };
+        const detected = await support();
+        if (!detected.codex) return { status: 'skip', detail: 'not installed (optional)' };
+        const suffix = detected.codex.source === 'PATH' ? '' : ` (${detected.codex.source})`;
+        return { status: 'pass', detail: `${detected.codex.version.stdout.trim()}${suffix}` };
       },
     },
     {
       id: 'codex-plugin', label: 'Codex plugin',
       async run() {
-        const ver = await exec('codex', ['--version']);
-        if (!ver.ok) return { status: 'skip', detail: 'Codex not installed' };
-        const r = await exec('codex', ['plugin', 'list', '--json']);
+        const detected = await support();
+        if (!detected.codex) return { status: 'skip', detail: 'Codex not installed' };
+        const r = await exec(detected.codex.command, ['plugin', 'list', '--json']);
         if (!r.ok) return { status: 'skip', detail: 'could not query Codex plugin list' };
         const plugin = findCodexRobiumPlugin(r.stdout);
         if (!plugin) return { status: 'warn', detail: 'not installed', hint: 'run: npx robium-ai setup --agent codex' };
         if (plugin.enabled === false) return { status: 'warn', detail: 'installed but disabled', hint: 'enable robium in the Codex plugin browser' };
         return { status: 'pass', detail: 'installed' };
+      },
+    },
+    {
+      id: 'gemini', label: 'Gemini CLI',
+      async run() {
+        const detected = await support();
+        if (!detected.gemini) return { status: 'skip', detail: 'not installed (optional)' };
+        return { status: 'pass', detail: detected.gemini.version.stdout.trim() };
+      },
+    },
+    {
+      id: 'gemini-skills', label: 'Gemini skills',
+      async run() {
+        const detected = await support();
+        if (!detected.gemini) return { status: 'skip', detail: 'Gemini CLI not installed' };
+        const extension = await exec('gemini', ['extensions', 'list']);
+        if (extension.ok && /\brobium\b/i.test(extension.stdout)) {
+          return { status: 'pass', detail: 'native Robium extension installed' };
+        }
+        const count = await countRobiumSkills(path.join(home, '.gemini', 'skills'));
+        return count
+          ? { status: 'pass', detail: `${count} Robium Agent Skills available` }
+          : { status: 'warn', detail: 'not installed', hint: 'run: npx robium-ai setup --agent gemini' };
+      },
+    },
+    {
+      id: 'cursor', label: 'Cursor',
+      async run() {
+        const detected = await support();
+        if (!detected.cursor) return { status: 'skip', detail: 'not installed (optional)' };
+        const version = detected.cursor.version?.stdout.trim();
+        return { status: 'pass', detail: version || `detected via ${detected.cursor.source}` };
+      },
+    },
+    {
+      id: 'cursor-skills', label: 'Cursor skills',
+      async run() {
+        const detected = await support();
+        if (!detected.cursor) return { status: 'skip', detail: 'Cursor not installed' };
+        const count = await countRobiumSkills(path.join(home, '.cursor', 'skills'));
+        return count
+          ? { status: 'pass', detail: `${count} Robium Agent Skills available` }
+          : { status: 'warn', detail: 'not installed', hint: 'run: npx robium-ai setup --agent cursor' };
       },
     },
     {

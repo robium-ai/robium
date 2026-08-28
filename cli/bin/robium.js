@@ -12,6 +12,8 @@ Usage:
                                          your coding agents (auto-detects:
                                          claude, codex, gemini, cursor)
   npx robium-ai install                  Alias for setup
+  npx robium-ai update [options]         Pull the Robium checkout and refresh
+                                         every detected agent integration
   npx robium-ai doctor [--json]          Check your environment
   npx robium-ai skills [query]           Browse the skill catalog
   npx robium-ai app <subcommand>         Work with reference applications
@@ -74,6 +76,8 @@ export async function main(argv) {
     case 'setup':
     case 'install':
       return setup({ agent: flags.agent, dir: flags.dir, yes: flags.yes, copy: flags.copy });
+    case 'update':
+      return setup({ agent: flags.agent, dir: flags.dir, yes: true, copy: flags.copy });
     case 'doctor':
       return doctor({ json: flags.json });
     case 'skills':

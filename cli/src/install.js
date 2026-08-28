@@ -47,14 +47,25 @@ export async function installClaude({
   if (inst.ok) {
     log(`✓ Plugin installed: ${PLUGIN_SPEC}`);
   } else if (/already/i.test(inst.stderr + inst.stdout)) {
-    log(`✓ Plugin already installed: ${PLUGIN_SPEC}`);
+    const upd = await exec('claude', ['plugin', 'update', PLUGIN_SPEC, '--scope', 'user']);
+    log(upd.ok
+      ? `✓ Plugin updated: ${PLUGIN_SPEC}`
+      : `✓ Plugin already installed: ${PLUGIN_SPEC}`);
   } else {
     error(`✗ Could not install plugin ${PLUGIN_SPEC}:\n${(inst.stderr || inst.stdout).trim()}`);
     return 1;
   }
 
-  const list = await exec('claude', ['plugin', 'list', '--json']);
-  const plugin = list.ok ? findRobiumPlugin(list.stdout) : null;
+  let list = await exec('claude', ['plugin', 'list', '--json']);
+  let plugin = list.ok ? findRobiumPlugin(list.stdout) : null;
+  if (plugin?.enabled === false) {
+    const enabled = await exec('claude', ['plugin', 'enable', PLUGIN_SPEC, '--scope', 'user']);
+    if (enabled.ok) {
+      log(`✓ Plugin enabled: ${PLUGIN_SPEC}`);
+      list = await exec('claude', ['plugin', 'list', '--json']);
+      plugin = list.ok ? findRobiumPlugin(list.stdout) : null;
+    }
+  }
   const verified = !!plugin && plugin.enabled !== false;
   log(verified
     ? '✓ Verified: robium is installed and enabled'
@@ -77,19 +88,20 @@ export async function installCodex({
   log = console.log,
   error = console.error,
   marketplaceRef = MARKETPLACE_REF,
+  command = 'codex',
 } = {}) {
-  const ver = await exec('codex', ['--version']);
+  const ver = await exec(command, ['--version']);
   if (!ver.ok) {
     error(CODEX_MISSING);
     return 1;
   }
   log(`✓ Codex detected (${ver.stdout.trim()})`);
 
-  const add = await exec('codex', ['plugin', 'marketplace', 'add', marketplaceRef]);
+  const add = await exec(command, ['plugin', 'marketplace', 'add', marketplaceRef]);
   if (add.ok) {
     log(`✓ Codex marketplace added: ${marketplaceRef}`);
   } else if (/already|exists|configured/i.test(add.stderr + add.stdout)) {
-    const upd = await exec('codex', ['plugin', 'marketplace', 'upgrade', MARKETPLACE_NAME]);
+    const upd = await exec(command, ['plugin', 'marketplace', 'upgrade', MARKETPLACE_NAME]);
     log(upd.ok
       ? '✓ Codex marketplace already present; refreshed to latest'
       : '! Codex marketplace already present (refresh failed; continuing)');
@@ -98,7 +110,7 @@ export async function installCodex({
     return 1;
   }
 
-  const inst = await exec('codex', ['plugin', 'add', PLUGIN_SPEC, '--json']);
+  const inst = await exec(command, ['plugin', 'add', PLUGIN_SPEC, '--json']);
   if (inst.ok) {
     log(`✓ Codex plugin installed: ${PLUGIN_SPEC}`);
   } else if (/already|installed/i.test(inst.stderr + inst.stdout)) {
@@ -108,7 +120,7 @@ export async function installCodex({
     return 1;
   }
 
-  const list = await exec('codex', ['plugin', 'list', '--json']);
+  const list = await exec(command, ['plugin', 'list', '--json']);
   const plugin = list.ok ? findCodexRobiumPlugin(list.stdout) : null;
   const verified = !!plugin && plugin.enabled !== false;
   log(verified

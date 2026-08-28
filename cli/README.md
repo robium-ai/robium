@@ -16,6 +16,9 @@ npx robium-ai setup --dir ~/src/robium
 npx robium-ai setup -y                 # accept defaults (CI / agent-driven)
 npx robium-ai setup --copy             # copy skills from the repo instead of symlinking
 
+# Pull the checkout and refresh every detected integration
+npx robium-ai update
+
 # `install` is an alias for `setup`
 npx robium-ai install
 
@@ -62,12 +65,15 @@ or uses the checkout you're already inside, then wires it in per agent:
 - **Codex**: the native plugin (skills + capture hooks) via
   `codex plugin marketplace add <clone>` + `codex plugin add robium@robium`.
   Review and trust the bundled hooks with `/hooks` before expecting capture.
-- **Gemini CLI and Cursor**: each skill is symlinked from the clone into the
-  agent's native user skill directory (`~/.gemini/skills` or
-  `~/.cursor/skills`).
+- **Gemini CLI**: each Agent Skill is linked from the checkout into
+  `~/.gemini/skills`. The repository also ships `gemini-extension.json` for
+  users who prefer Gemini's extension installer.
+- **Cursor**: each Agent Skill is linked from the checkout into
+  `~/.cursor/skills`, one of Cursor's documented native skill directories.
 
-`git pull` updates symlink-based installs immediately. Native plugin hosts use
-an installed cache, so re-run `setup` after pulling and start a new session.
+`npx robium-ai update` pulls the checkout, repairs links, and refreshes native
+plugins. Symlink-based installs see the new files immediately. Native plugin
+hosts use an installed cache, so start a new session after updating.
 The npm package carries no skill content, so skill releases never wait on an
 npm publish. Re-running `setup` refreshes the clone, reinstalls native plugins,
 and repairs links; it never overwrites a
@@ -77,9 +83,36 @@ second repo-scoped `.agents/skills/` copy would register every skill twice.
 
 Requires `git` (setup prints the manual recipe if missing).
 
+Codex Desktop on macOS is supported even when its bundled CLI is not on shell
+`PATH`; setup and doctor probe the application bundle directly.
+
+### Install one skill
+
+The full setup is optional. Agent Skills users can install and update one
+skill through the cross-agent Skills CLI:
+
+```bash
+npx skills add robium-ai/robium -g --skill nav2 --agent codex
+npx skills update -g
+```
+
+That is an installed skill snapshot. `npx robium-ai setup`, by contrast,
+keeps a real Git checkout that can be used directly for contributions.
+
 ## Development
 
 Plain ESM Node (≥18), zero runtime dependencies, no build step.
+
+When `setup` created `~/robium`, contributors can work in that checkout rather
+than cloning again:
+
+```bash
+cd ~/robium
+./scripts/bootstrap.sh
+git switch -c my-skill-fix
+# edit, then verify
+./scripts/check.sh
+```
 
 This package lives in the [robium](https://github.com/robium-ai/robium)
 monorepo under `cli/`. Run these from the `cli/` directory:
