@@ -1,6 +1,6 @@
 ---
 name: architect
-version: 2.2.0
+version: 2.1.0
 description: >
   Entry-point skill for shaping new robotics applications: lightweight
   brainstorming, project ideation, requirement/risk discovery, stack selection,
@@ -56,15 +56,10 @@ implementation to the skills that own each layer.
   re-architecture. It records validated decisions, provisional assumptions,
   risks, and authorized pivots. Bounded feature/fix work does not require a new
   brief or approval cycle.
-
 - **Environment first, syntax verified.** <!-- id: env-first-route-environments --> Route reproducibility to
   `environments` before substantial code. Verify volatile versions, commands,
   and platform constraints against current primary sources or installed CLI
-  help when implementation reaches that decision. Record the combination that
-  works; do not turn current recommendations into architecture pins unless the
-  first slice actually depends on them.
-
-- **Lock outcomes, not implementation tactics.** <!-- id: outcomes-not-tactics --> Decide the user-visible result, genuine constraints, and the next risk-reducing slice. Keep exact methods, versions, hardware SKUs, training parameters, metric thresholds, protocols, and deployment details provisional unless the user requires them, compatibility/safety/cost makes them necessary, or a cheap probe has validated that choice for the next slice. Verify and record what actually worked during implementation.
+  help; never rely on memory.
 
 ## Quick start
 
@@ -176,7 +171,6 @@ conversation. Normal new-app design stays in the main conversation.
 
 ## Changelog
 
-- 2.2.0 (2026-08-28): add outcomes-not-tactics (Key directives); update env-first-route-environments; annotate references/brief-template.md [reasons: obs-architect-002] (applied by apply_deltas)
 - 2.1.0 (2026-08-28): routing table gained app-publishing for the public app
   overview/live/article composition that follows a green application smoke;
   live-demo remains the hosted runtime lifecycle owner. Clarified two legacy

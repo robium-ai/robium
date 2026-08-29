@@ -1,0 +1,40 @@
+date: 2026-08-28
+deltas:
+  - skill: architect
+    op: add
+    section: Key directives
+    position: bottom
+    content: |
+      - **Lock outcomes, not implementation tactics.** <!-- id: outcomes-not-tactics --> Decide the user-visible result, genuine constraints, and the next risk-reducing slice. Keep exact methods, versions, hardware SKUs, training parameters, metric thresholds, protocols, and deployment details provisional unless the user requires them, compatibility/safety/cost makes them necessary, or a cheap probe has validated that choice for the next slice. Verify and record what actually worked during implementation.
+    reason: obs-architect-002
+  - skill: architect
+    op: update
+    anchor: env-first-route-environments
+    content: |
+      - **Environment first, syntax verified.** <!-- id: env-first-route-environments --> Route reproducibility to
+        `environments` before substantial code. Verify volatile versions, commands,
+        and platform constraints against current primary sources or installed CLI
+        help when implementation reaches that decision. Record the combination that
+        works; do not turn current recommendations into architecture pins unless the
+        first slice actually depends on them.
+    reason: obs-architect-002
+  - skill: architect
+    op: annotate
+    file: references/brief-template.md
+    find: |
+      Only the four core sections are required. Add optional detail when it changes a
+      decision or helps the next implementation step.
+    replace: |
+      Only the four core sections are required. Add optional detail when it changes a
+      decision or helps the next implementation step.
+
+      Lock the user-visible outcome, genuine constraints, and the next risk-reducing
+      slice. Exact methods, versions, hardware SKUs, training parameters, metric
+      thresholds, protocols, and deployment details stay provisional unless the user
+      requires them, compatibility/safety/cost makes them necessary, or a cheap probe
+      has validated that choice for the next slice. Record what actually worked as
+      implementation evidence instead of predicting it in the architecture brief.
+    reason: obs-architect-002
+bump:
+  architect: minor
+evals_confirmed: []

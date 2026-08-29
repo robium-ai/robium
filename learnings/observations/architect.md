@@ -22,3 +22,11 @@ evidence: proof=2 independent sessions, but the "no-skill-fired" diagnosis
   trigger-surface fix already exists (learnings/2026-07-13.md:20-38 ->
   architect 1.3.0) and was not re-examined here; check that history before
   drafting any new architect trigger-surface delta.
+
+## architecture plans freeze provisional implementation tactics <!-- id: obs-architect-002 -->
+status: absorbed 2026-08-28
+proof: 1
+signal: user-correction
+sources: [user-correction-2026-08-28-issue-70]
+target: architect#outcomes-not-tactics (add) — lock outcomes and real constraints while leaving methods, versions, hardware choices, and other tactics provisional until implementation evidence requires them
+evidence: The issue #70 plan correctly named the desired quadruped demo but over-prescribed Isaac versions, a GPU SKU and floor, training/evaluation parameters, checkpoint cadence, streaming protocol, and deployment details. The user explicitly rejected that rigidity because it lengthens a simple demo and asked for a reusable architecture-direction guardrail. Existing "decision record, not a contract" wording did not provide a concrete classification test, so the same failure remained possible.

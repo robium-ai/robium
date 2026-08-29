@@ -7,13 +7,6 @@ contract. Update it when evidence authorizes a pivot.
 Only the four core sections are required. Add optional detail when it changes a
 decision or helps the next implementation step.
 
-Lock the user-visible outcome, genuine constraints, and the next risk-reducing
-slice. Exact methods, versions, hardware SKUs, training parameters, metric
-thresholds, protocols, and deployment details stay provisional unless the user
-requires them, compatibility/safety/cost makes them necessary, or a cheap probe
-has validated that choice for the next slice. Record what actually worked as
-implementation evidence instead of predicting it in the architecture brief.
-
 ```markdown
 # Architecture Brief: <app name>
 

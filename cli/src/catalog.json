@@ -8,7 +8,7 @@
     },
     {
       "name": "architect",
-      "version": "2.1.0",
+      "version": "2.2.0",
       "description": "Entry-point skill for shaping new robotics applications: lightweight brainstorming, project ideation, requirement/risk discovery, stack selection, comparing or choosing simulators/models/visualization, a first user-visible slice, and a concise architecture decision record. Use when: starting a new robotics app; 'brainstorm a robot app', 'build a robot app', 'which robotics stack', 'choose between simulators', 'decide the simulator, model, robot, and visualization', 'what robotics project can we build', 'cheapest useful demo', 'rethink the architecture', genuine re-architecture, 'scaffold a robotics project', 'mobile robot', 'robot arm', 'manipulation policy', 'navigation stack', 'let's do demo 1', or when requirements exist but the stack is unchosen. Load first for a new app, then route to domain skills. Excludes narrow maintenance work after stack selection and skill authoring (skill-author)."
     },
     {

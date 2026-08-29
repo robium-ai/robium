@@ -1,0 +1,20 @@
+triggers:
+  positive:
+    - phrase: lets do demo 1 from the project ideas; first help choose the robot, simulator, model, visualization, and cheapest working slice
+      source: learnings/2026-07-13.md
+    - phrase: i actually meant to have ml vla based arm control here… lets decide the simulator, model, robot and how to visualize
+      source: learnings/2026-07-13.md
+    - phrase: we'll create a new TurtleBot3 application that does not exist yet. Before any live-demo or publishing work, help brainstorm the architecture, choose the stack, and plan the cheapest navigation-only first slice; teleoperation, camera transfer, and mapping come later.
+      source: learnings/2026-08-02.md
+    - phrase: i want to learn isaac lab through a new robotics project; compare project ideas and choose the robot, task, simulator, visualization, and cheapest first slice before we start
+      source: learnings/2026-08-02.md
+    - phrase: help me choose between Gazebo and Isaac Sim for a new warehouse robot app, then start with the cheapest useful demo
+    - phrase: we are changing this arm application from scripted control to a VLA and need to rethink the architecture
+  negative:
+    - phrase: fix the existing gateway CORS allowlist for our production frontend
+      expect: integration
+    - phrase: update this existing README typo and run the tests
+      expect: none
+    - phrase: diagnose why this existing ROS 2 node misses messages
+      expect: ros2
+tasks: []
