@@ -116,7 +116,7 @@ The full setup is optional. Agent Skills users can install and update one
 skill through the cross-agent Skills CLI:
 
 ```bash
-npx skills add robium-ai/robium -g --skill nav2 --agent codex
+npx skills add robium-ai/robium -g --skill navigation --agent codex
 npx skills update -g
 ```
 

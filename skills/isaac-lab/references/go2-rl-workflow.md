@@ -9,7 +9,7 @@ of the Isaac Lab 3.0.0 source/docs in that session, not recalled.
 
 - **Task IDs:** `Isaac-Velocity-Flat-Unitree-Go2-v0` (train), plus
   `Isaac-Velocity-Flat-Unitree-Go2-Play-v0` and a `Rough` variant. Confirm
-  the current names with `list_envs.py` (SKILL.md Quick start) rather than
+  the current names with the installed `list_envs.py` rather than
   assuming these across releases.
 - **Train script:** `scripts/reinforcement_learning/rsl_rl/train.py`.
   Default RL library is `rsl_rl` (PPO).

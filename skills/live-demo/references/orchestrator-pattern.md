@@ -1,119 +1,93 @@
-# The orchestrator: who starts the instance
+# Host-level session control
 
-The gateway (`gateway-pattern.md`) lives *inside* the demo container, and
-that ceiling is structural: **it cannot manage its own lifecycle**, because
-it dies with the container it would have to restart. A browser can't fill
-the gap either: no web page starts a container. So a demo whose page has a
-real Start button needs a third party that outlives any instance: a
-host-level **orchestrator**.
+The gateway dies with its container, so it cannot create or authoritatively
+delete that container. A browser also cannot allocate provider resources. Keep
+provider lifecycle in a host-level control plane and keep visitor traffic out of
+that control plane after it returns a connect host.
 
-On Cloud Run this role is played *for* you (the control plane cold-boots an
-instance on the first request, which is why the deep-link flow needs no
-orchestrator at all). The moment you want the same demo to run locally
-(for development, for a laptop demo, for a self-hosted deployment) you have
-to build that control plane yourself, and discover it was a distinct
-component all along. Verified end-to-end 2026-07-13 (nav-trial demo v4):
-page Start spawns a fresh container on an ephemeral port → sim ready at
-RTF 1.2 → Stop removes it, with no manual `make demo` anywhere.
+## Divide ownership by lifetime
 
-## The split
-
-Draw the line by lifetime, and keep the orchestrator **out of the data
-path**: it is a control plane, not a proxy. Visitor bytes (the viewer
-WebSocket, the terminal, logs) go browser → instance gateway directly.
-
-| | Orchestrator (host, always on) | Gateway (in-container, per instance) |
+| | Host-level controller | Per-instance gateway |
 | --- | --- | --- |
-| Lifetime | Outlives every instance | Dies with its instance |
-| Owns | start / stop / list, fleet cap, port + domain-ID allocation | session claim, readiness, ws tunnel, shutdown |
-| Knows | *which* instances exist | everything *inside* one instance |
-| In the data path? | **No**: hands the browser a connect host and gets out of the way | Yes: every visitor byte |
+| Lifetime | Outlives every visitor instance | Dies with one instance |
+| Owns | provider allocation or routing, expiry, fleet cap, registry lookup | first claim, readiness, viewer transport, app-local shutdown |
+| Knows | which instances or routes exist | what is healthy inside one instance |
+| Visitor data path | No | Yes |
 
-A small Node/TS service with `dockerode` is enough; the whole surface is
-`POST /instances` (returns the connect host), `DELETE /instances/:id`,
-`GET /instances`.
+The controller returns an instance ID, lifecycle phase, expiry, and connect
+host. The verified gateway then uses a browser-provided claim ID to prevent two
+active visitors from sharing one process. That first-claim mechanism is not
+authentication. If the public boundary needs access control, the controller
+must also issue a signed or high-entropy value bound to the instance and expiry,
+and the gateway must validate it on every lifecycle and viewer route.
 
-## The driver seam
+## Keep one configuration source
 
-The one design decision worth making up front: put the container backend
-behind a `Driver` interface, not inline `dockerode` calls.
+- The application's `robium-app.yaml` owns the runnable
+  `demo.orchestrator` facts: image, command, gateway port, readiness contract,
+  provider requirements, resources, lifetime, and fleet or budget limits that
+  the current schema supports.
+- The website/orchestrator registry is a derived deployment projection. Do not
+  hand-maintain a competing copy of application runtime facts.
+- Current public enablement and editorial presentation remain website-owned.
+  Validate the app manifest before deriving or deploying its registry record.
+
+## Let providers realize the contract differently
+
+| Provider | What allocate/release means | Important boundary |
+| --- | --- | --- |
+| Local Docker | Create and remove a labeled container on an ephemeral host port | Cheapest full lifecycle probe; shared hosts require explicit isolation |
+| RunPod | Create and delete a paid Pod, often with an attached network volume | The authoritative Pod list and confirmed deletion define cleanup; route mechanics to `runpod` |
+| Cloud Run | Route a claim/request to a predeployed service and let Cloud Run start or retain instances | Do not create a new Cloud Run service per visitor; request lifetime, concurrency, affinity, and max instances define behavior |
+
+A small session interface keeps the browser contract stable without pretending
+the providers expose identical resources:
 
 ```ts
-interface Driver {
-  start(app: string): Promise<{ id: string; host: string }>  // host the browser connects to
-  stop(id: string): Promise<void>
-  list(): Promise<Instance[]>
+interface SessionDriver {
+  begin(app: AppRuntime): Promise<{ id: string; host: string; expiresAt: string }>
+  end(id: string): Promise<void>
+  capacity(): Promise<Capacity>
 }
 ```
 
-`LocalDockerDriver` (dockerode, ephemeral host port) and a future
-`CloudRunDriver` (Admin API, service URL) then satisfy the same contract,
-and the page's Start/Stop mean the same thing in both worlds. Without the
-seam, "run the demo locally" quietly becomes a fork of the demo.
+For Local Docker and RunPod, `begin` creates an explicit resource and `end`
+deletes it. For Cloud Run, `begin` issues or records a claim and triggers the
+predeployed route; `end` ends the app session while the platform controls
+instance retention. It is not a per-visitor Admin API service creator. Keep
+current deploy flags and request semantics in `cloud-run`, and current Pod
+inventory, volume, proxy, and deletion operations in `runpod`.
 
-This is also what fixes the local-dev weirdness people paper over: cloud
-Stop semantics ("dispose the container") are *wrong* against a warm local
-container you didn't start, so the temptation is a `if (localhost)`
-special-case. Don't: make Stop genuinely remove and Start genuinely spawn
-everywhere, and the special case evaporates.
+## Isolate concurrent ROS graphs
 
-## Per-instance `ROS_DOMAIN_ID` (not optional)
+Concurrent ROS instances on one Docker network must not share a fixed
+`ROS_DOMAIN_ID`. Robium's July 2026 local nav-trial assigned the lowest free ID
+from 1 through 200 and labeled each container so it could recover the ID on
+restart. The important invariant is one free domain per concurrent instance;
+the range and allocation strategy are evidence from that host, not a universal
+default.
 
-The orchestrator's first real bug. Every ROS container in a project
-normally pins one `ROS_DOMAIN_ID` (integration's guidance, and correct for
-one-stack-per-host). Concurrent instances on a shared Docker network make
-that pin actively wrong: the graphs **merge**, so two Gazebo servers
-publish `/clock` into one graph and the logs flood forever with
+Without isolation, graphs merge, multiple Gazebo servers publish `/clock`, and
+logs can repeatedly report transforms moving backward in time. Diagnose this as
+cross-instance graph contamination, not simulator physics.
 
-```
-[robot_state_publisher] Moved backwards in time, re-publishing joint transforms!
-```
+## Make budget and teardown authoritative
 
-That is physics nonsense, not a discovery error, which is what makes it slow to
-diagnose. The driver must assign the **lowest free domain ID (1–200)** per
-instance, label the container with it, and exclude in-use IDs. (gz-transport
-needs no equivalent fix: `GZ_RELAY=127.0.0.1` is loopback-only, so each
-container's gz discovery is already private to it.)
+- Local Docker and RunPod can count their labeled containers or Pods before
+  allocating. Refuse starts beyond the configured cap and make the busy state
+  visible.
+- Cloud Run enforces its configured maximum instances; monitoring-derived fleet
+  counts are approximate and lagging. Use them for display, not as an exact
+  admission lock.
+- Expiry and provider cleanup must work when the browser disappears. A beacon or
+  gateway shutdown is only a best effort; RunPod deletion and any paid storage
+  policy need explicit verification.
 
-## Fleet cap
+## Keep the local loop honest
 
-The orchestrator owns the budget, because it is the only component that can
-count. `list()` filtered by label → refuse `start` past the cap with a
-"all robots busy" response the page can render. On Cloud Run the equivalent
-number comes from Cloud Monitoring (see `cloud-run-tuning.md`); behind the
-`Driver` seam the page doesn't care which.
-
-## In-browser terminal (PTY over WebSocket)
-
-If the demo's pitch is "you get a real machine", the console has to be a
-real shell, and that is less work than it sounds: **xterm.js** in the page,
-a **PTY over WebSocket** on the gateway.
-
-- Server: `pty.fork()` + `os.execvp('bash', ...)` in the child, then pipe
-  bytes both ways between the master fd and the socket.
-- No `ws` dependency needs to enter the container: hand-rolling the
-  RFC 6455 frame codec (mask/unmask, opcodes, close) is ~40 lines of
-  stdlib, and the gateway is already doing raw socket work for its tunnel.
-- Resize: forward xterm's `onResize` as a control message → `TIOCSWINSZ`.
-
-A public shell is a real attack surface and needs a threat model before it
-ships: container escape is the least of it; the exposures that matter are
-the instance's **credentials** and its **network egress**. robium has a
-candidate hardening shape for this (zero-role service account + locked-down
-egress) that is deployed but not yet verified end-to-end, so this skill
-does not yet prescribe it. Until it does: don't put a public shell on a
-container that holds any credential you'd mind losing.
-
-## Local development loop
-
-Worth ten minutes on day one; these are the difference between a demo you
-can iterate on and one you fight.
-
-- **`?host=` switcher** on the demo page: point a hot-reloading frontend
-  at either the deployed backend or a local orchestrator without a rebuild.
-- **Same-site subdomain** (`demo.<your-domain>`) + `credentials:'include'`
-  + localhost origins allowed in the gateway's CORS, so the Cloud Run
-  affinity cookie actually rides (see `cloud-run-tuning.md`).
-- **One `npm run dev`** that boots the site *and* the orchestrator together
-  (`concurrently`); a demo whose backend has to be started by hand is a
-  demo that gets tested rarely.
+- Start should create a disposable local container and Stop should remove it.
+  Reusing an unrelated warm container hides lifecycle bugs.
+- Let the frontend target either the local controller or deployed route without
+  rebuilding app code.
+- Start the site and local controller together so the end-to-end lifecycle is
+  exercised routinely.

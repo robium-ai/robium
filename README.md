@@ -52,7 +52,7 @@ is not on your shell `PATH`.
 To install only one portable skill instead of the full Robium integration:
 
 ```bash
-npx skills add robium-ai/robium -g --skill nav2 --agent codex
+npx skills add robium-ai/robium -g --skill navigation --agent codex
 npx skills update -g
 ```
 
@@ -92,7 +92,7 @@ Robium provides robotics expertise. Your project provides the context. Your AI
 coding agent handles architecture, implementation, simulation, testing, and
 deployment.
 
-Captured build learnings can improve future skill versions. See the workflow
+Captured build learnings can improve future skill guidance. See the workflow
 at [robium.ai](https://robium.ai/#how-it-fits). External users can contribute a
 [sanitized build finding](./CONTRIBUTING.md#contributing-a-sanitized-build-finding)
 without sharing a raw agent transcript.
@@ -101,7 +101,7 @@ without sharing a raw agent transcript.
 
 ```
 robium/
-├── skills/          the catalog: versioned, hand-crafted, validator-enforced
+├── skills/          the catalog: lean, hand-crafted, validator-checked
 ├── agents/          robium-architect: researches the stack, writes your brief
 ├── .claude-plugin/  Claude Code package
 ├── .codex-plugin/   Codex package manifest
@@ -128,7 +128,7 @@ The catalog in one view: every skill is one folder under
 | Simulation | `simulation` · `gazebo` · `mujoco` · `isaac-sim` · `isaac-lab` |
 | Data & learning | `data` · `lerobot` · `huggingface` |
 | Visualization | `visualization` · `foxglove` · `rerun` · `rviz2` |
-| Robotics integration | `ros2` · `nav2` · `integration` · `environments` |
+| Robotics integration | `ros2` · `navigation` · `integration` · `environments` |
 | Catalog upkeep | `skill-author` · `learning-loop` · `mining` |
 
 **Umbrella skills** own decisions (which simulator, where data comes from, how
@@ -144,11 +144,11 @@ change shape. robium is built to notice:
   sessions; [`learnings/`](./learnings) holds the evidence.
 - **Mine**: the ecosystem's proven patterns are read out of real repos, with
   citations that must still hold at the pinned commit.
-- **Absorb**: evidence-gated pull requests fold both back into the versioned
-  skills. Agents draft; a human merges every change.
-- **Verify**: version facts are checked against live upstream docs at
-  authoring time, and each claim states how it was verified. Prior skill
-  versions stay browsable under [`archive/`](./archive).
+- **Absorb**: evidence-gated pull requests fold both back into the skills.
+  Agents draft; a human merges every unrequested change.
+- **Verify**: volatile facts are checked against current upstream docs, and
+  observed values retain the conditions that produced them. Historical
+  snapshots from the former format remain under [`archive/`](./archive).
 
 ## Contributing
 

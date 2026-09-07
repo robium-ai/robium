@@ -12,7 +12,7 @@ README, all fetched directly via raw GitHub URLs on 2026-07-10 (`main`
 branch). The `lerobot/pusht` dataset's `meta/info.json` was fetched directly
 from `huggingface.co/datasets/lerobot/pusht` to confirm it is already on
 format v3.0 (206 episodes, 25,650 frames); this is the dataset this
-skill's examples and Quick start use throughout.
+skill's examples use throughout.
 
 ## Format v3.0: what changed and why
 
@@ -130,11 +130,10 @@ Left Arrow/`r` = re-record, Esc/`q` = stop) work over X11, Wayland, and
 headless/SSH sessions as long as `lerobot-record` runs in an interactive
 terminal. **Keyboard teleoperation itself** (as opposed to the recording
 control flow) needs a global key backend and only works on X11, a Windows
-desktop, or macOS with Accessibility permission granted, not Wayland or
-headless. `hf auth login --token ${HUGGINGFACE_TOKEN}` must be run before
-recording pushes to the Hub; that login/token mechanic is the
-`huggingface` skill's territory; it's only referenced here because
-`lerobot-record` calls it inline.
+  desktop, or macOS with Accessibility permission granted, not Wayland or
+  headless. Authenticate through the secure workflow in the `huggingface` skill
+  before a recording that pushes to the Hub; do not put an access token in the
+  LeRobot command or this dataset workflow.
 
 **Always call `finalize()` before `push_to_hub()`** when hand-rolling a
 recording loop (as opposed to using `lerobot-record`, which does this for
@@ -186,9 +185,9 @@ port via `--web-port`, default 8765) instead of Rerun, and
 `--save 1 --output-dir <dir>` writes a `.rrd` file headlessly with no
 viewer at all, the CI-friendly artifact path. A hosted viewer also exists at
 [huggingface.co/spaces/lerobot/visualize_dataset](https://huggingface.co/spaces/lerobot/visualize_dataset)
-for browsing a dataset without running anything locally. See `SKILL.md`'s
-Platform gotchas for the headless/remote-streaming variant
-(`--mode distant --grpc-port=<port>`).
+for browsing a dataset without running anything locally. For headless or remote
+viewer selection, use the `rerun` skill; verify the current LeRobot distant-mode
+flags before invoking them.
 
 ## Migrating v2.1 → v3.0
 

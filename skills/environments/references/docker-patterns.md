@@ -1,8 +1,7 @@
 # Docker patterns
 
 How to shape a Docker image for a robium project that needs ROS 2 or other
-system-level dependencies: the "Yes" branch of the decision tree in
-`SKILL.md`. This covers a *single environment's* Dockerfile shape; wiring
+system-level dependencies. This covers a *single environment's* Dockerfile shape; wiring
 multiple app modules together with compose is the `integration` skill's job;
 don't duplicate that here, cross-reference it.
 
@@ -117,7 +116,7 @@ USER robium
 
 ## Local == remote parity, the Docker half
 
-This is the mechanical half of the checklist in `SKILL.md`:
+These checks make the runtime contract in `SKILL.md` reproducible:
 
 - **Pin tags, not `latest`.** `ros:jazzy-ros-base-noble`, not `ros:jazzy`;
   ideally pin a digest (`@sha256:...`) for anything long-lived.

@@ -60,7 +60,7 @@ async function makeFixtures() {
   await writeFile(path.join(repo, 'assets', 'brand', 'robium-lockup.png'), 'png');
   for (const name of ['ros2', 'gazebo']) {
     await mkdir(path.join(repo, 'skills', name, 'references'), { recursive: true });
-    await writeFile(path.join(repo, 'skills', name, 'SKILL.md'), `---\nname: ${name}\nversion: 1.0.0\ndescription: test\n---\nbody\n`);
+    await writeFile(path.join(repo, 'skills', name, 'SKILL.md'), `---\nname: ${name}\ndescription: test\n---\nbody\n`);
     await writeFile(path.join(repo, 'skills', name, 'references', 'notes.md'), 'ref\n');
   }
   await mkdir(path.join(repo, 'skills', '_TEMPLATE'), { recursive: true });

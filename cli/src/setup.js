@@ -10,7 +10,6 @@ import { detectAgentSupport } from './agentCommands.js';
 import {
   MANAGED_MARKER,
   isManagedSkill,
-  readSkillVersions,
 } from './managedSkills.js';
 import {
   inspectClaudeIntegration,
@@ -124,10 +123,14 @@ async function verifyIntegration({ target, support, exec, home, versions }) {
       exec,
       home,
       expectedPluginVersion: versions.plugin,
-      skillVersions: versions.skills,
+      expectedManagedVersion: versions.cli,
     });
   }
-  return inspectCursorIntegration({ home, expectedPluginVersion: versions.plugin, skillVersions: versions.skills });
+  return inspectCursorIntegration({
+    home,
+    expectedPluginVersion: versions.plugin,
+    expectedManagedVersion: versions.cli,
+  });
 }
 
 export async function setup({
@@ -228,10 +231,7 @@ export async function setup({
     }
   }
 
-  const versions = {
-    ...await integrationVersions(),
-    skills: await readSkillVersions(path.join(repo, 'skills')),
-  };
+  const versions = await integrationVersions();
   for (const target of targets) {
     const result = await verifyIntegration({ target, support, exec, home, versions });
     if (result.state === 'active' && !result.outdated) {

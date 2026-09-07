@@ -1,6 +1,6 @@
 # Gemini CLI integration
 
-Robium is a native Gemini CLI extension. Gemini discovers the versioned skills
+Robium is a native Gemini CLI extension. Gemini discovers the skills
 under `skills/`, the `robium-architect` subagent under `agents/`, and lifecycle
 hooks under `hooks/hooks.json` from one installation.
 Gemini currently documents custom subagents as a preview feature.

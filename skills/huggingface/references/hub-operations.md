@@ -58,6 +58,21 @@ command, timeout, secrets, output destination, and cost exposure. Use
 `hf jobs hardware` and live `hf jobs run --help` or `hf jobs uv run --help`;
 do not encode a stale flavor list here.
 
+## Spaces are optional hosting
+
+- Spaces host Gradio, Docker, or static applications, but Hub artifacts do not
+  require a Space. Choose one only when its managed build, visibility, and demo
+  workflow are useful.
+- Most Space Docker images can be run locally. Verify the current Space's **Run
+  with Docker** instructions and registry access instead of assuming the hosted
+  runtime is the only deployment path.
+- This file owns Space repository metadata and logs. Route the application's
+  container, health, ports, authentication, and self-hosted service boundary to
+  `integration`, then use the selected provider skill for deployment.
+- Re-check the current [Spaces overview](https://huggingface.co/docs/hub/spaces-overview)
+  and [Run with Docker](https://huggingface.co/docs/hub/spaces-run-with-docker)
+  guidance before promising hardware, pricing, visibility, or portability.
+
 ## Source verification
 
 Checked directly on 2026-08-27 against the official Hugging Face CLI guide and

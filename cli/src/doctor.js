@@ -159,7 +159,7 @@ export function buildChecks({
           exec,
           home,
           expectedPluginVersion: expected.plugin,
-          skillVersions: expected.skills,
+          expectedManagedVersion: expected.cli,
         });
         return integrationCheck(result, {
           missingHint: 'run: npx robium-ai setup --agent gemini',
@@ -187,7 +187,9 @@ export function buildChecks({
         if (!detected.cursor) return { status: 'skip', detail: 'Cursor not installed' };
         const expected = await versions();
         const result = await inspectCursorIntegration({
-          home, expectedPluginVersion: expected.plugin, skillVersions: expected.skills,
+          home,
+          expectedPluginVersion: expected.plugin,
+          expectedManagedVersion: expected.cli,
         });
         return integrationCheck(result, {
           missingHint: 'run: npx robium-ai setup --agent cursor',

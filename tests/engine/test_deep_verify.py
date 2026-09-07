@@ -102,7 +102,8 @@ def test_run_for_skill_task_with_no_matching_example_leaves_file_unfixtured(tmp_
     # A task exists but its `example:` points elsewhere — the join fails,
     # so the file is still unfixtured (not silently matched to the wrong task).
     other_task = dict(PASS_TASK, example="examples/other.py")
-    _mk_examples_skill(tmp_path, tasks=[other_task])
+    skill = _mk_examples_skill(tmp_path, tasks=[other_task])
+    (skill / "examples" / "other.py").write_text("# status: verified\n")
     res = dv.run_for_skill("nav2", str(tmp_path / "skills"), str(tmp_path), "2026-08-05")
     assert res["unfixtured"] == [{"skill": "nav2", "file": "examples/x.py"}]
     assert res["deltas"] == []

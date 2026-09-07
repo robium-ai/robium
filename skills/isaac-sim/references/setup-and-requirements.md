@@ -8,7 +8,11 @@ pages, fetched directly on 2026-07-10 (method noted per section below).
 **Requirements change per release**; re-verify against the live
 requirements page before trusting a number here in a real project.
 
-## GPU, driver, CPU, RAM, storage (direct fetch on 2026-07-10)
+## GPU, driver, CPU, RAM, storage
+
+The table below is a snapshot of the Isaac Sim 6.0.1 requirements fetched on
+2026-07-10. It is evidence for that release, not a floor to copy into a new
+project without checking the current requirements page.
 
 | Requirement | Minimum | Recommended | Ideal |
 |---|---|---|---|
@@ -34,15 +38,17 @@ Notes:
 **Reconciliation note:** this GPU/RAM floor matches the figures already
 recorded in this repo's architect skill (RTX 4080 min / 16 GB VRAM, RTX
 5080 recommended, 32 GB RAM min / 64 GB recommended); no discrepancy found
-between architect's Platform gotchas and the live requirements page as of
+between architect's recorded requirements and the live requirements page as of
 the 2026-07-10 session's fetch.
 
-## Supported operating systems (direct fetch on 2026-07-10)
+## Supported operating systems
+
+These operating-system rows are from the same Isaac Sim 6.0.1 snapshot.
 
 - **Linux:** Ubuntu 22.04 or 24.04.
 - **Windows:** Windows 11 only; **Windows 10 is no longer supported.**
-- **macOS:** not supported, on any hardware (see `SKILL.md`'s Platform
-  gotchas; this is a hard stop, not a workaround-able gap).
+- **macOS:** not supported, on any hardware (this is a hard stop, not a
+  workaround-able gap).
 
 ## Three install paths
 
@@ -69,8 +75,8 @@ that cache.) PyTorch with CUDA should be installed first, into an
 activated virtual environment. This is the lighter-weight path for an
 already-provisioned Linux/Windows workstation; it still needs the same
 GPU/driver floor above, but skips the container layer. Prefer the
-container path per `SKILL.md`'s Key directives unless this machine is not
-going to be redeployed elsewhere. Source: direct fetch of the pip
+container path when this machine must reproduce elsewhere. Source: direct
+fetch of the pip
 installation page on 2026-07-10.
 
 **3. Workstation / Omniverse Launcher.** A full local GUI install for
@@ -78,12 +84,15 @@ interactive scene authoring on a single machine; same GPU/driver/OS floor
 applies. Use this only for local authoring; it is not the reproducible path
 for a project that also needs to run headless on a remote server.
 
-## Headless + livestream networking (direct fetch on 2026-07-10)
+## Headless + livestream networking
+
+The port and client shape below was re-checked against NVIDIA's current
+livestream-client guide on 2026-09-07. Provider-specific exposure and remapping
+still belong to that provider's skill.
 
 Running headless: launch with `./runheadless.sh -v` (Linux/container) or
 the equivalent Windows batch file; no display is required, which is the
-default posture for a remote/cloud GPU box (see `SKILL.md`'s Key
-directives on headless-first, not X11).
+default posture for a remote/cloud GPU box.
 
 Livestreaming the viewport uses WebRTC. The host GPU must support NVENC
 (hardware video encoding) to stream at all. Two ports must both be

@@ -2,6 +2,7 @@
 
 import os
 import re
+from pathlib import Path
 
 
 TASK_NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -20,7 +21,23 @@ def _relative_path(value, field, index):
         raise TaskSchemaError(f"tasks[{index}].{field} must be {scope} without '..'")
 
 
-def validate_tasks(tasks):
+def _contained_path(value, base, field, index, *, must_be_dir):
+    base = Path(base).resolve()
+    resolved = (base / value).resolve()
+    try:
+        resolved.relative_to(base)
+    except ValueError as exc:
+        raise TaskSchemaError(f"tasks[{index}].{field} escapes its allowed root") from exc
+    if not resolved.exists():
+        raise TaskSchemaError(f"tasks[{index}].{field} does not exist: {value}")
+    if must_be_dir and not resolved.is_dir():
+        raise TaskSchemaError(f"tasks[{index}].{field} must name a directory")
+    if not must_be_dir and not resolved.is_file():
+        raise TaskSchemaError(f"tasks[{index}].{field} must name a file")
+    return resolved
+
+
+def validate_tasks(tasks, *, repo_root=None, skill_dir=None):
     """Validate and return a task list using the runner's canonical schema."""
     if not isinstance(tasks, list):
         raise TaskSchemaError("tasks must be a list")
@@ -54,7 +71,24 @@ def validate_tasks(tasks):
                 raise TaskSchemaError(f"tasks[{index}].timeout must be a positive integer")
         if "app" in task:
             _relative_path(task["app"], "app", index)
+            if repo_root is not None:
+                resolved = _contained_path(
+                    task["app"], repo_root, "app", index, must_be_dir=True
+                )
+                skills_root = (Path(repo_root).resolve() / "skills").resolve()
+                try:
+                    resolved.relative_to(skills_root)
+                except ValueError:
+                    pass
+                else:
+                    raise TaskSchemaError(
+                        f"tasks[{index}].app cannot run inside the skills tree"
+                    )
         if "example" in task:
             _relative_path(task["example"], "example", index)
+            if skill_dir is not None:
+                _contained_path(
+                    task["example"], skill_dir, "example", index, must_be_dir=False
+                )
 
     return tasks

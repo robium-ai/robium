@@ -11,9 +11,9 @@ versions before use, they move frequently.
 
 GPU access inside a Docker container requires the **NVIDIA Container
 Toolkit** installed on the *host*; this is a Linux-only requirement (the
-official install guide covers Ubuntu/Debian, RHEL/CentOS/Fedora, and
-OpenSUSE/SLE; there is no first-party macOS or bare-Windows host path). See
-the Platform gotchas in `SKILL.md`.
+official install guide covers Linux distributions; there is no first-party
+macOS host path). See [platform notes](../PLATFORM-NOTES.md) for Robium's observed platform
+tradeoffs.
 
 **Install (Ubuntu/Debian host, apt):**
 

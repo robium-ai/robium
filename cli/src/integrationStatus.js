@@ -7,16 +7,13 @@ import { inspectCursorPlugin } from './cursorPlugin.js';
 let packageInfoPromise;
 
 export async function integrationVersions() {
-  packageInfoPromise ??= Promise.all([
-    readFile(new URL('../package.json', import.meta.url), 'utf8').then(JSON.parse),
-    readFile(new URL('./catalog.json', import.meta.url), 'utf8').then(JSON.parse),
-  ])
-    .then(([pkg, catalog]) => ({
+  packageInfoPromise ??= readFile(new URL('../package.json', import.meta.url), 'utf8')
+    .then(JSON.parse)
+    .then((pkg) => ({
       cli: pkg.version ?? null,
       plugin: pkg.robiumPluginVersion ?? null,
-      skills: Object.fromEntries((catalog.skills ?? []).map((skill) => [skill.name, skill.version])),
     }))
-    .catch(() => ({ cli: null, plugin: null, skills: {} }));
+    .catch(() => ({ cli: null, plugin: null }));
   return packageInfoPromise;
 }
 
@@ -95,9 +92,9 @@ export function parseGeminiSkills(stdout) {
   return records;
 }
 
-function managedSkillsOutdated(managed, skillVersions = {}) {
-  return managed.some((item) => item.name
-    && isOlderVersion(item.version, skillVersions[item.name]));
+function managedSkillsOutdated(managed, expectedManagedVersion) {
+  return managed.some((item) => item.kind === 'copy'
+    && isOlderVersion(item.managedVersion, expectedManagedVersion));
 }
 
 function normalizedLocations(managed) {
@@ -113,7 +110,7 @@ export async function inspectGeminiIntegration({
   exec,
   home,
   expectedPluginVersion,
-  skillVersions,
+  expectedManagedVersion,
 } = {}) {
   const extensions = await exec('gemini', [
     'extensions', 'list', '--output-format', 'json',
@@ -151,7 +148,7 @@ export async function inspectGeminiIntegration({
   if (!managed.length) return { state: 'missing', outdated: false, apiAvailable: extensions.ok };
 
   const listed = await exec('gemini', ['skills', 'list']);
-  const outdated = managedSkillsOutdated(managed, skillVersions);
+  const outdated = managedSkillsOutdated(managed, expectedManagedVersion);
   if (!listed.ok) {
     return { state: 'unknown', outdated, apiAvailable: false, source: 'skills', count: managed.length };
   }
@@ -175,7 +172,7 @@ export async function inspectGeminiIntegration({
   };
 }
 
-export async function inspectCursorIntegration({ home, expectedPluginVersion, skillVersions } = {}) {
+export async function inspectCursorIntegration({ home, expectedPluginVersion, expectedManagedVersion } = {}) {
   const plugin = await inspectCursorPlugin({ home, expectedVersion: expectedPluginVersion });
   if (plugin.state !== 'missing') return plugin;
 
@@ -184,7 +181,7 @@ export async function inspectCursorIntegration({ home, expectedPluginVersion, sk
   if (!managed.length) return { state: 'missing', outdated: false, apiAvailable: false };
   return {
     state: 'unknown',
-    outdated: managedSkillsOutdated(managed, skillVersions),
+    outdated: managedSkillsOutdated(managed, expectedManagedVersion),
     apiAvailable: false,
     source: 'skills',
     count: managed.length,

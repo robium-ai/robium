@@ -1,7 +1,8 @@
 # Comms selection
 
-The full decision behind the comms-choice table in `SKILL.md`: what each
-transport is, when it's the right default, and what was actually verified
+The detailed decision behind the boundary choices introduced in the
+[entrypoint](../SKILL.md):
+what each transport is, when it's the right default, and what was verified
 about current status (vs. carried from memory) as of this writing (2026-07).
 
 ## ROS 2 native: topics, services, actions

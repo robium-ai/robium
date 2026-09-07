@@ -32,7 +32,7 @@ TAIL_MAX_LINES = 5
 TAIL_MAX_CHARS = 400
 
 
-def load_tasks(skill, skills_dir):
+def load_tasks(skill, skills_dir, repo_root=None):
     path = os.path.join(skills_dir, skill, "evals.yaml")
     if not os.path.exists(path):
         return []
@@ -41,7 +41,11 @@ def load_tasks(skill, skills_dir):
         raise TaskSchemaError(f"{path}: top level must be a mapping")
     tasks = data.get("tasks", [])
     try:
-        return list(validate_tasks(tasks))
+        return list(validate_tasks(
+            tasks,
+            repo_root=repo_root,
+            skill_dir=os.path.join(skills_dir, skill),
+        ))
     except TaskSchemaError as exc:
         raise TaskSchemaError(f"{path}: {exc}") from exc
 
@@ -144,7 +148,7 @@ def main(argv=None):
     passed = failed = skipped = 0
     for skill in args.skills:
         try:
-            all_tasks = load_tasks(skill, args.skills_dir)
+            all_tasks = load_tasks(skill, args.skills_dir, args.repo_root)
         except TaskSchemaError as exc:
             failed += 1
             print(f"{skill}: invalid task schema: {exc}")

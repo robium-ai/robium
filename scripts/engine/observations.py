@@ -18,6 +18,7 @@ _HEAD_RE = re.compile(r"^## (.+?)\s*<!-- id: ")
 _FIELD_RE = re.compile(r"^([a-z][a-z-]*):\s*(.*)$")
 _STATUS_RE = re.compile(r"^(tentative|ready|absorbed \d{4}-\d{2}-\d{2}|rejected \(.+\))$")
 _SOURCE_RE = re.compile(r"^[\w.-]+/[\w.-]+@[0-9a-f]{7,40}\s+\S+#L\d+(-L\d+)?$")
+LEGACY_SKILL_ALIASES = {"nav2": "navigation"}
 
 
 def parse_file(path):
@@ -79,7 +80,10 @@ def _ready_ok(fields):
 def lint_file(path, known_skills=None):
     errs = []
     stem = os.path.splitext(os.path.basename(path))[0]
-    if known_skills is not None and stem not in known_skills and stem != "new-skills":
+    known_stem = stem in known_skills if known_skills is not None else True
+    known_alias = (known_skills is not None
+                   and LEGACY_SKILL_ALIASES.get(stem) in known_skills)
+    if known_skills is not None and not known_stem and not known_alias and stem != "new-skills":
         errs.append(f"{path}: filename stem '{stem}' is not a known skill (or new-skills)")
     seen = set()
     for e in parse_file(path):

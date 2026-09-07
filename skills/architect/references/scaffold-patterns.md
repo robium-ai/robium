@@ -21,7 +21,7 @@ my-nav-robot/
 ├── docs/
 │   └── architecture-brief.md        # concise decision record
 ├── docker/
-│   ├── Dockerfile                   # ROS 2 Jazzy base + deps (environments skill)
+│   ├── Dockerfile                   # selected ROS 2 base + deps (environments skill)
 │   └── compose.yaml                 # sim + nav + viz services
 ├── src/                             # colcon workspace source
 │   ├── my_robot_description/        # URDF/xacro, meshes: the robot model
@@ -47,11 +47,11 @@ my-nav-robot/
   publishes the model. One source of truth for the robot's geometry/frames.
 - `*_bringup`: the composition layer; the launch file that starts sim + Nav2 +
   visualization together, plus the parameter YAMLs. Where a new user starts.
-- `*_navigation`: everything Nav2 (`nav2` skill): costmap configs, planner and
+- `*_navigation`: everything Nav2 (`navigation` skill): costmap configs, planner and
   controller params, behavior trees, saved maps.
 - `*_sim`: Gazebo (`gazebo` skill): world files, spawn models, sim-only glue.
-- `docker/`: the reproducible environment (`environments` skill): a Jazzy base
-  image and a compose file wiring the services.
+- `docker/`: the reproducible environment (`environments` skill): a
+  compatibility-checked ROS 2 base image and a compose file wiring services.
 - `tests/`: smoke and launch tests (`testing` skill): "does the robot reach a
   goal in sim" as a regression.
 
@@ -69,7 +69,7 @@ my-arm-policy/
 ├── src/
 │   └── my_policy/
 │       ├── configs/                 # policy + training configs (ACT, Diffusion, SmolVLA…)
-│       ├── datasets/                # dataset prep / loading glue (huggingface delegation)
+│       ├── datasets/                # LeRobotDataset prep / loading glue (lerobot)
 │       ├── train.py                 # training entry point (lerobot)
 │       ├── eval.py                  # in-sim evaluation entry point
 │       └── env/                     # sim/hardware env wrappers
@@ -83,9 +83,9 @@ my-arm-policy/
 **What each dir holds**
 - `src/my_policy/configs`: training and policy hyperparameter configs; which
   policy family (ACT / Diffusion / SmolVLA / π0) and its settings.
-- `src/my_policy/datasets`: glue for fetching and shaping datasets; Hub
-  pulls/pushes go through the `huggingface` delegation, sourcing strategy
-  through the `data` skill.
+- `src/my_policy/datasets`: LeRobotDataset preparation, loading, transforms,
+  and recording glue belong to `lerobot`; Hub authentication and transfers go
+  through `huggingface`, and sourcing strategy through `data`.
 - `src/my_policy/{train,eval}.py`: the `lerobot` training and evaluation
   entry points; keep them thin, config-driven.
 - `src/my_policy/env`: wrappers around the sim (or, later, real hardware).

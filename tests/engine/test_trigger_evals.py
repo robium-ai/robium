@@ -47,6 +47,16 @@ def test_positive_and_negative_pass(tmp_path):
     assert all(c["pass"] for c in out["cases"]), out["cases"]
 
 
+def test_negative_expect_rejects_the_wrong_neighbor(tmp_path, monkeypatch):
+    skills = mk_catalog(tmp_path)
+    monkeypatch.setattr(
+        rte, "judge_details", lambda *_args, **_kwargs: ("not-bar", "semantic")
+    )
+    out = rte.run_skill("foo", skills, no_llm=True)
+    negative = [c for c in out["cases"] if c["kind"] == "negative"]
+    assert negative and not negative[0]["pass"]
+
+
 def test_no_evals_is_skipped_not_green(tmp_path):
     skills = mk_catalog(tmp_path)
     out = rte.run_skill("bar", skills, no_llm=True)
@@ -91,6 +101,23 @@ def test_judge_falls_back_without_llm(tmp_path):
     cat = placement.load_catalog(skills)
     assert rte.judge("costmap inflation obstacles", cat, no_llm=True,
                      skills_dir=skills) == "foo"
+
+
+def test_lexical_fallback_is_marked_inconclusive(tmp_path):
+    skills = mk_catalog(tmp_path)
+    out = rte.run_skill("foo", skills, no_llm=True)
+    assert out["cases"] and all(not case["conclusive"] for case in out["cases"])
+
+
+def test_cli_lexical_miss_is_diagnostic_not_blocking(tmp_path, capsys):
+    skills = mk_catalog(tmp_path)
+    md = tmp_path / "skills" / "foo" / "SKILL.md"
+    md.write_text(FOO.replace(
+        "Costmap tuning and obstacle inflation for mobile robot navigation.",
+        "General helper utilities."))
+    result = rte.main(["--skills", "foo", "--skills-dir", skills, "--no-llm"])
+    assert result == 0
+    assert "DIAGNOSTIC MISS" in capsys.readouterr().out
 
 
 def test_flip_gate_never_invokes_judge(tmp_path, monkeypatch):

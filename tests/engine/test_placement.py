@@ -57,4 +57,4 @@ def test_analyze_drops_zero_scores(tmp_path):
 def test_analyze_runs_on_live_catalog():
     out = placement.analyze("costmap inflation robot hugs obstacles",
                             str(REPO / "skills"))
-    assert "nav2" in [name for name, _ in out["skills"]][:2]
+    assert "navigation" in [name for name, _ in out["skills"]][:2]

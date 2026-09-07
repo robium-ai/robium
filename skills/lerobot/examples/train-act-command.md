@@ -21,14 +21,14 @@ smoke-run value, not an upstream default; see the reasoning below and
 it up for a real run.
 
 Pairs with `load-dataset-snippet.py` in this same directory (same dataset,
-`lerobot/pusht`) and with the "start from pretrained, then small-scale
-fine-tune" key directive in `SKILL.md`: run this only after evaluating
-`lerobot/diffusion_pusht` per `SKILL.md`'s Quick start step 3, to confirm
-the eval pipeline works before spending compute on training.
+`lerobot/pusht`). Use it only when PushT is a useful smoke path for the
+application; its purpose is to prove train → checkpoint → evaluation with a
+self-trained checkpoint before spending substantial compute.
 
 Requires the `training` and `pusht` extras (`uv add
-"lerobot[training,pusht]"`; see `SKILL.md`'s Quick start; `core_scripts`
-is only for the hardware CLIs and not needed here).
+"lerobot[training,pusht]"`; verify the current extras in LeRobot's install
+documentation; `core_scripts` was only needed for hardware CLIs in the tested
+release).
 
 ```bash
 uv run lerobot-train \
@@ -59,16 +59,17 @@ uv run lerobot-train \
   policies (diffusion, SmolVLA, the Pi0 family); see
   `references/policies-and-training.md` if switching `--policy.type` to one
   of those.
-- `--policy.device=cuda`: swap for `mps` (Apple Silicon) or `cpu` (smoke
-  test only, expect it to be much slower) per `SKILL.md`'s Platform gotchas.
+- `--policy.device=cuda`: swap for `mps` (Apple Silicon) or `cpu` only after
+  checking the policy's current accelerator support; see `FAILURES.md` for
+  measured limits of those smoke paths.
 - `--wandb.enable=false` and `--policy.push_to_hub=false`: kept off for a
   throwaway smoke run; flip both on for a real tracked run (`wandb login`
   first; dropping `--policy.push_to_hub=false` pushes the trained policy to
   `--policy.repo_id` on the Hub, which is the `huggingface` skill's
   territory once you get there).
 
-**After this run**, evaluate the checkpoint per `SKILL.md`'s Quick start
-step 4, pointing `--policy.path` at
+**After this run**, evaluate the checkpoint using the current CLI shape in
+`references/eval-and-sim.md`, pointing `--policy.path` at
 `outputs/train/act_pusht_smoke/checkpoints/last/pretrained_model` (path
 verified 2026-07-12):
 

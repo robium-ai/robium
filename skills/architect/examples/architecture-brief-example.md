@@ -25,9 +25,9 @@
 
 | Layer | Choice | Version | Why (and what was rejected) |
 |---|---|---|---|
-| Middleware | ROS 2 | Jazzy Jalisco | LTS to 2029; standard nav ecosystem. Lyrical Luth (newer LTS, to 2031) rejected for now: Nav2 has no released binaries for it yet. Kilted rejected: non-LTS, ends 2026. |
-| Simulator | Gazebo | Harmonic | Officially paired with Jazzy; no GPU needed. Isaac Sim rejected: GPU-gated, overkill for a lidar nav demo. |
-| Navigation | Nav2 | (Jazzy release) | The standard ROS 2 nav stack; costmaps + planners + BT out of the box. Rolling our own rejected: no reason to. |
+| Middleware | ROS 2 | project-supported release | Standard navigation ecosystem. Verify the release against Nav2 and simulator support before implementation. |
+| Simulator | Gazebo | ROS-compatible release | No dedicated NVIDIA GPU is required for this slice. Isaac Sim is unnecessary for a lidar navigation demo. |
+| Navigation | Nav2 | release matching ROS 2 | Standard ROS 2 navigation with costmaps, planners, controllers, and behavior trees. |
 | Visualization | RViz2 (dev) + Foxglove (remote) | n/a | RViz2 locally for quick checks; Foxglove for the eventual headless workstation. Rerun rejected: not needed for classical nav. |
 | Environment | Docker | Jazzy base image | Dev machine is macOS, which can't run the native ROS 2 + Gazebo desktop cleanly; Docker gives identical local/remote repro. uv rejected: this is a compiled ROS 2 workspace, not pure Python. |
 
@@ -57,15 +57,15 @@ Standard ROS 2 topics, single robot, all in-process for the MVP.
 | `/odom` | `nav_msgs/Odometry` | ~30 Hz | Gazebo diff-drive → Nav2, TF |
 | `/cmd_vel` | `geometry_msgs/Twist` | ~20 Hz | Nav2 controller → base |
 | `/map` | `nav_msgs/OccupancyGrid` | latched | map_server → Nav2 |
-| goal | `nav2` action (`NavigateToPose`) | on demand | app → Nav2 BT |
+| goal | Nav2 action (`NavigateToPose`) | on demand | app → Nav2 BT |
 
 No cross-host transport needed for the MVP. If the fleet grows to multiple
 robots later, revisit with the `integration` skill (namespacing, DDS discovery).
 
 ## 5. Environment strategy
 
-Docker, single `Dockerfile` on a ROS 2 Jazzy base plus Gazebo Harmonic and Nav2
-from ROS vendor packages; a `compose.yaml` running sim + nav + viz. macOS dev
+Docker, single `Dockerfile` on a compatibility-checked ROS 2 base plus its
+supported Gazebo and Nav2 packages; a `compose.yaml` running sim + nav + viz. macOS dev
 uses an X/Wayland forward or Foxglove for viewing. The same image runs on the
 headless workstation later; identical repro is the reason Docker was chosen
 over a native workspace. No GPU passthrough (none required). Detail: route to
@@ -85,7 +85,7 @@ bags gitignored. No Hub involvement.
 | Environment setup | environments |
 | Robot model + bringup | ros2 |
 | Simulation world | gazebo |
-| Mapping + navigation | nav2 |
+| Mapping + navigation | navigation |
 | Visualization | visualization → rviz2 (local), foxglove (remote) |
 | Smoke/regression tests | testing |
 
@@ -102,6 +102,6 @@ bags gitignored. No Hub involvement.
 - **macOS + Gazebo rendering**: GUI rendering under Docker on macOS can be slow
   or flaky. Blocks smooth local dev. *De-risk:* prefer Foxglove/headless sim for
   day-to-day; use RViz2 sparingly, or move dev to the Linux workstation early.
-- **ROS 2 Jazzy version pins**: Nav2/Gazebo package versions assumed compatible
-  on the Jazzy line but not yet built. *Resolve:* stand up the Docker image
+- **ROS 2 package compatibility**: the selected ROS 2, Nav2, and Gazebo
+  combination has not yet been built. *Resolve:* stand up the Docker image
   first and confirm `colcon build` is clean before writing app code.

@@ -14,12 +14,10 @@ it has a fixture; `run_for_skill` actually runs the fixture (via
 `run_task_checks.run_task` — no subprocess handling is reimplemented here)
 and, on PASS, emits an `annotate` delta op that flips the marker.
 
-Like every other tool under scripts/engine/, this module only ever EMITS a
-deltas.yaml (see skills/learning-loop/references/delta-format.md) — it
-never writes to skills/** itself. `apply_deltas.py` is the sole writer of
-skills content; the emitted file is meant to be reviewed and applied
-through the normal absorb pipeline (or by hand with apply_deltas), same as
-any other delta.
+This module never writes to `skills/**`. It emits a legacy-compatible YAML
+annotation suggestion so existing experiment tooling can still consume the
+result. In the current versionless workflow, review the passing evidence and
+apply the status change with the normal repository editor.
 
 Reason ids: emitted ops carry `reason: deep-verify-<task-name>`, which
 intentionally does NOT match the `obs-<stem>-NNN` pattern apply_deltas'
@@ -121,8 +119,8 @@ def run_for_skill(skill, skills_dir, repo_root, date):
     """Run every unverified example's fixture (if it has one) for one
     skill. Returns {"deltas", "passed", "failed", "unfixtured"}:
 
-    - deltas: annotate ops for examples whose fixture PASSED — apply via
-      apply_deltas.py, never applied here.
+    - deltas: legacy-compatible annotation suggestions for examples whose
+      fixture passed; never applied here.
     - passed: [{"skill", "file", "task"}] — mirrors deltas 1:1.
     - failed: [{"skill", "file", "task", "tail"}] — no delta emitted.
     - unfixtured: [{"skill", "file"}] — no evals.yaml task's `example:`
@@ -232,8 +230,8 @@ def main(argv=None):
             os.makedirs(out_dir, exist_ok=True)
         with open(out_path, "w", encoding="utf-8") as f:
             yaml.safe_dump({"date": date, "deltas": agg["deltas"]}, f, sort_keys=False)
-        print(f"\nwrote deltas: {out_path} ({len(agg['deltas'])} promotion(s)) "
-              "— never applied; run apply_deltas.py to apply")
+        print(f"\nwrote review suggestions: {out_path} "
+              f"({len(agg['deltas'])} promotion(s)) — never applied")
 
         # Scheduled-lane semantics: a failing example is a finding for the
         # report above, not a fatal error for the CLI invocation itself.

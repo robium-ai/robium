@@ -70,12 +70,12 @@ should not force a full apt-get/colcon-dependency-resolution re-run.
 cleanly for graceful shutdown (lifecycle transitions, clean DDS
 participant teardown). Two things commonly break this in containers:
 
-- **Use exec form, not shell form, for the final `CMD`/`ENTRYPOINT` step**
-  so the launched process is PID 1 (or receives signals directly) rather
-  than being a child of an untracked shell that swallows the signal. The
-  `ENTRYPOINT` pattern above uses `exec "$@"` for exactly this reason;
-  without `exec`, the sourced-setup shell stays PID 1 and `docker stop`
-  has to wait out the full timeout before SIGKILL.
+- **Use exec form, not shell form, for the final `CMD`/`ENTRYPOINT` step** so
+  an untracked setup shell does not swallow the signal. Then account for PID 1
+  semantics: `ros2 launch` may still fail to follow Docker's default SIGTERM
+  path cleanly. Prefer a small init such as `tini`, or configure and test the
+  stop signal the launch process handles. The `ENTRYPOINT` above solves shell
+  indirection only; it is not proof of graceful shutdown.
 - **`docker compose stop`'s default timeout (10s)** may not be enough for a
   ROS 2 graph with several lifecycle nodes to shut down cleanly; raise
   `stop_grace_period` in compose for modules with real shutdown work to do,

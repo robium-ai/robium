@@ -38,7 +38,7 @@ uses dark red only for an active failure, not as decoration.
 
 - Inter: headings, body, buttons, and explanatory interface copy.
 - System mono: metadata, controls, compact labels, commands, and code.
-- Geist Mono: skill names, versions, and knowledge identifiers.
+- Geist Mono: skill names and knowledge identifiers.
 - Aldrich: the lowercase Robium wordmark only.
 - Corners: square or 2px. A circle is reserved for status dots and avatars.
 - Surfaces: flat border, no drop shadow, no decorative gradient.

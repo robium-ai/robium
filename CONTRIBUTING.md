@@ -77,10 +77,9 @@ cp -r templates/skill skills/<your-skill-name>
 mv skills/<your-skill-name>/SKILL.template.md skills/<your-skill-name>/SKILL.md
 ```
 
-The skeleton at `templates/skill/SKILL.template.md` carries the required
-section structure and inline guidance. (It is intentionally *not* named
-`SKILL.md` so plugin discovery doesn't load the skeleton itself; don't rename
-it in place.)
+The skeleton at `templates/skill/SKILL.template.md` demonstrates the lean
+shape. Its sections are prompts to replace, not a required template. It is
+intentionally not named `SKILL.md` so plugin discovery does not load it.
 
 The directory name is the skill's identity: `<your-skill-name>` must equal the
 `name:` field in the frontmatter.
@@ -88,37 +87,28 @@ The directory name is the skill's identity: `<your-skill-name>` must equal the
 ### 3. Fill it in
 
 Write the SKILL.md following the
-[quality bar](./skills/skill-author/references/quality-bar.md). The rules that
+[quality bar](./skills/skill-author/QUALITY.md). The rules that
 reviews enforce:
 
-- **Frontmatter is exactly `name` + `version` + `description`**, nothing else.
+- **Frontmatter is exactly `name` + `description`**, nothing else.
   (`name` must equal the directory name.)
-- **The `description` is a trigger surface, not a summary.** It is the only
-  signal an agent uses to decide whether to load your skill. Pack it with the
-  capability, explicit "Use when" phrases, literal keywords a user might type,
-  where the skill sits in the workflow, and a "Not for" negative-scope line
-  naming the neighboring skills it should *not* fire for. (≤1024 chars.)
-- **`version: MAJOR.MINOR.BUILD`**: start a brand-new skill at `1.0.0`.
-- **Body under 500 lines.** Depth beyond that goes into `references/*.md`
-  files (single-topic, ~5–10 KB, one level deep).
-- **Required sections, in this order**, as level-2 (`##`) headers:
-  `When to use this skill`, `Key directives`, `Quick start`, then
-  `Decision guidance` (umbrella skills) **or** `Usage patterns` (tool skills),
-  `Platform gotchas`, `Customization`, `References`, `Changelog`.
-- **State the delegation posture** as the first bullet of `Key directives`:
-  **embed** / **embed + links** / **delegate to `<upstream>`**.
+- **Keep the description short and discriminating.** Say what the skill helps
+  accomplish and separate it from its nearest neighbor without a keyword
+  inventory.
+- **Keep `SKILL.md` under 120 body lines.** This is a ceiling, not a target.
+  Give it one organizing idea and move conditional commands, failures, tuning,
+  platform evidence, schemas, and substantial examples into focused files.
+- **Use natural sections.** There is no required heading list or delegation
+  declaration.
 - **No invented syntax.** Every command, flag, and config key must be
   traceable to the real tool's own docs. robium ships knowledge, not a
   made-up DSL.
-- **Verify version facts against live docs at authoring time**: don't write
-  release names, LTS windows, or CLI shapes from memory; they drift.
-- **`examples/` files carry a `status:` marker**: `unverified` (curated from
-  upstream, not yet run here) until a real run promotes them to `verified`.
-- **Cross-references stay bidirectional.** If your skill points at a sibling,
-  make sure the relationship reads consistently from both sides. Only the
-  `architect` skill knows the whole catalog.
-- **Backticks are for local files only.** Backtick a path only when the file
-  lives inside your own skill's directory; another skill's file is prose.
+- **Verify volatile facts against current official docs.** Keep exact observed
+  values tied to their robot, platform, version, workload, and check.
+- **Route depth conditionally.** Link a support file where it becomes useful;
+  do not make every task load every reference.
+- **Use evals selectively.** Preserve routing ambiguity or a meaningful
+  executable regression, not headings or exact prose.
 
 ### 4. Run the checks
 
@@ -131,15 +121,13 @@ One command validates the skills, plugin manifests, and CLI tests:
 Expected output:
 
 ```
-Checked 25 skills: PASS
+Checked 26 skills: PASS
 ```
 
-(The count goes up by one when you add a skill.) The skill validator enforces the
-mechanical rules: frontmatter fields, version format, section presence, body
-line count, and that every backtick-quoted `references/`, `scripts/`, or
-`examples/` path actually exists. The judgment items in the quality bar
-(is the description a good trigger surface? is the delegation posture right?)
-are checked by a human in review.
+(The count goes up by one when you add a skill.) The validator checks the
+lightweight contract: frontmatter, entrypoint size, local links, and optional
+eval structure. Whether the guidance is genuinely useful is checked by a human
+with realistic requests.
 
 ### 5. Open a PR
 
@@ -150,22 +138,13 @@ the PR to one skill where you can; small, reviewable units merge faster.
 ## Improving an existing skill
 
 Fixing a stale fact or adding a hard-won gotcha to an existing skill is just as
-welcome. A few extra rules apply because skills are versioned like software:
-
-- **Bump the `version:`** per the semantics: **build** = small correction
-  (typo, stale-fact refresh, one-line fix, a keyword added to the
-  description); **minor** = content addition (new bullet/pattern, new reference
-  or example file); **major** = restructure or re-scope.
-- **Archive the prior version** before your first edit of a bump: copy the
-  skill's current directory to `archive/<name>/<old-version>/`. The archive is
-  the browsable history: committed, never edited, never loaded as a skill.
-- **Add a `## Changelog` line** starting with the new version:
-  `- <new-version> (YYYY-MM-DD): <what changed and why>`.
+welcome. Make the smallest useful edit, remove superseded guidance, and rely on
+Git history rather than adding a skill version or changelog.
 
 Learning-engine absorption still opens a reviewable PR rather than merging a
 skill change automatically. See
-`skills/learning-loop/references/learnings-loop.md` for the full hardening
-process maintainers use.
+`skills/learning-loop/PROMOTION.md` for the evidence and ownership process
+maintainers use.
 
 ## Contributing a sanitized build finding
 
@@ -192,10 +171,10 @@ Before posting, apply this privacy checklist:
 - Share only facts and excerpts needed to reproduce and verify the guidance.
 
 If the finding warrants a skill edit, make that change on a branch and open a
-focused pull request using the version, archive, changelog, and validation
-steps above. An agent may prepare the patch, but a human review and merge is
-still required; a learning report never writes directly to the published
-skill catalog.
+focused pull request using the lightweight validation and evidence steps
+above. An agent may prepare the patch, but a human review and merge is still
+required; a learning report never writes directly to the published skill
+catalog.
 
 ## Reporting bugs and requesting skills
 
@@ -213,7 +192,7 @@ Open-ended questions and design discussion belong in
 ## Ground rules
 
 - Match the repo's tone and factual claims; don't contradict `AGENTS.md` or
-  invent facts. When unsure about a versioned fact, verify against live docs.
+  invent facts. When unsure about a volatile fact, verify against live docs.
 - One logical change per PR. A new skill, or one skill's fix, is the ideal
   size.
 - By contributing, you agree your work is licensed under the repo's

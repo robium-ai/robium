@@ -1,87 +1,69 @@
-# Remote GUI over WebRTC livestream
+# Remote viewport over WebRTC
 
-Getting a full Isaac Sim viewport out of a headless cloud pod, with the
-traps that cost real time. Battle-tested on a RunPod pod running go2 on the
-prebuilt Isaac Lab image (Isaac Lab image 3.0.0-beta2-post1, driver
-580.159.04, Python 3.12.13), 2026-07-27/28. These are Isaac-specific facts;
-the general pod port-exposure mechanics belong to the `environments` skill's
-GPU-and-remote reference; reference it, don't re-derive it here.
+Use this card when a headless Isaac Sim instance needs an interactive or
+view-only viewport. The observations were measured on a RunPod pod running Go2
+on Isaac Lab image 3.0.0-beta2-post1 (driver 580.159.04, Python 3.12.13) on
+2026-07-27/28. Isaac Sim owns the streaming protocol; `runpod` owns provider
+port exposure, mapping, and proxy mechanics.
 
-## The only working answer is WebRTC (VNC/VirtualGL is a dead end)
+## Use a supported client
 
-A full Isaac Sim GUI from a headless pod = a **WebRTC livestream**. Do not
-reach for VNC/VirtualGL: Kit's RTX viewport renders with **Vulkan**, and
-VirtualGL only intercepts GLX/OpenGL, so you get a black or software
-viewport. Only GPU-Vulkan-aware protocols work: WebRTC (built in),
-NoMachine, or DCV.
+NVIDIA's current remote-viewport path is WebRTC. In the tested pod,
+VNC/VirtualGL connected but could not carry Kit's Vulkan RTX viewport and
+showed black or software output. Preserve that as a failure signature for that
+stack, not a claim that every remote-desktop product or future renderer fails.
 
-## Client
+- The native **Isaac Sim WebRTC Streaming Client** is available for supported
+  Windows, macOS, and Linux client platforms and suits local or trusted
+  networks.
+- NVIDIA also documents a separate Docker Compose web client for Chromium-based
+  browsers and recommends it for cloud or remote deployments. It runs beside
+  Isaac Sim; it is not bundled into the Isaac Sim NGC container.
+- The streaming endpoints provide neither authentication nor encryption. Keep
+  them on a trusted network or add an authenticated TLS boundary.
 
-Client = the **Isaac Sim WebRTC Streaming Client** (macOS aarch64 `.dmg`).
-Headless install (no Finder):
+Use the current [NVIDIA livestream client guide](https://docs.isaacsim.omniverse.nvidia.com/latest/installation/manual_livestream_clients.html)
+for the native and browser deployments.
 
-```bash
-hdiutil attach <client>.dmg
-cp -R "/Volumes/<mounted>/<Client>.app" /Applications/
-xattr -dr com.apple.quarantine "/Applications/<Client>.app"
-```
+## Start the stream and prove both paths
 
-There is **no in-page browser WebRTC client on the NGC image**: it ships
-the native client and the server extension but not a browser/JS WebRTC
-client (NVIDIA's web viewer is a separate Docker-Compose piece). If you need
-an in-page view, embed **MJPEG** instead (`env.render()` → `<img src=/stream>`):
-that is the real Isaac render, just JPEG rather than H.264/RTX.
+- Use the launch command for the installed distribution. Current documented
+  forms include `isaac-sim.streaming.sh`, container `runheadless.sh`, and the
+  full-streaming pip application; re-check before scripting one.
+- WebRTC needs signaling and media. In the current NVIDIA guide these are TCP
+  49100 and UDP 47998. Re-check them for the selected release and open both.
+- For a public endpoint, pass the public IP and advertised ports through the
+  current Kit settings. Do not expose the unauthenticated service directly.
+- In the tested RunPod setup, the client used the pod public IP and externally
+  mapped ports. Verify current provider behavior with `runpod`; do not copy that
+  mapping to another provider.
+- A reachable TCP port proves signaling only. Confirm media, a loaded stage,
+  and a changing frame before debugging the application.
 
-## Enabling the stream
+The current container guide requires host networking for the native WebRTC
+path; Docker port publishing is not equivalent. The official web-client Compose
+deployment owns its own networking shape.
 
-- Via AppLauncher: `--livestream 1` (public) or `--livestream 2` (private),
-  plus `PUBLIC_IP=<ip>`.
-- Or run `/isaac-sim/isaac-sim.streaming.sh`.
+## Black, grainy, or slow output
 
-**Ports:** TCP **49100** (signaling) and UDP **47998** (media). Opening only
-the TCP port is insufficient; WebRTC media needs the UDP port too, and a
-TCP-only setup is a common half-working state. On RunPod the ports are
-**remapped**, so in the client set the Signal/Stream fields to the
-**external mapped ports** and Server to the **pod public IP**. Pod
-port-exposure mechanics: the `environments` skill's GPU-and-remote reference.
+- Compare the server render size with the client's selected resolution. The
+  native client tested in 2026-07 offered 720p, 1080p, 1440p, and 4K choices; a
+  mismatch produced a black screen and a resolution-difference error.
+- Pass renderer dimensions through current Kit settings. In the tested Isaac
+  Lab launcher, generic `--width` and `--height` flags were not accepted.
+- In that client, grainy output tracked render resolution rather than an
+  exposed bitrate control. Slow output tracked pod distance. Recheck the
+  current client before carrying either diagnosis to another release.
 
-## Resolution must match a client dropdown option
+## Separate viewing from control
 
-The client offers fixed resolutions (720 / 1080 / 1440 / 4K). If the server
-renders at anything else you get a **black screen** plus:
-
-```
-Cannot stream video frame with resolution AxB that differs from CxD
-```
-
-Force a matching render resolution through Kit args (AppLauncher itself has
-**no `--width`/`--height` flags**; passing them yields
-`error: unrecognized arguments`):
-
-```
---kit_args "--/app/window/width=1920 ... --/app/renderer/resolution/height=1080"
-```
-
-Other symptoms: **"grainy"** is render resolution, not bitrate (there is no
-bitrate setting; it is adaptive). **"Slow/laggy"** is pod distance:
-geolocate the pod IP (e.g. `ip-api.com/json`) and pick a closer datacenter.
-
-## Input forwarding is split, and the interactive combo can't run a policy
-
-- **Bare Isaac Lab scripts** (`create_empty.py`, `play.py`) with
-  `--livestream` stream **video but not input**: the interaction extensions
-  never load, so the view is read-only.
-- **The full editor** (`isaac-sim.streaming.sh` /
-  `isaacsim.exp.full.streaming.kit`) loads those extensions, so it is
-  interactive, **but it cannot run an Isaac Lab policy.** The editor
-  timeline fights `env.step()`; the env never finishes reset and hangs
-  (~12 min) with:
-
-  ```
-  omni.physx.tensors: All physics information was deleted while being used
-  by a tensor view class ... simulationView invalidated
-  ```
-
-**Consequence:** {trained policy + interactive WebRTC + keyboard} cannot all
-coexist. Pick two: a policy running headless with a view-only stream, or an
-interactive editor with no policy stepping.
+- Bare Isaac Lab scripts with livestreaming produced video but did not load the
+  full editor's input extensions in the tested image, so the stream was
+  view-only.
+- The full editor was interactive, but its timeline fought the running Isaac
+  Lab policy's `env.step()` and invalidated the physics tensor view in that
+  image.
+- The reliable choices in that trial were headless policy execution with a
+  view-only stream, or editor control without policy stepping. Retest this
+  limitation on the selected Isaac Sim/Lab pair; do not state it as a permanent
+  product constraint.

@@ -125,7 +125,7 @@ If you must hit a hard 60s: compress shots 3–4 (reuse the terminal GIF at
 - "Your coding agent is lost in robotics. robium fixes that."
 - "One command: `npx robium-ai install`."
 - "Ask in plain language. Get a robot navigating in sim."
-- "25 versioned robotics skills — ROS 2, Nav2, Gazebo, LeRobot, Isaac, MuJoCo."
+- "Practical robotics skills — ROS 2, Nav2, Gazebo, LeRobot, Isaac, MuJoCo."
 - "Tested against real builds, not vibes."
 - Closing: "robium.ai · `npx robium-ai install`"
 

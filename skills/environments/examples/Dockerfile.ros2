@@ -3,12 +3,10 @@
 #         https://docs.astral.sh/uv/guides/integration/docker/ (uv-in-Docker pattern)
 #
 # Example: a ROS 2 workspace container with uv managing any pure-Python glue
-# code's dependencies (never `pip install` into this image's system Python;
-# see skills/environments/SKILL.md's key directives). Jazzy Jalisco is shown
-# here because it's the Nav2-vertical default; Lyrical Luth is the general
-# current-LTS default per skills/architect's Platform gotchas; re-verify
-# the ROS 2 base tag against hub.docker.com/_/ros and swap jazzy for lyrical
-# (or another current distro) before using in a real project.
+# code's dependencies instead of accumulating undeclared packages in the
+# image's system Python. Jazzy Jalisco is an example only; re-verify the ROS 2
+# base tag against hub.docker.com/_/ros and use the project's actual distro
+# before adapting this file.
 
 FROM ros:jazzy-ros-base-noble
 

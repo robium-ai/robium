@@ -23,7 +23,7 @@ export async function inspectManagedSkill(dest) {
       const resolved = await realpath(dest);
       if (!(await isRobiumSkillTarget(resolved))) return null;
       const text = await readFile(path.join(resolved, 'SKILL.md'), 'utf8');
-      return { path: dest, resolved, kind: 'link', ...skillIdentity(text) };
+      return { path: dest, resolved, kind: 'link', managedVersion: null, ...skillIdentity(text) };
     } catch {
       return null;
     }
@@ -37,6 +37,7 @@ export async function inspectManagedSkill(dest) {
     path: dest,
     resolved: dest,
     kind: 'copy',
+    managedVersion: await readManagedVersion(dest),
     ...skillIdentity(text),
   };
 }
@@ -44,8 +45,16 @@ export async function inspectManagedSkill(dest) {
 function skillIdentity(text) {
   return {
     name: text.match(/^name:\s*([^\s]+)\s*$/m)?.[1] ?? null,
-    version: text.match(/^version:\s*(\d+\.\d+\.\d+)\s*$/m)?.[1] ?? null,
   };
+}
+
+async function readManagedVersion(dest) {
+  try {
+    const marker = await readFile(path.join(dest, MANAGED_MARKER), 'utf8');
+    return marker.match(/^robium-ai\s+(\d+\.\d+\.\d+)\s*$/m)?.[1] ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export async function isManagedSkill(dest) {
@@ -62,18 +71,4 @@ export async function listManagedSkills(root) {
     if (item && await isFile(path.join(item.path, 'SKILL.md'))) managed.push(item);
   }
   return managed;
-}
-
-export async function readSkillVersions(root) {
-  let entries;
-  try { entries = await readdir(root, { withFileTypes: true }); } catch { return {}; }
-  const versions = {};
-  for (const entry of entries) {
-    if (!entry.isDirectory()) continue;
-    try {
-      const identity = skillIdentity(await readFile(path.join(root, entry.name, 'SKILL.md'), 'utf8'));
-      if (identity.name && identity.version) versions[identity.name] = identity.version;
-    } catch {}
-  }
-  return versions;
 }

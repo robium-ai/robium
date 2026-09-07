@@ -87,8 +87,8 @@ test('doctor: Cursor reports an installed local plugin with activation unknown',
   await writeFile(path.join(repo, '.claude-plugin', 'plugin.json'), '{}');
   await mkdir(path.join(repo, '.cursor-plugin'), { recursive: true });
   await writeFile(path.join(repo, '.cursor-plugin', 'plugin.json'), '{"name":"robium","version":"0.5.0"}');
-  await mkdir(path.join(repo, 'skills', 'nav2'), { recursive: true });
-  await writeFile(path.join(repo, 'skills', 'nav2', 'SKILL.md'), '---\nname: nav2\ndescription: test\n---\n');
+  await mkdir(path.join(repo, 'skills', 'navigation'), { recursive: true });
+  await writeFile(path.join(repo, 'skills', 'navigation', 'SKILL.md'), '---\nname: navigation\ndescription: test\n---\n');
   await mkdir(path.join(home, '.cursor', 'plugins', 'local'), { recursive: true });
   await symlink(repo, path.join(home, '.cursor', 'plugins', 'local', 'robium'), 'dir');
   const table = { ...ALL_GOOD };

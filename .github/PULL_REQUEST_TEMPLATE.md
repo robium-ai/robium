@@ -13,13 +13,11 @@ See CONTRIBUTING.md for the full flow.
 
 **If this PR touches a skill (`skills/**`):**
 
-- [ ] Frontmatter is exactly `name` + `version` + `description`; `name` equals the directory name.
-- [ ] Body is under 500 lines; required sections are present and in order.
-- [ ] **Version bumped** (`MAJOR.MINOR.BUILD`) per the semantics — build = small fix, minor = content addition, major = restructure/re-scope. New skills start at `1.0.0`.
-- [ ] **Prior version archived** to `archive/<name>/<old-version>/` (for edits to an existing skill), in this same PR.
-- [ ] A `## Changelog` line was added, starting with the new version: `- <version> (YYYY-MM-DD): …`.
-- [ ] Version facts were verified against live upstream docs at authoring time (not written from memory); citations say how they were verified.
-- [ ] Cross-references to sibling skills are bidirectional and consistent.
+- [ ] Frontmatter is exactly `name` + `description`; `name` equals the directory name.
+- [ ] The entrypoint is under 120 body lines, uses natural sections, and keeps conditional depth in focused support files.
+- [ ] Volatile facts were verified against current official sources; observed values retain their measured conditions.
+- [ ] Local links resolve and sibling skills are mentioned only at real subsystem boundaries.
+- [ ] Tests protect meaningful routing or behavior, not headings or exact prose.
 
 ## Notes for reviewers
 
