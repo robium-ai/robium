@@ -12,6 +12,13 @@ Use the symptom to locate the failed simulation contract.
   - Camera and `gpu_lidar` depend on the render engine even in server-only mode.
   - Check OGRE2/EGL or the software renderer and use the current headless-
     rendering option when no display is present.
+  - Inspect vendor robot xacro and included model files before adding a Sensors
+    system to the world. In the 2026-09-07 Silly TurtleBot Jazzy container, the
+    Create 3 model already owned a Sensors system fixed to Ogre 1; adding a
+    second Ogre2 system produced duplicate scene/HLMS failures. Patching that
+    exact installed xacro to Ogre2 while retaining one Sensors system restored
+    a roughly 3.5 Hz simulated OAK-D stream. Treat this as package-specific
+    evidence and re-inspect the installed source before applying it elsewhere.
   - Physics or odometry continuing does not prove render-backed sensors work.
 
 - **A vendor demo always opens a GUI**

@@ -23,3 +23,11 @@ evidence: proof=3 independent, explicit occurrences: (1)
   (environment, not skill content)". All three independently name the same
   root cause in the assistant's own words, in three different sessions —
   proof>=2 clears the ready bar on its own.
+
+## Gemini Robotics ER now has a concrete app and distinct integration boundary <!-- id: obs-new-skills-002 -->
+status: absorbed 2026-09-07
+proof: 3
+signal: no-skill-fired
+sources: [lrn-0907-01, lrn-0907-02, lrn-0907-03]
+target: new-skill: gemini-robotics — endpoint choice, streaming tool loop, multimodal turn boundaries, and guarded robot execution
+evidence: symptom verbatim ✓ · passing check ✓ · dead-ends ruled out ✓ — Silly TurtleBot supplied the named ER 2 Streaming application required by issue #25; a live guarded fake-tool turn, six focused tests, and separate Gazebo Nav2/OAK-D smoke establish the current validation boundary.

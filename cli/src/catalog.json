@@ -30,6 +30,10 @@
       "description": "Build and debug modern Gazebo simulations and their ROS 2 boundary."
     },
     {
+      "name": "gemini-robotics",
+      "description": "Build low-latency robot agents with Gemini Robotics ER, including streaming perception, function calls, and guarded execution."
+    },
+    {
       "name": "huggingface",
       "description": "Inspect and manage robotics datasets, models, Jobs, and Spaces on Hugging Face."
     },

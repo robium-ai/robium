@@ -51,3 +51,11 @@ quote: ros_distribution:
           # - humble
           - jazzy
           - rolling
+
+## a vendor model-scoped Sensors system cannot be overridden by adding a second world system <!-- id: obs-gazebo-005 -->
+status: absorbed 2026-09-07
+proof: 1
+signal: figured-out-from-scratch
+sources: [lrn-0907-04]
+target: gazebo/FAILURES.md (update) — inspect existing Sensors ownership and render engine before adding a world-scoped plugin
+evidence: symptom verbatim ✓ · passing check ✓ · dead-end ruled out ✓ — the Silly TurtleBot Jazzy container moved the installed Create 3 xacro's single Sensors system from Ogre 1 to Ogre2; a fresh-container Nav2/OAK-D smoke then passed, while Xvfb/Ogre 1 and a duplicate world Sensors system had failed distinctly.

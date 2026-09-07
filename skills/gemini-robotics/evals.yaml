@@ -1,0 +1,11 @@
+triggers:
+  positive:
+    - phrase: connect Gemini Robotics ER 2 Streaming to our TurtleBot camera and guarded Nav2 tools
+      source: learnings/2026-09-07-silly-turtlebot.md#lrn-0907-01
+    - phrase: my Gemini robotics Live API session stalls after the navigate function call
+  negative:
+    - phrase: Nav2 plans a path but the robot never receives velocity commands
+      expect: navigation
+    - phrase: decide whether this new robot application should use a VLM at all
+      expect: architect
+tasks: []
