@@ -22,7 +22,7 @@ async function makeRepo(dir) {
   await mkdir(path.join(dir, '.claude-plugin'), { recursive: true });
   await writeFile(path.join(dir, '.claude-plugin', 'plugin.json'), '{}');
   await mkdir(path.join(dir, 'skills', 'ros2'), { recursive: true });
-  await writeFile(path.join(dir, 'skills', 'ros2', 'SKILL.md'), '---\nname: ros2\nversion: 1.0.0\ndescription: t\n---\n');
+  await writeFile(path.join(dir, 'skills', 'ros2', 'SKILL.md'), '---\nname: ros2\ndescription: t\n---\n');
 }
 
 async function scratch() {

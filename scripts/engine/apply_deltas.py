@@ -2,7 +2,12 @@
 # /// script
 # dependencies = ["pyyaml"]
 # ///
-"""Apply anchor-targeted delta ops to skills (spec §7.2).
+"""Legacy anchor/version delta applier for historical artifacts and experiments.
+
+Live Robium skills are versionless and anchorless. Current absorption edits the
+skill and observation status together through the normal reviewed repository
+workflow; this module remains because historical tests and A/B machinery still
+import it.
 
 Deterministic: archive snapshot → apply ops (no-op fallback) → bump version
 → changelog line → sidecar updates. An unappliable op degrades to a no-op +

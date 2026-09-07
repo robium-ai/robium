@@ -9,7 +9,7 @@
           anti-bot page for direct fetch; re-verify there when reachable.
 
   <name> must match setup.py's package_name and the resource/ marker file
-  name in this same directory. See ../../SKILL.md's Customization section.
+  name in this same directory. Rename those package references together.
 -->
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">

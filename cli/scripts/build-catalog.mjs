@@ -45,14 +45,24 @@ export async function buildCatalog(pluginDir) {
     let text;
     try {
       text = await readFile(path.join(skillsDir, e.name, 'SKILL.md'), 'utf8');
-    } catch {
-      continue; // no SKILL.md (e.g. _TEMPLATE), so not an installable skill
+    } catch (error) {
+      if (error?.code === 'ENOENT') continue;
+      throw error;
     }
     const fm = parseFrontmatter(text);
-    if (!fm.name || !fm.version || !fm.description) {
-      throw new Error(`skills/${e.name}/SKILL.md missing name/version/description`);
+    if (!fm.name || !fm.description) {
+      throw new Error(`skills/${e.name}/SKILL.md missing name/description`);
     }
-    skills.push({ name: fm.name, version: fm.version, description: fm.description });
+    const fields = Object.keys(fm).sort();
+    if (fields.join(',') !== 'description,name') {
+      throw new Error(
+        `skills/${e.name}/SKILL.md frontmatter must contain only name and description`,
+      );
+    }
+    if (fm.name !== e.name) {
+      throw new Error(`skills/${e.name}/SKILL.md name must match its directory`);
+    }
+    skills.push({ name: fm.name, description: fm.description });
   }
   skills.sort((a, b) => a.name.localeCompare(b.name));
   return { source: 'robium-ai/robium', skills };

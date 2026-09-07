@@ -1,6 +1,5 @@
 ---
 name: alpha
-version: 1.2.3
 description: >
   A folded-scalar description that spans
   multiple indented lines and should be

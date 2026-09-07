@@ -60,8 +60,9 @@ Maintainer credentials live in Doppler (`robium/dev`) and never in git. Use
 - The maintainer may explicitly authorize direct-to-`main` work in the current
   conversation. That exception permits the local commit, not an inferred push,
   deploy, publish, paid job, or destructive cloud action.
-- Every skill edit still requires its archive snapshot, version bump,
-  changelog, catalog regeneration, and validation.
+- Live skills are intentionally versionless and changelog-free; Git history is
+  their change record. Regenerate the catalog when names or descriptions
+  change, and run the lightweight skill validator after skill edits.
 - Preserve unrelated working-tree changes. Never rewrite history or use a
   destructive reset unless the maintainer explicitly asks.
 

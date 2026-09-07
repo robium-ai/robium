@@ -12,7 +12,7 @@ idle
 allocating
   -> provider returns instance ID
 booting
-  -> host/capability appears; claim gateway; poll readiness
+  -> connect host/claim appears; claim gateway; poll readiness
 ready
   -> render viewer; show remaining time; allow restart/stop
 stopping
@@ -42,13 +42,17 @@ allocating another paid instance.
 
 ## Browser mechanics
 
-- Generate or receive one opaque session/instance ID per start.
-- Store the current host and capability in a ref/current-state cell read by the
+- Generate or receive one session/claim ID per start. Treat it as coordination,
+  not authentication, unless the host issued and the gateway validates a real
+  signed or high-entropy capability.
+- Store the current host and claim in a ref/current-state cell read by the
   poll loop; do not close over the pre-allocation host.
 - Claim the gateway when its host first appears or changes.
 - Poll the orchestrator during allocation/deletion and the gateway for app
-  readiness/metrics when a protected host exists.
-- Render the viewer only after readiness.
+  readiness/metrics when a current host exists.
+- Render the viewer only after readiness. Choose the adapter with
+  [viewers.md](viewers.md); keep protocol and layout mechanics in the selected
+  viewer skill.
 - Use `pagehide`/`beforeunload` beacon teardown only as a best effort; provider
   expiry and orchestrator cleanup remain authoritative.
 - Never poll or fetch fleet/provider state from catalog or overview pages.

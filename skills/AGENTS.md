@@ -1,50 +1,37 @@
-# Skill authoring guidance
+# Skill guidance
 
-This file applies only under `skills/`. Load the `skill-author` skill before
-editing skill content; use `learning-loop` for evidence absorption/refining.
+This file applies under `skills/`. Load `skill-author` before changing skill
+content and `learning-loop` when working from captured evidence.
 
-## Catalog boundaries
+## Keep discovery and context cheap
 
-- Only `architect` knows the full catalog. Other skills reference direct
-  collaborators and keep ownership bidirectional.
-- Put knowledge in the lowest skill that owns the decision. Keep common-path
-  guidance in `SKILL.md`; put optional depth in one-level `references/` files.
-- Robium documents real upstream syntax and examples. Never invent a command,
-  flag, API, configuration format, version fact, or DSL.
+- Only `architect` needs the full catalog. Other skills name direct neighbors
+  only where work crosses a real boundary.
+- Live frontmatter contains only `name` and a short `description`.
+- Give each entrypoint one strong organizing idea and keep it human-readable.
+  There is no required section template.
+- Assume ordinary coding competence. Include only guidance that changes a
+  capable agent's decisions.
+- Put conditional commands, failures, tuning, platform evidence, schemas, and
+  substantial examples in focused support files. Link them where they become
+  relevant instead of loading them by default.
+- Keep official upstream documentation authoritative for volatile commands,
+  APIs, packages, and configuration.
+- Preserve exact Robium-observed values with their conditions; never present
+  one application's workaround as a universal default.
 
-## Required mechanics
+## Change and review
 
-Before editing a skill, copy its current directory to
-`archive/<name>/<old-version>/`. Never edit an archive.
+- Git history is the normal record of live skill changes. Do not add per-skill
+  versions, changelogs, README files, or routine archive snapshots.
+- Existing files under `archive/` are immutable historical snapshots.
+- Preserve useful examples and scripts only when they provide reusable value;
+  validate changed executable artifacts proportionally.
+- Run `uv run skills/skill-author/scripts/validate_skills.py` after any live
+  skill change.
+- Use trigger or task evals only when they protect a meaningful routing or
+  behavior regression. Do not test headings or exact prose.
+- Regenerate `cli/src/catalog.json` after a skill name or description changes.
 
-- Build bump: correction, stale fact, typo, or trigger keyword.
-- Minor bump: new pattern/reference or trigger-surface expansion.
-- Major bump: restructure, ownership change, or description rewrite.
-
-Add a dated changelog line for the new version. Regenerate `cli/src/catalog.json`
-after any skill version/description change, then run:
-
-```bash
-uv run skills/skill-author/scripts/validate_skills.py
-uv run scripts/engine/run_trigger_evals.py --skills <changed-skills>
-```
-
-## Format and review bar
-
-- Frontmatter is `name`, `version`, `description` only, except the existing
-  `isaac-sim` compatibility field. Description is a concise trigger surface:
-  capability, realistic “Use when” phrases/keywords, workflow position, and
-  negative scope.
-- Required body order: When to use, Key directives, Quick start, Decision
-  guidance or Usage patterns, Platform gotchas, Customization, References,
-  Changelog. Body stays under 500 lines.
-- The first Key-directives bullet states the delegation posture: embed,
-  embed+links, or delegate.
-- Local backticked paths must exist inside the same skill. Refer to another
-  skill's files in prose rather than as a local path.
-- State how current/versioned facts were verified. If direct documentation was
-  unavailable, label search synthesis honestly and request re-verification.
-- Examples remain `status: unverified` until a real fixture/run passes.
-
-Direct-to-main is allowed only when the maintainer explicitly authorizes it in
-the current conversation. Otherwise skill changes end in a human-reviewed PR.
+Robium ships practical robotics knowledge and real reusable examples, not an
+application framework or invented DSL.

@@ -12,8 +12,8 @@
 # below (observation.image, observation.state, action) are exactly what
 # that training command's policy adapts to automatically.
 #
-# Requires: uv add "lerobot[dataset]"  (see SKILL.md's Quick start for the
-# fuller install used by the rest of this skill's examples)
+# Requires: uv add "lerobot[dataset]" (verify the current extra in LeRobot's
+# install docs; references/datasets.md explains the dataset contract.)
 
 from lerobot.datasets import LeRobotDataset
 

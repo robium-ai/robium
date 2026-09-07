@@ -29,9 +29,11 @@
       all set explicitly on the DiffDrive plugin (upstream's moving_robot.sdf
       only sets <topic>) so this world's gz topics are flat ("/cmd_vel",
       "/odom", "/tf") instead of model-scoped, matching
-      ../examples/ros-gz-bridge-config.yaml and what nav2's example params
-      expect (odom_frame_id "odom", base_frame_id "base_link",
-      odom_topic "/odom"); see ../../nav2/examples/nav2-params-diffdrive.yaml.
+      ../examples/ros-gz-bridge-config.yaml and the usual navigation contract:
+      odometry is reported in "odom" for a base called "base_link". Confirm
+      the exact frames and topics in the application's navigation profile;
+      TurtleBot3/Jazzy/Harmonic evidence lives in
+      ../../navigation/TURTLEBOT3-JAZZY-GAZEBO.md.
       The leading slash on every explicitly-set <topic>/<odom_topic>/
       <tf_topic> (and the sensors' <topic> tags below) matches the
       convention gz-sim's own test worlds use for explicit topics; see

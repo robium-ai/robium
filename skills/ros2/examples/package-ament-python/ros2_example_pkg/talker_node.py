@@ -25,8 +25,7 @@ from std_msgs.msg import String
 
 class ExampleTalker(Node):
     """Minimal publisher node demonstrating a declared parameter and
-    explicit QoS; see the "parameterize a node" usage pattern in
-    ../../../SKILL.md.
+    explicit QoS; see ../../../references/interfaces-and-qos.md.
     """
 
     def __init__(self):

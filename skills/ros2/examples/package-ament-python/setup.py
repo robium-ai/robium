@@ -9,8 +9,8 @@
 # package_name must match package.xml's <name>, the resource/ marker file
 # name, and the 'package=' argument in launch/talker.launch.py. The
 # console_scripts entry point name ('talker') must match the 'executable='
-# argument in that same launch file. See ../../SKILL.md's Customization
-# section for what to keep in sync when renaming.
+# argument in that same launch file. Rename the package, entry point, and launch
+# references together.
 
 import os
 from glob import glob

@@ -23,7 +23,7 @@ verification date; re-confirm at adoption time before vendoring.
 | Unitree Go2 (MJCF) | [google-deepmind/mujoco_menagerie](https://github.com/google-deepmind/mujoco_menagerie), dir `unitree_go2` | per-model (repo SPDX: NOASSERTION; check the model's own license file) | Quadruped testing in MuJoCo | GitHub API 2026-07-18: dir listing confirms unitree_go2 |
 | Unitree Go2/G1 (URDF, ROS) | [unitreerobotics/unitree_ros](https://github.com/unitreerobotics/unitree_ros) | BSD-3-Clause | Official Unitree descriptions for ROS/Gazebo use | GitHub API 2026-07-18: 1,477★, pushed 2026-07-08, SPDX BSD-3-Clause |
 | Unitree G1 (MJCF) | mujoco_menagerie dir `unitree_g1`; also [unitreerobotics/unitree_mujoco](https://github.com/unitreerobotics/unitree_mujoco) (BSD-3-Clause) | per-model (Menagerie) | Humanoid testing in MuJoCo | GitHub API 2026-07-18: dir listing confirms unitree_g1; unitree_mujoco 1,089★ |
-| SO-101 arm | [TheRobotStudio/SO-ARM100](https://github.com/TheRobotStudio/SO-ARM100), `Simulation/SO101/` | Apache-2.0 | The LeRobot-ecosystem arm; upstream source of the SO-101 sim model | GitHub API 2026-07-18: 6,821★, SPDX Apache-2.0, dir listing confirms Simulation/SO101. Note: Menagerie carries only the SO-**100** (`trs_so_arm100`) |
+| SO-101 arm (MJCF) | [google-deepmind/mujoco_menagerie](https://github.com/google-deepmind/mujoco_menagerie), dir `robotstudio_so101`; derived from [TheRobotStudio/SO-ARM100](https://github.com/TheRobotStudio/SO-ARM100), `Simulation/SO101/` | Apache-2.0 | The LeRobot-ecosystem arm in MuJoCo; Menagerie adds manipulation collision geometry, a camera mount, and ready scenes | GitHub contents API and both upstream READMEs on 2026-09-07 at Menagerie commit `8161bba264d7fa7c99ca301e91e7fb44737676ad`; model requires MuJoCo 3.1.3+ |
 
 ## Datasets
 
@@ -42,9 +42,11 @@ verification date; re-confirm at adoption time before vendoring.
 
 ## Known gaps
 
-- **No canonical public Nav2/TB3 rosbag exists**: nav regression bags are
-  always self-recorded; produce them with a seeded generator script (see the
-  sourcing funnel in the skill body) rather than hunting for a download.
+- **Nav2/TB3 rosbag search was inconclusive:** a 2026-07-18 public-source/API
+  search did not identify a canonical bag suitable for Robium's navigation
+  regression. Self-recording from a seeded scenario was the practical fallback,
+  not proof that no suitable public bag exists. Search again before generating
+  a new fixture.
 - **Drone assets unpicked**: no vertical yet (px4 is future work); the
   matrix row is an honest gap, not an oversight.
 - **Legged robots have models here but no robium skill coverage**: Go2/G1

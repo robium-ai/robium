@@ -12,12 +12,12 @@ file would collide). Plain `YYYY-MM-DD.md` only for non-app work.
 
 ## Entry template (schema v2)
 
-    - [nav2] wrong-guidance (seen 2x) <!-- id: lrn-0710-03 -->
+    - [navigation] wrong-guidance (seen 2x) <!-- id: lrn-0710-03 -->
       symptom: `[controller_server]: Costmap layer error` — robot hugged obstacles
       root-cause: Quick-start costmap YAML omits inflation_layer block
       fix: added inflation_layer, cost_scaling_factor 3.0 — check: nav smoke test passed
       dead-ends: tuning robot_radius (no effect — wrong layer)
-      anchors: nav2#costmap-inflation
+      target: navigation/FAILURES.md — clarify costmap evidence
       source: transcript a1b2c3#turn-142..158 (robium-apps/robot-navigation, 2026-08-27)
 
 Rules:
@@ -27,12 +27,13 @@ Rules:
   id `<!-- id: lrn-MMDD-NN -->` so ledgers/observations can cite the entry.
 - `symptom` / `fix (check: …)` / `dead-ends` are the three-part evidence bar as
   named fields. Missing parts are fine — the entry is `tentative` until complete.
-- `anchors:` names the exact skill item implicated (grep the skill for
-  `<!-- id:` to find them). `source:` points into the transcript archive when known.
+- `target:` names the skill or focused support file and the intended decision
+  change. It is an intent, not a brittle heading or anchor address. `source:`
+  points into the transcript archive when known.
 - Only the first line is mandatory. Capture is never blocked on schema — write
   the one-liner mid-session; the consolidation pass (Phase 2) completes fields
   from the archived transcript.
-- Absorption marking: the observations tier is canonical — an absorbed
-  finding is `status: absorbed YYYY-MM-DD` in learnings/observations/
-  (written by apply_deltas). Legacy `<!-- absorbed -->` markers in old
-  entries remain as history; don't add new ones.
+- Absorption marking: the observations tier is canonical. After the reviewed
+  skill change lands, update its finding to `status: absorbed YYYY-MM-DD` in
+  `learnings/observations/` as part of the same change. Legacy anchors and
+  `<!-- absorbed -->` markers remain history; do not add new ones.

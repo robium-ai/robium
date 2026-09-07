@@ -5,7 +5,7 @@ SDF (Simulation Description Format) world/model anatomy for modern Gazebo
 to run headless. All tag names, plugin filenames, and CLI flags below were
 verified on 2026-07-10 by direct `curl` of the raw source files cited in each
 section; re-verify before trusting a specific value in a real project, per
-this skill's "never write facts from memory" key directive.
+the source-of-truth rule in this skill's entrypoint.
 
 ## Release/pairing status (verify before using)
 
@@ -23,8 +23,8 @@ search snippets):
 
 Re-fetch this page before starting a new project; Gazebo ships a new named
 release roughly every year, and the "current LTS" answer shifts each time
-(Jetty superseded Harmonic/Ionic as the newest LTS after this skill's
-frontmatter description was written).
+(Jetty superseded Harmonic/Ionic as the newest LTS after the original
+reference was written).
 
 ## SDF world structure
 
@@ -107,7 +107,7 @@ session; this is the plugin's own doc, not a summary):
 Setting `<topic>/cmd_vel</topic>`, `<odom_topic>/odom</odom_topic>`,
 `<frame_id>odom</frame_id>`, and `<child_frame_id>base_link</child_frame_id>`
 explicitly (rather than leaving the model-scoped defaults) is what makes a
-single-robot world's gz topics and TF frames line up with what `nav2`
+single-robot world's gz topics and TF frames line up with what Nav2
 expects (`odom`→`base_link`) without a namespace prefix; see
 `examples/diffdrive-world-snippet.sdf`.
 

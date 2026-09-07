@@ -3,17 +3,18 @@
 Tier 2 of the learning engine — canonical, proof-counted, absorption-ready
 findings (spec: docs/superpowers/specs/2026-08-01-learning-engine-design.md
 §4.5 + §6a.3). One file per target skill (`<skill>.md`, stem must be a real
-skill directory); cross-catalog proposals go in `new-skills.md`. Lint:
+skill directory); cross-catalog proposals go in `new-skills.md`. Historical
+files keep their original IDs when a skill is renamed. Lint:
 `python3 scripts/engine/observations.py --check learnings/observations/*.md`.
 
 ## Entry template
 
-    ## costmap inflation missing from quick start <!-- id: obs-nav2-007 -->
+    ## costmap inflation missing from quick start <!-- id: obs-navigation-007 -->
     status: ready
     proof: 2
     signal: wrong-guidance
     sources: [lrn-0710-03, lrn-0726-01]
-    target: nav2#costmap-inflation (update) — add inflation_layer block to Quick start YAML
+    target: navigation/FAILURES.md (update) — distinguish missing sensor data from layer tuning
     evidence: symptom verbatim ✓ · passing check ✓ · dead-end ruled out ✓
 
 External (mined) entries add three fields:
@@ -43,9 +44,12 @@ External (mined) entries add three fields:
   skill owns → no-skill-fired (routes to new-skills.md).
 - **sources**: non-empty `[a, b, …]` list — `lrn-…` entry ids and/or
   `repo@short-sha` refs (convergence witnesses; only `source:` is quote-verified).
-- **target**: `<skill>#<anchor> (add|update|retire|move|annotate) — <what>` for
-  anchor-level intents, `<skill> (new-section) — <what>` when no anchor exists
-  yet, or in new-skills.md: `new-skill: <proposed-name> — <what>`.
+- **target**: `<skill>[/support-file] (add|update|retire|move) — <decision to
+  change>`, or in `new-skills.md`: `new-skill: <proposed-name> — <what>`.
+  Choose the narrowest likely file, but treat this as intent: the author may
+  place the final wording elsewhere after reviewing the current skill.
+- Existing anchor-shaped targets remain as immutable audit history. Do not add
+  new anchor IDs just to make an observation addressable.
 - **ready bar** (spec §4.5 + §6a.4): `status: ready` requires proof ≥ 2, OR
   signal = user-correction, OR the three-part evidence bar (three ✓ marks in
   evidence), OR origin external with the word "official" in evidence (the
@@ -60,3 +64,6 @@ External (mined) entries add three fields:
 - **Merge-on-same-finding**: one canonical entry per finding; new occurrences
   append to sources and bump proof — never sibling entries. Contradictions
   evolve in place: "now X (previously Y per lrn-…)".
+- **Absorption**: edit the live skill directly, run the checks appropriate to
+  the change, then mark the observation absorbed in the same reviewed diff.
+  The legacy version-and-anchor delta applier is not the live-skill writer.

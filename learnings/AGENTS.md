@@ -25,8 +25,9 @@ retention maintenance.
   sidecars; it never changes `skills/`.
 - During an app build, capture and continue. Absorb between builds unless the
   maintainer explicitly requests a skill change in the current conversation.
-- Automated/unrequested absorption ends in a PR. A maintainer-authorized direct
-  main edit still uses archive/version/changelog/validation mechanics.
+- Automated or unrequested absorption ends in a PR. A maintainer-authorized
+  direct-main edit still needs a concrete diff, evidence, and proportional
+  validation, but live skills do not use versions or changelogs.
 
 ## Transcript retention
 

@@ -21,9 +21,10 @@ having their own module, so they don't show up in a directory listing of
 Adapted from `lerobot_eval.py`'s own docstring example with two
 corrections learned in a real build (2026-07-12, manip-trial): the
 docstring's `--policy.path=lerobot/diffusion_pusht` no longer loads
-(pre-0.6 checkpoint, missing processor files; see `SKILL.md`'s Key
-directives), and the async-env default crashes (see `SKILL.md`'s Platform
-gotchas), so point at your own checkpoint and force sync envs:
+(pre-0.6 checkpoint, missing processor files), and the async-env default
+crashed in the tested release, so point at your own checkpoint and force sync
+envs. See `FAILURES.md` and re-check both behaviors against the installed
+version:
 
 ```bash
 lerobot-eval \
@@ -69,8 +70,8 @@ older versions used an `aggregated` key). Rollout MP4s land in
 | `isaaclab_arena` | Isaac Lab Arena, loaded via EnvHub (`HubEnvConfig`) | This is the seam to the NVIDIA RL stack: deep Isaac Lab usage is `isaac-lab`'s territory; this skill only notes that LeRobot can evaluate against it. |
 
 `aloha` and `pusht` are LeRobot's original, longest-supported sim envs:
-the default choice for validating a new pipeline (see `SKILL.md`'s Quick
-start). Their many hub-hosted pretrained baselines mostly predate the 0.6
+the default choice for validating a new pipeline. Their many hub-hosted
+pretrained baselines mostly predate the 0.6
 processor-pipeline format and no longer load, so validate with a smoke
 train of your own rather than a hub checkpoint.
 `libero` is the standard published benchmark for comparing VLA policies.
@@ -153,5 +154,5 @@ evaluation), `highlight` (ring-buffer recording, save-on-keystroke),
 with reset phases). All strategies support `--inference.type=rtc` for
 smoother execution with slower VLA policies (Pi0, Pi0.5, SmolVLA). Real-
 hardware bring-up (ports, calibration, camera setup) is deliberately not
-covered in depth by this skill; see LeRobot's own hardware docs
-(`SKILL.md`'s References) for a specific robot.
+covered in depth by this skill; see LeRobot's current hardware documentation
+for the specific robot.

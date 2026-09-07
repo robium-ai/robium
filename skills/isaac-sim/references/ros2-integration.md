@@ -19,24 +19,20 @@ real project.
 | Ubuntu 22.04 | Humble, Jazzy | Jazzy |
 | Windows 11 | Humble | Humble |
 
-**This is narrower than robium's general ROS 2 default.** The `architect`
-and `environments` skills default new robium projects to **Lyrical Luth**
-(the current newest LTS) generally, with Jazzy Jalisco reserved for the
-Nav2 vertical, but Isaac Sim's ROS 2 bridge does not officially test or
-support Lyrical Luth as of 2026-07-10's fetch. Don't assume a
-Lyrical-Luth-based project gets a working Isaac Sim bridge out of the box;
-either target Jazzy (or Humble) for the Isaac-Sim-facing part of a project,
-or use the experimental path below and validate it yourself before relying
-on it.
+**This may be narrower than the ROS 2 release used by the application.** The
+table records what NVIDIA documented on 2026-07-10, not a permanent support
+matrix. Detect the project's actual distro and re-check the current bridge
+documentation before choosing a mixed stack. A distro absent from the official
+matrix is unverified until the bridge is exercised against it.
 
 **Experimental: any natively-installed distro.** The docs note Isaac Sim
 "experimentally supports loading any ROS 2 distro that is natively
 installed on your platform" (Ubuntu 22.04 or 24.04 only) by sourcing the
 host's own ROS 2 install before Isaac Sim launches, rather than using the
-bridge's bundled internal ROS 2 libraries. Only Humble and Jazzy remain
-officially tested and recommended; treat any other distro (including
-Lyrical Luth) run this way as unverified for a given project until you've
-confirmed the bridge actually works against it.
+bridge's bundled internal ROS 2 libraries. Only Humble and Jazzy were
+officially tested and recommended in that fetch; treat any other distro run
+this way as unverified for a given project until the bridge actually works
+against it.
 
 Additional notes from the same fetch:
 

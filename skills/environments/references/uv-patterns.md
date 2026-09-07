@@ -2,8 +2,8 @@
 
 How to set up and run a pure-Python robium project with
 [uv](https://docs.astral.sh/uv/). This is the default for any project that
-doesn't need ROS 2 or other system-level dependencies; see the decision tree
-in `SKILL.md`. Sources: [uv docs](https://docs.astral.sh/uv/), fetched via the
+doesn't need ROS 2 or other system-level dependencies; see the uv choice in
+`SKILL.md`. Sources: [uv docs](https://docs.astral.sh/uv/), fetched via the
 `ctx7` documentation tool (`astral-sh/uv`) rather than from memory; re-verify
 against current docs before relying on exact flag behavior.
 
@@ -73,7 +73,7 @@ treat `uv pip install` as an escape hatch, not the norm.
 Commit `uv.lock` to the repository. It pins every resolved dependency
 (including transitive ones) to an exact version, which is what makes "works
 on my machine" become "works everywhere"; this is the uv half of the
-local == remote acceptance test from `SKILL.md`. Re-run `uv lock` (or `uv
+local == remote runtime contract from `SKILL.md`. Re-run `uv lock` (or `uv
 sync`, which updates the lock as needed) after changing `pyproject.toml`, and
 commit the updated lockfile in the same change.
 

@@ -91,6 +91,10 @@ def test_clean_file_lints_clean(tmp_path):
     assert obs.lint_file(_write(tmp_path, "nav2.md", GOOD), {"nav2"}) == []
 
 
+def test_renamed_skill_keeps_historical_observation_ids(tmp_path):
+    assert obs.lint_file(_write(tmp_path, "nav2.md", GOOD), {"navigation"}) == []
+
+
 def test_external_entry_lints_clean(tmp_path):
     assert obs.lint_file(_write(tmp_path, "ros2.md", EXTERNAL), {"ros2"}) == []
 

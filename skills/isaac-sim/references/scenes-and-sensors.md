@@ -84,8 +84,8 @@ Three sensor families, per the Robot Setup documentation:
 - **Physics-based sensors**: IMU and contact sensors, driven by the physics
   simulation rather than rendering.
 
-As with Gazebo (see that skill's Key directives), pull real rate/FOV/range/
-noise numbers from the target sensor's datasheet rather than leaving
+As with Gazebo guidance, pull real rate/FOV/range/noise numbers from the target
+sensor's datasheet rather than leaving
 importer or tutorial defaults in place; a sensor that "looks right" in a
 demo scene but doesn't match the real unit's characteristics produces a
 perception stack that quietly breaks the moment it meets real data.

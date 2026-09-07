@@ -24,7 +24,7 @@ export async function skills({ query, log = console.log, catalogPath } = {}) {
 
   const w = Math.max(...hits.map((s) => s.name.length));
   for (const s of hits) {
-    log(`${s.name.padEnd(w)}  ${s.version.padEnd(7)}  ${firstSentence(s.description)}`);
+    log(`${s.name.padEnd(w)}  ${firstSentence(s.description)}`);
   }
   log(`\n${hits.length} of ${list.length} skills. Install with: npx robium-ai install`);
   return 0;

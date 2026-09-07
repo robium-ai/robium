@@ -6,16 +6,23 @@ on robium.ai (Cloud Run service demo-nav-trial). Adapt FLEET_BUDGET and
 the CORS origin for your deployment.
 
 Routes:
+  * POST /start?session=UUID      -> first claim when no tunnel is active;
+      503 if another claim has an active tunnel.
   * WebSocket upgrade (any path)  -> raw byte tunnel to the bridge :8766.
       First tunnel claims the instance for the request's ?session=UUID;
       a second concurrent viewer gets 503 (Cloud Run routes their retry to
       a fresh instance because this one is busy).
   * GET  /status?session=UUID     -> 200 JSON (contract in the plan header);
       409 if the instance is claimed by a different session.
-  * POST /shutdown?session=UUID   -> 200 + SIGTERM PID 1 (container exits);
+  * POST /shutdown?session=UUID   -> 200 + SIGINT PID 1 (container exits);
       403 on session mismatch.
 
 stdlib only; runs alongside ros2 launch inside the demo container.
+
+The session query value is supplied by the browser. It prevents concurrent
+visitors from sharing this process, but it is not authentication. An untrusted
+deployment must add host-issued, signed or high-entropy capability validation
+to every lifecycle and viewer route.
 """
 import asyncio
 import json
@@ -135,9 +142,10 @@ async def handle(reader, writer):
     is_upgrade = 'upgrade: websocket' in head.lower()
 
     if is_upgrade:
-        # A claim is sacred only while its tunnel is LIVE: a concurrent ws
-        # from any session -> 503 (hijack guard; that visitor's retry gets a
-        # fresh instance). With no live tunnel, a new session may take over
+        # A claim is exclusive only while its tunnel is live: a concurrent ws
+        # from any session -> 503. On Cloud Run that visitor's retry may reach
+        # a fresh instance; a single local or RunPod instance cannot reroute.
+        # With no live tunnel, a new session may take over
         # the claim; this is the page-reload path (new UUID + affinity
         # cookie routes to the old, already-booted instance: instant ready).
         if state['tunnel_open']:

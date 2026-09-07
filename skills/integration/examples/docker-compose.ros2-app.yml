@@ -7,14 +7,14 @@
 # Minimal two-service ROS 2 app: `sim` stands in for a simulator publishing
 # data, `app` stands in for the module that consumes it, the same shape as
 # a real sim+controller or sim+perception pair. Both run on the *same*
-# ROS 2 graph, so per the comms-choice table in SKILL.md this uses native
+# ROS 2 graph, so per the boundary guidance in SKILL.md this uses native
 # ROS 2 topics, not a non-ROS transport.
 #
 # DDS discovery is configured EXPLICITLY, not assumed:
 #   - `network_mode: host` puts both containers on the host's real network
 #     namespace, so default multicast-based DDS discovery works unmodified
 #     (see references/compose-patterns.md, option 1). Linux-only; see
-#     SKILL.md Platform gotchas for the macOS/Windows Docker Desktop caveat;
+#     references/compose-patterns.md for the macOS/Windows Docker Desktop caveat;
 #     for cross-host or non-Linux-host setups use option 2 or 3 in that
 #     reference instead (Fast DDS Discovery Server / static CycloneDDS
 #     peers) rather than switching to host networking blindly.

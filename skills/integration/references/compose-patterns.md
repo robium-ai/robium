@@ -13,18 +13,16 @@ page loaded but didn't render past its table of contents, so the
 corroboration rather than a full direct read; re-verify before relying on
 them.
 
-## The core problem: multicast doesn't cross Docker's default network
+## First prove discovery in the target topology
 
 By default, `docker compose` puts services on a bridge network. Most DDS
 implementations' default discovery (Simple Discovery Protocol) uses
-multicast UDP (traditionally `239.255.0.1:7400` and neighboring ports) to
-find peers. Docker's default bridge network does not forward multicast
-between containers, so two ROS 2 nodes in separate compose services will
-**not** discover each other with a bare `services:` block and no other
-config; this is the failure mode the "DDS discovery must be configured
-explicitly" key directive exists to prevent.
+multicast UDP to find peers. Whether that succeeds depends on the RMW,
+selected interfaces, Docker and host platform, and cross-host topology. Start
+two minimal participants in the actual deployment network and prove discovery
+and data flow; do not infer either success or failure from `docker compose up`.
 
-There are three sound fixes; pick one per project and state which:
+If the probe fails, choose and document one topology deliberately:
 
 ### 1. Host networking (same host, Linux, simplest)
 
@@ -40,14 +38,13 @@ services:
       - ROS_DOMAIN_ID=42
 ```
 
-Containers share the host's network namespace, so multicast discovery
-works exactly as it would for two processes run directly on the host; no
-DDS config changes needed. Linux-only in practice (Docker Desktop on
-macOS/Windows does not give a real host network namespace; see `SKILL.md`
-Platform gotchas), and it gives up Docker's port-mapping isolation, which
-is usually fine for a closed robotics stack but worth noting. This is the
-mechanism the compose example (`examples/docker-compose.ros2-app.yml`)
-uses, because it targets the common same-host Linux dev/deploy case.
+On Linux, containers share the host's network namespace, which often makes a
+same-host DDS topology behave like host processes without extra discovery
+configuration. Verify it with the selected RMW. Host-network behavior on
+Docker Desktop has changed across releases and is not equivalent to Linux;
+check current Docker documentation and probe it. This gives up port-mapping
+isolation. The compose example (`examples/docker-compose.ros2-app.yml`) uses
+this shape for a same-host Linux target, not as a universal fix.
 
 ### 2. Fast DDS Discovery Server (cross-host, or containers without host networking)
 
@@ -119,8 +116,7 @@ dependency, model it as one.
 Set it explicitly, per project, on every service that should discover each
 other, and treat it like a port number: unique enough that this project's
 containers don't cross-talk with another ROS 2 system running on the same
-host-network segment (default `0` is exactly the collision risk called out
-in `SKILL.md`'s Platform gotchas).
+host-network segment (default `0` is the collision risk).
 
 The constant in this file (`42`) is right for the shape compose models: one
 copy of the stack per host. It is **wrong for concurrent copies**: if
@@ -128,8 +124,9 @@ something spawns N containers from this image at once, they all land on
 domain 42, their graphs merge, and you get two `/clock` publishers and a
 `Moved backwards in time, re-publishing joint transforms!` flood rather
 than an honest error. Concurrent-instance spawners assign a per-instance
-domain ID (lowest free in 1–200) at start time; see the `ROS_DOMAIN_ID`
-gotcha in `SKILL.md`.
+domain ID at start time and keep it outside the IDs already in use. The
+1–200 allocation range was the convention used by Robium's 2026-07-13
+nav-trial orchestrator, not a universal ROS rule.
 
 ## `depends_on` and healthchecks
 

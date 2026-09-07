@@ -56,13 +56,13 @@ across reboots.
   *behind* NAT and ROS 2 sees **zero topics**: discovery multicast never
   reaches the robot's LAN. The teleop host must sit on the robot's own LAN
   subnet, not behind a NAT boundary.
-- **macOS has no native ROS 2, and Docker Desktop's Linux VM breaks DDS
-  multicast to the physical LAN.** So a Mac can't be a ROS 2 participant on
-  the robot's wire either natively or via a container. The consequence for
-  visualization: the ROS↔browser bridge (foxglove_bridge / rosbridge) must
-  run **on the robot** (talking DDS over localhost), and the browser
-  connects to it over a plain TCP WebSocket. See the foxglove skill for the
-  bridge side; this is why "run the bridge on the Mac" is a dead end.
+- **In the 2026-07-24/25 TurtleBot 4 + Docker Desktop trial, the Linux VM did
+  not discover DDS participants on the physical robot LAN.** Running the
+  ROS↔browser bridge on the robot and connecting from the Mac over TCP was the
+  validated resolution for that setup. Docker Desktop networking modes, RMWs,
+  and LAN topologies change; probe bidirectional reachability and ROS discovery
+  before generalizing this result or choosing bridge placement. See the
+  foxglove skill for the bridge side.
 
 ## macOS Internet Sharing failure modes
 
@@ -70,8 +70,8 @@ across reboots.
   (192.168.2.1) never comes up. Worse, the half-on state *breaks the direct
   cable*: the robot still answers IPv6 multicast ping but unicast SSH times
   out. Turning Internet Sharing OFF restores the cable. (For a Mac cabled to
-  a robot LAN losing its own internet, see the network-service-order gotcha
-  in SKILL.md, a separate issue.)
+  a robot LAN losing its own internet, see [platform notes](../PLATFORM-NOTES.md), a separate
+  issue.)
 
 ## DHCP and MAC-address gotchas on the shared SSID
 

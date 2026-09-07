@@ -21,9 +21,9 @@ From the same repo's top-level `README.md`, fetched directly on 2026-07-10:
 | Rolling | Jetty | packages.ros.org |
 | Rolling | Harmonic / Ionic | source only |
 
-The robium nav vertical (`nav2` skill) targets Jazzy, so this skill's
-nav-facing examples use the Jazzy/Harmonic row with prebuilt binaries
-(`sudo apt-get install ros-jazzy-ros-gz`). Re-fetch this table before
+The current `navigation` skill's proven TurtleBot3 profile targets Jazzy and
+Harmonic, so this reference's navigation examples use that row with prebuilt
+binaries (`sudo apt-get install ros-jazzy-ros-gz`). Re-fetch this table before
 picking a pairing for a different ROS 2 distro; it changes with every new
 named Gazebo or ROS 2 release.
 
@@ -104,9 +104,9 @@ If Gazebo detects another `/clock` publisher at startup, it falls back to a
 fully-qualified `/world/<world>/clock` topic instead, so bridge `/clock`
 explicitly and unidirectionally (`GZ_TO_ROS`) so Gazebo stays the sole
 `/clock` source: every `use_sim_time:=true` node (Nav2 included; see the
-`nav2` skill's Platform gotchas) depends on this topic actually publishing,
-or every TF/action timestamp check hangs waiting for a clock that never
-arrives.
+`navigation` skill's TurtleBot3 compatibility card) depends on this topic
+actually publishing, or every TF/action timestamp check hangs waiting for a
+clock that never arrives.
 
 ## `frame_id` / `override_frame_id`
 

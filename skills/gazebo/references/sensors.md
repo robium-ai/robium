@@ -168,13 +168,13 @@ the lidar-specific block shown above:
 `type="gaussian_quantized"` additionally rounds outputs to a `<precision>`
 step. A sensor left at the tutorial/example defaults (frequently zero
 noise) will not expose the same failure modes a downstream consumer will hit
-against the real sensor; set noise from the real sensor's datasheet, per
-this skill's sensor-correctness key directive.
+against the real sensor; set noise from the real sensor's datasheet and use
+the `simulation` skill's sensor-fidelity card when transfer matters.
 
 ## GPU dependency and headless rendering
 
 IMU and contact sensors have no render-engine dependency. Camera and
 `gpu_lidar` sensors do, via `gz-sim-sensors-system`'s render engine (OGRE2
-by default); see this skill's Platform gotchas for headless-rendering and
-GPU-vs-software-rendering guidance when running these sensor types without
-a display or GPU.
+by default); see this skill's [failure router](../FAILURES.md) for headless-rendering and
+GPU-vs-software-rendering guidance when running these sensor types without a
+display or GPU.

@@ -12,7 +12,7 @@
 # side and not the other, e.g. "cmd_vel" vs. "/cmd_vel", is a silent
 # non-match, not a typo Gazebo warns about). Renaming a topic in one file
 # without the other silently breaks that bridge entry; see the "Bridge
-# sensor topics to ROS 2" usage pattern in ../SKILL.md.
+# bridge shape in ../references/ros2-bridge.md.
 #
 # frame_id overrides below are set to "base_link" for scan/imu because the
 # example world mounts both sensors at base_link's own origin with no
@@ -27,7 +27,7 @@
 
 # Gazebo is the sole /clock source once bridged; see
 # ../references/ros2-bridge.md's "/clock needs special handling" section.
-# Every use_sim_time:=true ROS 2 node (including nav2) depends on this.
+# Every use_sim_time:=true ROS 2 node (including Nav2) depends on this.
 - ros_topic_name: "/clock"
   gz_topic_name: "/clock"
   ros_type_name: "rosgraph_msgs/msg/Clock"
@@ -43,10 +43,8 @@
   direction: ROS_TO_GZ
 
 # Wheel odometry out of the sim (matches <odom_topic>/odom</odom_topic>).
-# odom_frame_id / base_frame_id in nav2's example params
-# (nav2-params-diffdrive.yaml) expect exactly "odom" / "base_link", which
-# the DiffDrive plugin's <frame_id>/<child_frame_id> in the paired world
-# file already set.
+# The navigation configuration and robot model must agree with the "odom" /
+# "base_link" frames set by the paired world's DiffDrive plugin.
 - ros_topic_name: "/odom"
   gz_topic_name: "/odom"
   ros_type_name: "nav_msgs/msg/Odometry"
@@ -60,9 +58,8 @@
   gz_type_name: "gz.msgs.Pose_V"
   direction: GZ_TO_ROS
 
-# Lidar scan (matches the gpu_lidar sensor's <topic>/scan</topic>). nav2's
-# example AMCL config reads scan_topic: "scan"; bridged here to the same
-# flat ROS topic name "/scan".
+# Lidar scan (matches the gpu_lidar sensor's <topic>/scan</topic>). Bridge it to
+# the same ROS topic selected by the installed localization configuration.
 - ros_topic_name: "/scan"
   gz_topic_name: "/scan"
   ros_type_name: "sensor_msgs/msg/LaserScan"
