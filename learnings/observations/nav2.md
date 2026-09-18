@@ -39,7 +39,7 @@ source: ros-navigation/navigation2_tutorials@050a2d6 nav2_pure_pursuit_controlle
 quote: geometry_msgs::msg::TwistStamped computeVelocityCommands(
 
 ## sam_bot_description bringup: robot_localization's ekf_filter_node fuses odom+IMU into odom→base_link TF; use_sim_time propagation in the same launch file is only partially consistent <!-- id: obs-nav2-004 -->
-status: ready
+status: absorbed 2026-09-17
 proof: 1
 signal: verified
 sources: [ros-navigation/navigation2_tutorials@050a2d6]

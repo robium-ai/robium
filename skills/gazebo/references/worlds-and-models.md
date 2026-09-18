@@ -132,6 +132,11 @@ URDF that `robot_state_publisher` already published to
 prints the live flag list; check it against a specific `ros_gz` version
 before scripting around it.
 
+Both input shapes occur in current vendor applications: TurtleBot3 supplies a
+model with `-file`, while TurtleBot4 publishes `robot_description` and spawns
+with `-topic`. Choose from the model ownership boundary rather than treating
+one form as merely illustrative.
+
 ## Running headless
 
 `gz sim -s -r <world>.sdf`: `-s` runs the server only ("headless mode",

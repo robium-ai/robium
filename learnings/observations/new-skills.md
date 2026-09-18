@@ -1,5 +1,5 @@
 ## app-build sessions run without the robium plugin loaded — the whole catalog goes dark <!-- id: obs-new-skills-001 -->
-status: ready
+status: absorbed 2026-09-17
 proof: 3
 signal: no-skill-fired
 sources: [lrn-0802-01, lrn-0802-02]

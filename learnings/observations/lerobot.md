@@ -1,5 +1,5 @@
 ## dataset rows may mix joint degrees with gripper percent <!-- id: obs-lerobot-001 -->
-status: ready
+status: absorbed 2026-09-17
 proof: 1
 signal: figured-out-from-scratch
 sources: [lrn-0817-09]
@@ -7,7 +7,7 @@ target: lerobot#load-hub-dataset (update) — verify per-channel units and use t
 evidence: recorded rows contained degree-scale joints and a percent-scale gripper while the simulator expected radians ✓ · so101-nexus's dataset_row_to_sim_qpos conversion passed the dataset contract tests and the UI now labels recorded units explicitly ✓ · vector-wide numpy.deg2rad was ruled out because it corrupts the gripper channel ✓
 
 ## video-backed datasets require LeRobot's dataset extra <!-- id: obs-lerobot-002 -->
-status: ready
+status: absorbed 2026-09-17
 proof: 1
 signal: wrong-guidance
 sources: [lrn-0817-10]

@@ -25,6 +25,9 @@ executes it.
 
 - Keep one `client.aio.live.connect` session open for the task and run a receive
   loop that handles both model content and tool calls.
+- Serialize user turns and model-facing heartbeats around unresolved turns and
+  blocking tools. A text heartbeat is a new reasoning input, not a transport
+  keepalive, and can interrupt an action as barge-in.
 - Declare physical actions with `behavior: BLOCKING`. Execute each call through
   the robot adapter, then manually return a `FunctionResponse` with the call ID,
   name, and structured result using `send_tool_response`.
@@ -34,6 +37,10 @@ executes it.
 - A camera frame alone updates context but does not trigger reasoning. Pair it
   with user audio/text, or use an intentional heartbeat prompt. Heartbeats are
   turns and can interrupt generation.
+- When a tool exists specifically to observe the world, attach its fresh image
+  to that call's `FunctionResponse` when the SDK supports inline media. This
+  binds the evidence to the requesting call more deterministically than placing
+  an unrelated realtime frame immediately before the response.
 - The streaming endpoint returns text, not synthesized audio. Route speech
   through an independently replaceable TTS adapter or expose speaking as a
   bounded tool.
@@ -51,20 +58,27 @@ stalls, ignores images, overlaps actions, or never finishes an audio turn.
 - Validate the tool allowlist, exact arguments, ranges, named resources, and
   current perception-issued object IDs in ordinary code. A system instruction
   and JSON schema improve model behavior but are not the safety boundary.
+- Build the advertised tool list from capabilities that passed preflight. Do
+  not leave a disconnected robot, camera, or accessory visible to the model as
+  a callable tool.
 - Return completion, rejection, and failure states to the model. After motion,
   send a fresh observation so the next decision is based on the resulting
   scene rather than the pre-action frame.
 - Give every long-running action cancellation and a deadline. On session or
   tool timeout, invoke the robot's stop/cancel path independently of the model.
+- On half-duplex hardware, pause microphone ingestion before speech or another
+  device action and resume it explicitly afterward. Keep this device handoff
+  outside the model's control.
 - Prove the same semantic contract against a fake adapter, representative
   simulation, and finally supervised hardware. Keep simulator- and robot-
   specific motion details behind the adapter.
 
 For the evidence behind these choices and their current validation limits, read
-[SILLY-TURTLEBOT.md](SILLY-TURTLEBOT.md). Use `integration` for process or
-transport boundaries, `ros2` and `navigation` for deterministic mobile-robot
-execution, and `testing` for the fake-to-simulation-to-hardware acceptance
-ladder.
+[SILLY-TURTLEBOT.md](SILLY-TURTLEBOT.md) for a ROS/Nav2 mobile robot and
+[STACKCHAN-ER2.md](STACKCHAN-ER2.md) for a USB, audio, camera, and BLE companion.
+Use `integration` for process or transport boundaries, `ros2` and `navigation`
+for deterministic mobile-robot execution, and `testing` for the
+fake-to-simulation-to-hardware acceptance ladder.
 
 ## Done
 

@@ -1,5 +1,5 @@
 ## fall back to direct image rendering when an embedded Rerun viewer stays black <!-- id: obs-rerun-001 -->
-status: ready
+status: absorbed 2026-09-17
 proof: 1
 signal: verified
 sources: [lrn-0817-12]

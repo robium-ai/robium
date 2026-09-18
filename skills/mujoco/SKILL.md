@@ -34,6 +34,9 @@ model through kinematics, actuation, contact, and observation.
   point.
 - **Observation:** make cameras and renderer lifecycle deterministic before
   using frames as training or regression data.
+- **Controls:** distinguish model state, actuator limits, and rounded UI
+  ranges. Clamp reset values to the actual widget bounds before binding them;
+  a physically valid state can still be rejected by a narrower control.
 
 ## Go deeper only when needed
 

@@ -4,6 +4,9 @@ Find the first physical link whose measurement disagrees with the command.
 
 ## The arm does not reach the target
 
+- If the environment already exposes end-effector or operational-space
+  control, use it before copying an IK loop. Record the resulting joint targets
+  only when the application's action contract requires joint-space data.
 - Report the pose residual and saturated joints; do not treat returned joint
   positions as convergence.
 - Probe the task footprint and lift heights independently. One reachable point
@@ -20,10 +23,16 @@ Find the first physical link whose measurement disagrees with the command.
   to span.
 - Sweep grasp offset and support height together. Recalibrate after changing
   wrist orientation; grasp offset is pose-dependent.
+- Measure the fingertip/object contact height relative to the TCP site. The
+  physical pinch point may sit millimeters away from the site even when the TCP
+  reaches the object's center.
 - Inspect the approach trajectory, not only its endpoint. A joint-space servo
   can sweep through the object on the way to a valid pose.
 - Resolve gripper geoms by body membership when mesh geoms are unnamed.
 - Drive the gripper through both actuator limits and measure which end is open.
+- Calibrate a stable hold command as well as open/closed polarity. A
+  position-controlled gripper held at its fully closed limit can eject an
+  object, so more squeeze time or slower carrying is not automatically safer.
 
 ## The scene looks wrong
 

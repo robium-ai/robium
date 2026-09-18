@@ -1,7 +1,8 @@
 # Silly TurtleBot evidence
 
-This card records one Robium application run on 2026-09-07. It is evidence for
-the narrow Gemini Robotics integration path, not a universal robot design.
+This card records one Robium application developed from 2026-09-07 through
+2026-09-14. It is evidence for the narrow Gemini Robotics integration path, not
+a universal robot design.
 
 ## Observed stack
 
@@ -17,12 +18,16 @@ the narrow Gemini Robotics integration path, not a universal robot design.
 ## What passed
 
 - A live model turn called a guarded fake-robot tool successfully.
-- Six hardware-free tests covered the comedy mission, action guard, audio
-  framing, manual Live API tool mediation, post-action camera forwarding, and
-  the HTTP adapter.
+- Thirteen hardware-free tests covered the mission guard, audio framing, manual
+  Live API tool mediation, persistent-session reuse, heartbeat filtering, SSE
+  replay, cancellation, terminal response ordering, camera flow, and the HTTP
+  adapter.
 - An unrecognized `publish_cmd_vel` call was returned to the model as rejected.
-- The Gazebo Harmonic TurtleBot 4 runtime exposed both Nav2 actions and a fresh
-  simulated OAK-D JPEG; a real Nav2 quarter-turn completed successfully.
+- The Gazebo Harmonic TurtleBot 4 runtime exposed Nav2 actions and a fresh
+  simulated OAK-D JPEG; forward and quarter-turn actions completed.
+- The physical TurtleBot 4 smoke verified ROS/Nav2 state, fresh full-resolution
+  OAK-D frames, a separate low-bandwidth operator preview, and bounded neural
+  speech without commanding an autonomous mission.
 
 ## What the app changed after implementation evidence
 
@@ -33,13 +38,13 @@ the narrow Gemini Robotics integration path, not a universal robot design.
 - A model-turn deadline invoked the same stop path available to the operator.
 - Text-to-speech stayed behind a replaceable adapter because the endpoint's
   output modality is text.
+- The long-lived session kept local tool progress and camera frames flowing
+  during blocking motion, but withheld model-facing heartbeats until the tool
+  response and turn were resolved.
 
 ## Not yet proven
 
-- The ROS bridge, OAK-D topics, speaker, and cancellation path have not been
-  exercised on the physical TurtleBot 4.
-- A complete Gemini-driven navigation turn has not yet been rehearsed against
-  the Gazebo robot; the live-model and simulated-motion acceptance checks were
-  run separately.
+- A complete Gemini-driven navigation mission has not yet been repeated three
+  times on the physical TurtleBot 4 under supervision.
 - RGB-depth grounding of floor objects and person detection remain application
   work, so this skill does not prescribe either pipeline.

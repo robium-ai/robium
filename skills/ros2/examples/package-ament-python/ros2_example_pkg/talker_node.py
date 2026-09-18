@@ -4,7 +4,9 @@
 #         `with rclpy.init(): ...` + ExternalShutdownException idiom; this
 #         reflects the `rolling` branch of ros2_documentation via ctx7, not a
 #         distro-pinned page; re-confirm the idiom is current for whatever
-#         distro is actually installed before relying on it) and
+#         distro is actually installed before relying on it),
+#         https://github.com/ros2/examples/blob/rolling/rclpy/executors/examples_rclpy_executors/callback_group.py
+#         (independent official-code use of the same shutdown idiom), and
 #         https://github.com/ros2/ros2_documentation/blob/rolling/source/Tutorials/Beginner-Client-Libraries/Using-Parameters-In-A-Class-Python.rst
 #         (declare_parameter / get_parameter pattern).
 #

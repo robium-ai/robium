@@ -36,6 +36,9 @@ doctor if present; fall back to direct probes when it is not.
   X forwarding part of the normal workflow.
 - Test the same entry command in the target environment and prove important
   hardware, file, device, network, and display assumptions.
+- Before claiming first-run reproducibility, run the complete setup from a
+  clean project copy with the relevant package, model, and asset caches empty.
+  A warm development checkout can hide broken fetch and bootstrap behavior.
 
 ## Go deeper only when needed
 

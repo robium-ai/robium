@@ -22,7 +22,7 @@ evidence: symptom verbatim ✓ (user: "this is your second time terminating
   clears the ready bar; the 3-part evidence also holds.
 
 ## verify first-run setup with explicitly cold caches <!-- id: obs-environments-002 -->
-status: ready
+status: absorbed 2026-09-17
 proof: 1
 signal: better-method
 sources: [lrn-0817-15]

@@ -24,3 +24,11 @@ viewer or saved recording is simpler for ordinary debugging.
   preserve these old pins as universal defaults.
 - Keep the Rerun SDK and embedded component on compatible versions. Verify a
   minimal streaming render before integrating the robot workload.
+
+## Preserve the primary view
+
+If a valid recording and successful chunk transport still produce a black
+embedded canvas, stop treating the embed as the only live camera surface. Keep
+Rerun for the saved/offline timeline and render the critical live frame through
+the host UI directly. Robium's VLA trial passed this split after both path-based
+and streamed-byte Gradio integrations stayed black despite valid RRF2 data.

@@ -88,6 +88,10 @@ Official starting points:
 ## Final verification
 
 - Confirm the deployed digest and service configuration.
+- Compare the latest-created revision, latest-ready revision, and traffic map.
+  A successful deploy can leave an older tagged revision serving all traffic;
+  route to the intended revision explicitly when needed, then probe the public
+  path rather than trusting the deploy summary.
 - Exercise readiness and the real HTTP or WebSocket path through Cloud Run.
 - Verify idle scale-down, timeout, session isolation, and teardown.
 - Record the measured cold start and cost conditions in the application rather

@@ -15,11 +15,20 @@ that control plane after it returns a connect host.
 | Visitor data path | No | Yes |
 
 The controller returns an instance ID, lifecycle phase, expiry, and connect
-host. The verified gateway then uses a browser-provided claim ID to prevent two
-active visitors from sharing one process. That first-claim mechanism is not
-authentication. If the public boundary needs access control, the controller
-must also issue a signed or high-entropy value bound to the instance and expiry,
-and the gateway must validate it on every lifecycle and viewer route.
+host. Keep that control-plane ID separate from the longer browser capability.
+The verified gateway then uses the capability or a browser-provided claim ID to
+prevent two active visitors from sharing one process. That first-claim
+mechanism is not authentication. If the public boundary needs access control,
+the controller must issue a signed or high-entropy value bound to the instance
+and expiry, and the gateway must validate it on every lifecycle and viewer
+route.
+
+The controller owns a newly generated capability and hard expiry even when a
+provider create response returns only resource identity. Merge controller-owned
+state into the immediate session response; do not wait for the provider to echo
+secret environment values or reuse the shorter resource/session ID as access
+control. Translate gateway phases by capability and application readiness so a
+local provider and a remote provider implement the same browser contract.
 
 ## Keep one configuration source
 
@@ -45,7 +54,12 @@ the providers expose identical resources:
 
 ```ts
 interface SessionDriver {
-  begin(app: AppRuntime): Promise<{ id: string; host: string; expiresAt: string }>
+  begin(app: AppRuntime): Promise<{
+    id: string
+    host: string
+    capability: string
+    expiresAt: string
+  }>
   end(id: string): Promise<void>
   capacity(): Promise<Capacity>
 }

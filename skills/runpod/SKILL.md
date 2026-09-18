@@ -37,6 +37,12 @@ had no network volume, and REST rejecting a live inventory GPU identifier, on
 2026-08-24. GraphQL expressed the required contract in that run. This is a
 reason to verify provider state, not a universal preference for GraphQL.
 
+For a public service with a shared daily cap, reserve a conservative maximum
+session cost in an external atomic ledger before Pod creation. Use
+generation-conditional writes, fail closed on conflicts, and reconcile only
+controller-owned Pod IDs against final billing. A process-local counter or
+unconditional object overwrite cannot enforce a multi-instance budget.
+
 ## Diagnose without guessing
 
 - Combine control-plane state, system logs, container logs, storage identity,

@@ -12,7 +12,7 @@ source: ros2/examples@90a5b64 launch_testing/launch_testing_examples/launch_test
 quote: launch_testing.actions.ReadyToTest()
 
 ## rclcpp manual composition: NodeOptions constructor + RCLCPP_COMPONENTS_REGISTER_NODE <!-- id: obs-ros2-002 -->
-status: ready
+status: absorbed 2026-09-17
 proof: 1
 signal: better-method
 sources: [ros2/examples@90a5b64]
@@ -34,7 +34,7 @@ source: ros2/examples@90a5b64 rclpy/executors/examples_rclpy_executors/callback_
 quote: self.timer = self.create_timer(1.0, self.timer_callback, callback_group=self.group)
 
 ## rclpy.init() context-manager + ExternalShutdownException idiom confirmed independent of ros2_documentation <!-- id: obs-ros2-004 -->
-status: ready
+status: absorbed 2026-09-17
 proof: 1
 signal: verified
 sources: [ros2/examples@90a5b64]

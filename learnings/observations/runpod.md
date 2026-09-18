@@ -1,5 +1,5 @@
 ## atomic reservations keep a public GPU demo inside its daily cap <!-- id: obs-runpod-001 -->
-status: ready
+status: absorbed 2026-09-17
 proof: 1
 signal: figured-out-from-scratch
 sources: [lrn-0825-07]
@@ -7,7 +7,7 @@ target: runpod (new-section) — reserve conservative per-session cost in an ext
 evidence: the broad storage SDK introduced a moderate production audit finding ✓ · direct authenticated GCS JSON API generation reads and `ifGenerationMatch` writes passed success and HTTP-412 conflict tests with a 0-vulnerability production audit ✓ · unconditional overwrite and the unnecessary broad SDK were ruled out ✓
 
 ## exact RunPod inventory and volume contracts may require GraphQL creation <!-- id: obs-runpod-002 -->
-status: ready
+status: absorbed 2026-09-17
 proof: 2
 signal: figured-out-from-scratch
 sources: [lrn-0824-25, lrn-0826-01]

@@ -1,5 +1,5 @@
 ## verify dataset scene identity with a stable camera, not schema alone <!-- id: obs-data-001 -->
-status: ready
+status: absorbed 2026-09-17
 proof: 1
 signal: figured-out-from-scratch
 sources: [lrn-0817-07, lrn-0817-08]
@@ -7,7 +7,7 @@ target: data#verify-embodiment-match-before-committing (update) — require a sc
 evidence: two schema-compatible datasets rendered visibly different scenes ✓ · the selected static overhead-camera comparison accepted the matching dataset at 0.0023 and rejected the alternate under a 0.05 tolerance ✓ · comparing the randomized wrist camera and loosening its tolerance were ruled out ✓
 
 ## generate demonstrations in the pinned environment when no published dataset matches <!-- id: obs-data-002 -->
-status: ready
+status: absorbed 2026-09-17
 proof: 1
 signal: figured-out-from-scratch
 sources: [lrn-0817-16]

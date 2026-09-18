@@ -3,6 +3,8 @@ triggers:
     - phrase: connect Gemini Robotics ER 2 Streaming to our TurtleBot camera and guarded Nav2 tools
       source: learnings/2026-09-07-silly-turtlebot.md#lrn-0907-01
     - phrase: my Gemini robotics Live API session stalls after the navigate function call
+    - phrase: attach an on-demand camera frame to the Gemini Robotics look tool response on our voice robot
+      source: learnings/2026-09-17-stackchan-er2.md#lrn-0917-01
   negative:
     - phrase: Nav2 plans a path but the robot never receives velocity commands
       expect: navigation

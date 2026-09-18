@@ -34,7 +34,7 @@ evidence: proof=1, signal=figured-out-from-scratch (not user-correction, no
   second independent session hits the same constraint (proof=2).
 
 ## capability semantics must survive local provider substitution <!-- id: obs-live-demo-002 -->
-status: ready
+status: absorbed 2026-09-17
 proof: 1
 signal: figured-out-from-scratch
 sources: [lrn-0825-06]
@@ -42,7 +42,7 @@ target: live-demo#instance-lifecycle-gateway-contract (update) — distinguish t
 evidence: the local Docker gateway returned `ready` while the orchestrator remained `BOOTING` ✓ · 44 orchestrator tests plus a rebuilt Linux/amd64 allocate-to-delete lifecycle passed after capability-driven mapping ✓ · provider-identity mapping and reuse of the too-short session ID were both ruled out ✓
 
 ## preserve controller-owned capability state across sparse provider responses <!-- id: obs-live-demo-003 -->
-status: ready
+status: absorbed 2026-09-17
 proof: 1
 signal: figured-out-from-scratch
 sources: [lrn-0826-02]
@@ -50,7 +50,7 @@ target: live-demo#instance-lifecycle-gateway-contract (update) — merge a newly
 evidence: GraphQL returned a Pod without echoing environment state ✓ · the merged response immediately authorized claim/status/UI/rollout while missing and foreign capabilities returned 404 ✓ · waiting for a later environment read and reusing the control-plane ID were ruled out ✓
 
 ## verify Cloud Run traffic, not only the deployed service template <!-- id: obs-live-demo-004 -->
-status: ready
+status: absorbed 2026-09-17
 proof: 1
 signal: figured-out-from-scratch
 sources: [lrn-0826-04]

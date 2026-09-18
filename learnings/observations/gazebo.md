@@ -12,7 +12,7 @@ source: turtlebot/turtlebot4_simulator@b7d0f3b turtlebot4_gz_bringup/launch/sim.
 quote: ' --gui-config ',
 
 ## spawn via ros_gz_sim's create executable: both documented variants (-file and -topic) are live production usage <!-- id: obs-gazebo-002 -->
-status: ready
+status: absorbed 2026-09-17
 proof: 2
 signal: verified
 sources: [ROBOTIS-GIT/turtlebot3_simulations@9be186f, turtlebot/turtlebot4_simulator@b7d0f3b]

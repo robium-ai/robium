@@ -173,3 +173,20 @@ forking either package to add compatibility code. This pattern stays inside
 one ROS 2 system; if the "third-party package" is actually on the other side
 of a non-ROS system boundary, that's the `integration` skill's comms-choice
 table, not this one.
+
+## Compose C++ nodes only after the standalone graph works
+
+Composition is a process-boundary choice, not automatic zero-copy. A composable
+C++ node accepts `rclcpp::NodeOptions` (commonly by `const&`) and registers its
+class once with `RCLCPP_COMPONENTS_REGISTER_NODE`. Dynamic loading also needs
+the matching `rclcpp_components_register_node(s)` CMake registration; building
+a shared library and using the C++ macro alone does not put it in the ament
+resource index.
+
+Manual composition can instantiate several such node classes in one executable
+without a component manager. Those nodes do not appear in `ros2 component list`.
+Intra-process communication is a separate `NodeOptions` choice, and zero-copy
+has additional publisher/subscriber ownership requirements. Keep nodes
+standalone while debugging discovery, parameters, QoS, or lifecycle; compose
+after the interfaces are already proven. Re-check the project's distro against
+the current [ROS 2 composition guide](https://docs.ros.org/en/rolling/Tutorials/Intermediate/Composition.html).

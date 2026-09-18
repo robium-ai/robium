@@ -31,6 +31,9 @@ the owning `ros2`, simulator, or `lerobot` skill.
   run, and record the fixture and environment that produced the result.
 - Assert observable behavior and interfaces, not duplicated configuration
   literals or log wording.
+- For a camera or rendered demo, fetch the image payload and assert meaningful
+  pixels, such as non-black mean and non-flat variance. HTTP success and a
+  “camera ready” status can both pass while the viewer is blank.
 - Guard measurement tools against an empty run. Exiting successfully after
   measuring zero devices or episodes is a test-harness failure.
 - Keep benchmarks and long evaluations outside the default suite unless their
@@ -44,6 +47,10 @@ particular runner, read [FAILURES.md](FAILURES.md).
 ## Keep remote cost proportional
 
 - Run the same pipeline locally at tiny scale before any paid remote test.
+- After changing gateway or session lifecycle code, rebuild the target-platform
+  fake deployment image and prove allocation, capability isolation, one real
+  request, cancellation or deletion, and zero-resource cleanup before a paid
+  remote smoke. A stale digest does not test the change.
 - Keep GPU- or hardware-dependent tests explicit and schedulable; do not make a
   default CI job depend on unavailable hardware.
 - A remote success should preserve the exact image, model, data, seed,

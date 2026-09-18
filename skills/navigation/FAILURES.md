@@ -17,9 +17,13 @@ current link has evidence.
 - Separate a broken transform chain from an old transform. Both can look like
   a missing pose to costmaps and actions.
 - Check that every node uses the intended clock and that simulation time is
-  advancing.
+  advancing. Thread one `use_sim_time` launch value through every participating
+  node; copied literals can silently diverge when the launch argument changes.
 - Identify who owns each transform. AMCL and SLAM are alternative owners of
   `map -> odom`, not two publishers to run together.
+- When `robot_localization` owns `odom -> base_link`, verify that TF publication
+  is enabled and that `world_frame` matches the intended continuous odometry
+  frame. Do not leave a Gazebo TF bridge publishing the same transform.
 - With AMCL, distinguish “no initial pose yet” from a localizer that received a
   pose and still cannot publish one.
 

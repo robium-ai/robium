@@ -14,8 +14,14 @@ policy must see before deciding how to collect them.
   freedom, gripper, cameras, state features, timing, license, and provenance.
 - Use an exact embodiment match directly. Treat a near match as pretraining or
   co-training material, not a drop-in dataset.
+- When schemas and task labels cannot distinguish two environments, compare a
+  deterministic scene observation from the dataset with the pinned target
+  environment. Prefer a stable reference camera over a randomized wrist view.
 - Generate in simulation when scale, controlled variation, or labels matter
   more than perfect realism.
+- If a documented search finds no dataset for the exact scene and control
+  contract, generate demonstrations in the pinned application environment and
+  retain only episodes that satisfy its success condition.
 - Collect on the real robot when contact, appearance, or hardware behavior is
   difficult to reproduce faithfully.
 - Mix sources deliberately: simulation can provide coverage; a smaller real

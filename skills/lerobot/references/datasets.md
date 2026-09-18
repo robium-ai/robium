@@ -49,6 +49,13 @@ directly from the Hub instead of downloading first.
 
 ## Loading a dataset for training
 
+Install the dataset dependencies required by the pinned LeRobot release before
+testing video-backed episodes. Robium observed that bare `lerobot==0.6.0`
+imported successfully but could not decode dataset video; the matching
+`lerobot[dataset]` extra supplied TorchCodec and restored the load path. Re-check
+the current extra and decoder requirements rather than treating import success
+as a dataset smoke.
+
 ```python
 from lerobot.datasets import LeRobotDataset
 
@@ -66,6 +73,12 @@ current frame) instead of a single frame per key, e.g.
 `LeRobotDataset` returns plain dicts of PyTorch tensors and works directly
 with `torch.utils.data.DataLoader`. See `examples/load-dataset-snippet.py`
 for a runnable version against `lerobot/pusht`.
+
+Inspect units per feature channel before converting rows into simulator or
+robot commands. A single vector may combine degree-valued arm joints with a
+percentage-valued gripper. Prefer the environment's published row-to-action
+conversion helper; a vector-wide radians conversion can silently corrupt the
+gripper while leaving the shapes valid.
 
 The README's own quick example uses a slightly different import path,
 `from lerobot.datasets.lerobot_dataset import LeRobotDataset`; both resolve
