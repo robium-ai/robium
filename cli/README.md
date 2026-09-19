@@ -7,16 +7,18 @@ skills for Claude Code, Codex, Gemini CLI, and Cursor.
 ## Usage
 
 ```bash
-# Clone the robium repo and wire it into every coding agent on your machine
+# Clone both repositories and connect the plugin to your detected agents
 npx robium-ai setup
 
-# Target one agent / control the clone location / no prompts
+# Target one agent / choose the workspace parent / no prompts
 npx robium-ai setup --agent codex      # claude | codex | gemini | cursor
 npx robium-ai setup --dir ~/src/robium
 npx robium-ai setup -y                 # accept defaults (CI / agent-driven)
 npx robium-ai setup --copy             # copy integration files instead of symlinking
 
-# Pull the checkout and refresh every detected integration
+# Discover paths, check upstream, or apply safe updates to both repositories
+npx robium-ai workspace --json
+npx robium-ai update --check
 npx robium-ai update
 
 # `install` is an alias for `setup`
@@ -51,7 +53,8 @@ npx robium-ai app new my-app --from robot-navigation   # scaffold by copy
 
 `app` commands find the apps repo via `--dir <path>`, else `$ROBIUM_APPS_DIR`,
 else by walking up from the current directory to the first repo containing
-`REGISTRY.md` plus `robium-app.yaml` files. They exec each app's declared
+`REGISTRY.md` plus `robium-app.yaml` files, then `robium-apps/` in the current
+or remembered workspace. They exec each app's declared
 commands (usually Make targets); nothing app-specific is reimplemented in the
 CLI. A verb may be a command string or a `command`/`summary` object; the latter
 lets `app help` display both the CLI spelling and Make equivalent. See the
@@ -59,9 +62,22 @@ reference-apps spec: `docs/superpowers/specs/2026-08-05-reference-applications-d
 
 ## How setup works
 
-**The repo is the source of truth.** `setup` clones
-`github.com/robium-ai/robium` (default `~/robium`; one prompt, Enter accepts),
-or uses the checkout you're already inside, then wires it in per agent:
+**Git is the source of truth.** Setup asks for a workspace parent (default
+`~/robium`; Enter accepts). Choose any name/location with
+`npx robium-ai setup --dir ~/projects/my-robotics`. It clones both official
+repositories on `main`, without building apps or downloading model assets:
+
+```text
+~/projects/my-robotics/   # not a Git repository
+├── robium/              # editable skills, plugin, CLI source
+└── robium-apps/         # runnable reference examples
+```
+
+The root is remembered in `~/.config/robium/workspace.json`. Run
+`npx robium-ai workspace --json` to discover the paths. Explicit `--dir` wins,
+then an enclosing workspace, then the saved default. For setup and update,
+`--dir` means the parent; for app commands it means the apps repository.
+Setup reuses existing checkouts unchanged and wires `robium/` in per agent:
 
 - **Claude Code**: the full plugin (skills + the robium-architect agent +
   capture hooks) via `claude plugin marketplace add <clone>` +
@@ -78,13 +94,37 @@ or uses the checkout you're already inside, then wires it in per agent:
   catalog, architect agent, and Cursor-native capture hooks. Setup removes only
   legacy Robium-managed skill links; foreign skills and plugins are preserved.
 
-`npx robium-ai update` pulls the checkout, repairs links, and refreshes native
-plugins. Symlink-based installs see the new files immediately. Native plugin
-hosts use an installed cache, so start a new session after updating.
-The npm package carries no skill content, so skill releases never wait on an
-npm publish. Re-running `setup` refreshes the clone, reinstalls native plugins,
-and repairs links; it never overwrites a
-same-named skill it doesn't own. Run `setup` before working inside a clone so
+### Check and update on demand
+
+```bash
+npx robium-ai workspace                  # where both repositories live
+npx robium-ai update --check             # fresh check, no working-file changes
+npx robium-ai update --check --json      # paths, revisions, branches, status
+npx robium-ai update                     # safe updates, then refresh integrations
+```
+
+Update fetches **official Robium main**, not a personal fork's main. Only clean
+`main` branches without local-only commits are fast-forwarded. Dirty files,
+personal branches, detached HEADs, and divergent history are left untouched
+with a reason; partial updates return a nonzero exit status. Forks should retain
+the official repo as an `upstream` remote. Nothing is pushed, reset, stashed,
+automatically rebased, or installed into the apps' environments.
+
+Human-readable `app list` may check quietly before listing. Agents may also use
+`update --check --quiet` before a new example: at most daily network checks,
+at most weekly combined notices, no repeat notice for the same revisions.
+Current/offline results stay silent and do not prevent app listing. Set
+`ROBIUM_UPDATE_CHECKS=0` to disable opportunistic checks. Explicit checks still
+work and report network errors as unknown, not current. There is no daemon,
+background scheduler, or automatic source update.
+
+Manual Git updates are supported. After pulling or editing source, re-run
+`setup` to refresh integrations **without pulling either checkout**. Restart
+the host as instructed. Source freshness and cached-plugin activation are
+separate: a matching version alone does not prove a local skill edit is active.
+Edit the source, never the installed cache or installer-managed copies.
+
+The npm package carries no skill content. Run `setup` before working inside a clone so
 Codex uses the plugin as the single source of Robium skills and hooks; keeping a
 second repo-scoped `.agents/skills/` copy would register every skill twice.
 
@@ -127,11 +167,11 @@ keeps a real Git checkout that can be used directly for contributions.
 
 Plain ESM Node (≥18), zero runtime dependencies, no build step.
 
-When `setup` created `~/robium`, contributors can work in that checkout rather
+When `setup` created `~/robium`, contributors can work in its checkout rather
 than cloning again:
 
 ```bash
-cd ~/robium
+cd ~/robium/robium               # or the repo path from robium workspace
 ./scripts/bootstrap.sh
 git switch -c my-skill-fix
 # edit, then verify

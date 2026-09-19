@@ -6,6 +6,7 @@ import { runChecks } from './doctor.js';
 import { appValidate } from './appValidate.js';
 import { scaffoldApp } from './appNew.js';
 import { getAppVerb, STANDARD_APP_VERBS } from './appVerbs.js';
+import { findWorkspace, expandPath } from './workspace.js';
 
 // ---------------------------------------------------------------------------
 // robium-app.yaml parser. Deliberately a YAML *subset* so the CLI stays
@@ -83,6 +84,7 @@ export function parseAppYaml(text) {
 //   3. walk up from cwd: the first directory that contains REGISTRY.md and
 //      at least one <app>/robium-app.yaml (covers running from inside an
 //      apps repo or any app subdirectory)
+//   4. current or remembered workspace's robium-apps checkout
 // ---------------------------------------------------------------------------
 
 function looksLikeAppsRepo(dir) {
@@ -94,17 +96,20 @@ function looksLikeAppsRepo(dir) {
   }
 }
 
-export function findAppsDir({ dir, env = process.env, cwd = process.cwd() } = {}) {
-  if (dir) return existsSync(dir) ? path.resolve(dir) : null;
-  if (env.ROBIUM_APPS_DIR) return existsSync(env.ROBIUM_APPS_DIR) ? path.resolve(env.ROBIUM_APPS_DIR) : null;
+export function findAppsDir({ dir, env = process.env, cwd = process.cwd(), home = os.homedir() } = {}) {
+  if (dir || env.ROBIUM_APPS_DIR) {
+    const explicit = expandPath(dir || env.ROBIUM_APPS_DIR, { cwd, home });
+    return existsSync(explicit) ? explicit : null;
+  }
   let d = path.resolve(cwd);
-  const home = os.homedir();
   while (true) {
     if (looksLikeAppsRepo(d)) return d;
     const up = path.dirname(d);
-    if (up === d || d === home) return null;
+    if (up === d || d === home) break;
     d = up;
   }
+  const workspace = findWorkspace({ cwd, home });
+  return workspace && looksLikeAppsRepo(workspace.apps) ? workspace.apps : null;
 }
 
 export function loadApps(appsDir) {
@@ -197,13 +202,13 @@ Usage:
   npx robium-ai app validate [--json]              Validate every robium-app.yaml (CI-friendly)
   npx robium-ai app new <id> --from <existing-id>  Scaffold by copying the closest shipped app
 
-Apps repo resolution: --dir <path>, else $ROBIUM_APPS_DIR, else walk up from
-the current directory to the first repo with REGISTRY.md + robium-app.yaml files.`;
+Apps repo resolution: --dir <apps-repo>, else $ROBIUM_APPS_DIR, else an enclosing
+apps checkout, else robium-apps/ in the current or remembered workspace.`;
 
 function requireAppsDir(flags, log) {
   const appsDir = findAppsDir({ dir: flags.dir });
   if (!appsDir) {
-    log('No apps repo found. Pass --dir <path>, set ROBIUM_APPS_DIR, or run from inside an apps checkout.');
+    log('No apps repo found. Run npx robium-ai setup, pass --dir <apps-repo>, or set ROBIUM_APPS_DIR.');
     return null;
   }
   return appsDir;

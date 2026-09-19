@@ -5,7 +5,7 @@ import { run } from './exec.js';
 import { installClaude, installCodex, installGemini } from './install.js';
 import { removeManagedSkills } from './removeManagedSkills.js';
 import { installCursorPlugin } from './cursorPlugin.js';
-import { resolveRepo } from './repo.js';
+import { resolveWorkspace } from './repo.js';
 import { detectAgentSupport } from './agentCommands.js';
 import {
   MANAGED_MARKER,
@@ -168,8 +168,9 @@ export async function setup({
   const repoOpts = { exec, home, cwd, dir, yes, log, error };
   if (interactive !== undefined) repoOpts.interactive = interactive;
   if (ask) repoOpts.ask = ask;
-  const repo = await resolveRepo(repoOpts);
-  if (!repo) return 1;
+  const workspace = await resolveWorkspace(repoOpts);
+  if (!workspace) return 1;
+  const { repo, apps } = workspace;
 
   let failed = false;
 
@@ -256,9 +257,13 @@ export async function setup({
 
   if (!failed) {
     log(`
-Done. The robium repo is your skill source: ${repo}
+Done. Your editable workspace: ${workspace.root}
+  skills:      ${repo}
+  examples:    ${apps}
+  check:       npx robium-ai update --check
   update:      npx robium-ai update
-  contribute:  cd ${repo} && ./scripts/bootstrap.sh
+  examples:    npx robium-ai app list
+  customize:   create a branch in either checkout; updates never switch it
 
 Open your agent and try:
 

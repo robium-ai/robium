@@ -38,6 +38,14 @@ sibling `robium-website/` and `robium-apps/` checkouts instead.
 
 ## Modes and ownership
 
+- **User workspaces and updates:** setup remembers a configurable parent
+  containing `robium/` and `robium-apps/`. Use `npx robium-ai workspace --json`
+  to discover it; do not hardcode paths or treat a plugin cache as editable
+  source. Follow [workspace update guidance](skills/architect/references/workspace-updates.md)
+  when asked about freshness or updating. Check and apply are separate;
+  personal branches and local changes must remain intact. Quiet checks belong
+  at new-example boundaries, not on every prompt or during maintenance.
+
 - **Skill authoring:** follow `skills/AGENTS.md` and load `skill-author`.
 - **Learning engine:** follow `learnings/AGENTS.md` and load `learning-loop`.
 - **Application build/QA:** work in `robium-apps`; hooks capture evidence

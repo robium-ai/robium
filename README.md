@@ -24,20 +24,31 @@ for Claude Code, Codex, Gemini CLI, and Cursor.
 
 ## Install
 
-**Quick**: clone the repository once and install Robium for every supported
+**Quick**: clone the skills and reference-app repositories and install Robium for every supported
 agent detected on your machine:
 
 ```bash
 npx robium-ai setup                  # auto-detects your agents
 npx robium-ai setup --agent codex    # or target one
-npx robium-ai update                 # pull Robium and refresh integrations
+npx robium-ai workspace              # show your remembered directories
+npx robium-ai update --check          # check official main without applying
+npx robium-ai update                 # fast-forward clean main in both repos
 npx robium-ai remove                 # remove integrations; keep the checkout
 npx robium-ai doctor                 # verify activation and installed versions
 ```
 
-The default clone lives at `~/robium` and is a normal Git checkout you can
-use for contributions. Choose another location with `--dir`, for example
-`npx robium-ai setup --dir ~/repos/robium`.
+Choose the workspace parent and its name during setup, or pass
+`npx robium-ai setup --dir ~/projects/my-robotics`. The default is:
+
+```text
+~/robium/                 # workspace parent, not a repository
+├── robium/               # editable skills and plugin source
+└── robium-apps/          # runnable reference examples
+```
+
+The CLI remembers it in `~/.config/robium/workspace.json`; agents can discover
+both paths with `npx robium-ai workspace --json`. Apps are cloned by default,
+but environments and model assets are only set up when an app needs them.
 
 | Agent | Full Robium integration | Live skill source |
 | --- | --- | --- |
@@ -60,24 +71,35 @@ npx skills update -g
 flow where one is available:
 
 ```bash
-git clone https://github.com/robium-ai/robium ~/robium
+mkdir -p ~/robium
+git clone https://github.com/robium-ai/robium ~/robium/robium
+git clone https://github.com/robium-ai/robium-apps ~/robium/robium-apps
 
 # Claude Code: plugin with skills, architect agent, and capture hooks
-claude plugin marketplace add ~/robium && claude plugin install robium@robium
+claude plugin marketplace add ~/robium/robium && claude plugin install robium@robium
 
 # Codex: native plugin
-codex plugin marketplace add ~/robium && codex plugin add robium@robium
+codex plugin marketplace add ~/robium/robium && codex plugin add robium@robium
 
-# Gemini CLI: extension with automatic updates
-gemini extensions install https://github.com/robium-ai/robium --auto-update
+# Gemini CLI: editable local extension
+gemini extensions link ~/robium/robium --consent
 
 # Cursor: local native plugin linked from the checkout
 npx robium-ai setup --agent cursor --dir ~/robium
 ```
 
-The repository remains the source of truth. `npx robium-ai update` pulls it,
-repairs skill links, and refreshes native plugin installations. Start a new
-agent session after a native plugin update.
+Run `npx robium-ai setup --dir ~/robium` to remember a manually cloned workspace.
+Updates are on demand: clean `main` branches fast-forward from official
+upstream; personal branches, dirty files, and divergent histories are skipped
+without switching, stashing, or resetting. Work on a branch in either repo and
+optionally contribute later.
+
+Quiet checks during example discovery run at most daily and notify at most
+weekly, without repeating the same revisions. Disable them with
+`ROBIUM_UPDATE_CHECKS=0`; explicit checks remain available. After manual Git
+updates or edits, re-run `setup` to refresh integrations without pulling.
+Restart the host as instructed; cached skill activation is distinct from source
+freshness. See [CLI setup and updates](cli/README.md).
 
 Host-specific install, update, removal, permission, and fail-open details are
 in [docs/gemini-cli.md](./docs/gemini-cli.md) and
@@ -157,7 +179,7 @@ If you installed Robium with `npx robium-ai setup`, reuse its checkout—do not
 clone it again:
 
 ```bash
-cd ~/robium                       # or the location supplied with --dir
+cd ~/robium/robium                # or the repo path from robium workspace
 ./scripts/bootstrap.sh
 git switch -c my-skill-fix
 ```

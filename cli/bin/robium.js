@@ -5,16 +5,21 @@ import { doctor } from '../src/doctor.js';
 import { skills } from '../src/skills.js';
 import { appCmd } from '../src/apps.js';
 import { remove } from '../src/remove.js';
+import { updateWorkspace } from '../src/updates.js';
+import { findWorkspace } from '../src/workspace.js';
 
 const USAGE = `robium: robotics skill pack for coding agents (https://robium.ai)
 
 Usage:
-  npx robium-ai setup [options]          Clone the robium repo and wire it into
+  npx robium-ai setup [options]          Clone robium and robium-apps and wire into
                                          your coding agents (auto-detects:
                                          claude, codex, gemini, cursor)
   npx robium-ai install                  Alias for setup
-  npx robium-ai update [options]         Pull the Robium checkout and refresh
-                                         every detected agent integration
+  npx robium-ai workspace [--json]       Show the current or remembered workspace
+  npx robium-ai update [options]         Fast-forward clean main in both repos;
+                                         refresh detected agent integrations
+  npx robium-ai update --check           Check official main without applying
+                                         (--quiet: throttled, non-blocking notices)
   npx robium-ai remove [options]         Remove managed agent integrations;
                                          preserve the Robium checkout
   npx robium-ai doctor [--json]          Check environment and integration state
@@ -26,7 +31,8 @@ Usage:
 
 Setup options:
   --agent <name>   Target one agent instead of auto-detecting
-  --dir <path>     Where to clone/find the robium repo (default ~/robium)
+  --dir <path>     Workspace parent for setup/update (default ~/robium);
+                    app commands use the apps repository itself
   --copy           Copy integration files instead of symlinking
   -y, --yes        No prompts; accept defaults
 
@@ -41,6 +47,8 @@ export function parseArgs(argv) {
     if (a === '-h' || a === '--help') args.flags.help = true;
     else if (a === '-v' || a === '--version') args.flags.version = true;
     else if (a === '--json') args.flags.json = true;
+    else if (a === '--check') args.flags.check = true;
+    else if (a === '--quiet') args.flags.quiet = true;
     else if (a === '--copy') args.flags.copy = true;
     else if (a === '-y' || a === '--yes') args.flags.yes = true;
     else if (a.startsWith('--agent=')) args.flags.agent = a.slice('--agent='.length);
@@ -70,6 +78,14 @@ export async function main(argv) {
     console.error(`Unknown option: ${flags.unknown}\n\n${USAGE}`);
     return 1;
   }
+  if (Object.hasOwn(flags, 'dir') && (!flags.dir || flags.dir.startsWith('--'))) {
+    console.error('--dir requires a workspace path (or an apps repository for app commands).');
+    return 1;
+  }
+  if ((flags.check || flags.quiet) && cmd !== 'update') {
+    console.error('--check and --quiet are update options; use robium-ai update --check.');
+    return 1;
+  }
   if (flags.help || !cmd) {
     console.log(USAGE);
     return flags.help || !cmd ? 0 : 1;
@@ -79,8 +95,24 @@ export async function main(argv) {
     case 'setup':
     case 'install':
       return setup({ agent: flags.agent, dir: flags.dir, yes: flags.yes, copy: flags.copy });
-    case 'update':
+    case 'workspace': {
+      const workspace = findWorkspace({ dir: flags.dir });
+      if (!workspace) { console.error('No workspace configured. Run npx robium-ai setup.'); return 1; }
+      console.log(flags.json ? JSON.stringify(workspace, null, 2) :
+        `Workspace: ${workspace.root}\nSkills: ${workspace.repo}\nExamples: ${workspace.apps}`);
+      return 0;
+    }
+    case 'update': {
+      if (flags.quiet && flags.json) { console.error('Use --quiet for occasional notices or --json for a fresh report, not both.'); return 1; }
+      if (flags.json && !flags.check) { console.error('--json requires update --check.'); return 1; }
+      const code = await updateWorkspace({ dir: flags.dir, check: flags.check, quiet: flags.quiet, json: flags.json });
+      if (flags.check) return code;
+      if (code !== 0) {
+        console.error('Update incomplete. Integrations were not refreshed. Review the repository results; run setup to reconnect the current source without pulling.');
+        return code;
+      }
       return setup({ agent: flags.agent, dir: flags.dir, yes: true, copy: flags.copy });
+    }
     case 'remove':
       return remove({ agent: flags.agent });
     case 'doctor':
@@ -88,6 +120,9 @@ export async function main(argv) {
     case 'skills':
       return skills({ query: pos[1] });
     case 'app':
+      if (pos[1] === 'list' && !flags.json && !flags.dir && !process.env.ROBIUM_APPS_DIR) {
+        await updateWorkspace({ check: true, quiet: true });
+      }
       return appCmd({ args: pos.slice(1), flags });
     default:
       console.error(`Unknown command: ${cmd}\n\n${USAGE}`);
@@ -95,4 +130,5 @@ export async function main(argv) {
   }
 }
 
-process.exitCode = await main(process.argv.slice(2));
+try { process.exitCode = await main(process.argv.slice(2)); }
+catch (error) { console.error(error.message); process.exitCode = 1; }

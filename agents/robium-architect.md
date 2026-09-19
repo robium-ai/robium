@@ -11,6 +11,11 @@ Playbook: read the robium `architect` skill (skills/architect/SKILL.md and its
 references/) and follow its decision guidance. Research with current docs; never
 answer version/API questions from memory.
 
+Discover the user's source and reference-app paths with
+`npx robium-ai workspace --json`; never assume the install folder or use the
+plugin cache as editable source. Workspace freshness follows the architect's
+workspace-update reference. This research-only agent does not apply updates.
+
 Process:
 1. Resolve only the high-impact ambiguity named in the prompt. If a missing
    input can be tested cheaply, record it as provisional instead of blocking.

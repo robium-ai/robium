@@ -1,115 +1,77 @@
 import path from 'node:path';
 import { homedir } from 'node:os';
-import { stat } from 'node:fs/promises';
+import { lstat, realpath, stat, mkdir } from 'node:fs/promises';
 import { createInterface } from 'node:readline/promises';
 import { run } from './exec.js';
+import { REPOSITORIES, findWorkspace, workspacePaths, expandPath, readWorkspaceConfig, saveWorkspaceConfig } from './workspace.js';
 
-// The clone is the ONLY source of skills: npm ships CLI code, git ships
-// knowledge. Skill updates reach users via `git pull`, never via npm.
-export const REPO_URL = 'https://github.com/robium-ai/robium';
-
-async function isDir(p) {
-  try { return (await stat(p)).isDirectory(); } catch { return false; }
+async function exists(target) {
+  try { await lstat(target); return true; } catch (e) { if (e.code === 'ENOENT') return false; throw e; }
 }
-async function isFile(p) {
-  try { return (await stat(p)).isFile(); } catch { return false; }
-}
-
 export async function isRobiumRepo(dir) {
-  return (await isFile(path.join(dir, '.claude-plugin', 'plugin.json')))
-    && (await isDir(path.join(dir, 'skills')));
+  try { return (await stat(path.join(dir, 'skills'))).isDirectory() &&
+    (await stat(path.join(dir, '.claude-plugin', 'plugin.json'))).isFile(); } catch { return false; }
 }
-
-// Walk up from cwd: running setup from inside a checkout (contributors,
-// clone-only users) always uses that checkout.
-export async function findEnclosingRepo(startDir) {
-  let d = path.resolve(startDir);
-  for (;;) {
-    if (await isRobiumRepo(d)) return d;
-    const parent = path.dirname(d);
-    if (parent === d) return null;
-    d = parent;
-  }
-}
-
-const NO_GIT = `✗ git not found. robium setup clones the robium repo (the source of all skills).
-
-  Install git and re-run:  npx robium-ai setup
-
-  Or clone manually, then run setup from inside the clone:
-
-    git clone ${REPO_URL} ~/robium
-    cd ~/robium && npx robium-ai setup`;
 
 async function defaultAsk(question) {
   const rl = createInterface({ input: process.stdin, output: process.stdout });
-  try {
-    return await rl.question(question);
-  } finally {
-    rl.close();
-  }
+  try { return await rl.question(question); } finally { rl.close(); }
 }
 
-// Resolve the robium checkout to install from. Returns an absolute path or
-// null (error already reported). Exactly one prompt, and only when there is
-// a genuine choice: TTY, no --dir, no -y.
-export async function resolveRepo({
-  exec = run,
-  home = homedir(),
-  cwd = process.cwd(),
-  dir,
-  yes = false,
-  interactive = Boolean(process.stdout.isTTY && process.stdin.isTTY),
-  ask = defaultAsk,
-  log = console.log,
-  error = console.error,
+// Forks are welcome when a canonical upstream remote is present. Never adopt
+// a random directory, nested checkout, or unrelated repository as Robium.
+export async function validateCheckout(repo, spec, exec = run) {
+  const top = await exec('git', ['-C', repo, 'rev-parse', '--show-toplevel']);
+  if (!top.ok || await realpath(repo) !== await realpath(top.stdout.trim())) {
+    throw new Error(`${repo} is not a repository root; leave it untouched and choose another workspace.`);
+  }
+  const remotes = await exec('git', ['-C', repo, 'remote', '-v']);
+  const expected = `github.com/robium-ai/${spec.name}`;
+  const matches = remotes.ok && remotes.stdout.split('\n').some(line => {
+    const url = line.trim().split(/\s+/)[1] ?? '';
+    return url.replace(/^git@github\.com:/, 'github.com/').replace(/^https:\/\//, '').replace(/\.git\/?$/, '').replace(/\/$/, '') === expected;
+  });
+  if (!matches) throw new Error(`${repo} has no official Robium remote. Add the official upstream explicitly or choose another workspace.`);
+}
+
+export async function resolveWorkspace({
+  exec = run, home = homedir(), cwd = process.cwd(), dir, yes = false,
+  interactive = Boolean(process.stdout.isTTY && process.stdin.isTTY), ask = defaultAsk,
+  log = console.log, error = console.error,
 } = {}) {
-  const enclosing = await findEnclosingRepo(cwd);
-  if (enclosing) {
-    log(`✓ Using this robium checkout: ${enclosing}`);
-    return enclosing;
-  }
-
-  const git = await exec('git', ['--version']);
-  if (!git.ok) {
-    error(NO_GIT);
-    return null;
-  }
-
-  const fallback = path.join(home, 'robium');
-  let target = dir;
-  if (!target && !yes && interactive) {
-    const answer = (await ask(`Where should the robium repo live? [${fallback}]: `)).trim();
-    target = answer || fallback;
-  }
-  target = target || fallback;
-  if (target === '~' || target.startsWith('~/')) target = path.join(home, target.slice(2));
-  target = path.resolve(target);
-
-  if (await isRobiumRepo(target)) {
-    const dirty = await exec('git', ['-C', target, 'status', '--porcelain']);
-    if (dirty.ok && dirty.stdout.trim()) {
-      log(`! ${target} has local changes; skipped git pull (update it manually).`);
-    } else {
-      const pull = await exec('git', ['-C', target, 'pull', '--ff-only'], { timeout: 60_000 });
-      log(pull.ok
-        ? `✓ Repo up to date: ${target}`
-        : `! Could not fast-forward ${target}; continuing with the current checkout.`);
+  try {
+    const config = readWorkspaceConfig(home);
+    let workspace = findWorkspace({ dir, cwd, home });
+    if (!dir && workspace && config?.root === workspace.root && !(await exists(workspace.root))) {
+      throw new Error(`Saved workspace ${workspace.root} is missing. If you moved it, run setup --dir <new-parent>; no replacement was cloned.`);
     }
-    return target;
-  }
-
-  if (await isDir(target)) {
-    error(`✗ ${target} exists but is not a robium checkout; pick another location with --dir <path>.`);
-    return null;
-  }
-
-  log(`Cloning ${REPO_URL} → ${target}`);
-  const clone = await exec('git', ['clone', REPO_URL, target], { timeout: 300_000 });
-  if (!clone.ok) {
-    error(`✗ git clone failed:\n${(clone.stderr || clone.stdout).trim()}`);
-    return null;
-  }
-  log('✓ Cloned');
-  return target;
+    if (!workspace) {
+      let root = path.join(home, 'robium');
+      if (!yes && interactive) root = (await ask(`Where should the Robium workspace live? [${root}]: `)).trim() || root;
+      workspace = workspacePaths(expandPath(root, { home, cwd }));
+    }
+    if (!(await exec('git', ['--version'])).ok) {
+      throw new Error('git not found. Install git, then re-run npx robium-ai setup. Manual setup: git clone each official repository into <workspace>/robium and <workspace>/robium-apps.');
+    }
+    if (await isRobiumRepo(workspace.root) || await exists(path.join(workspace.root, '.git'))) {
+      throw new Error(`${workspace.root} is a repository, not a workspace parent. Choose a folder that will contain robium/ and robium-apps/.`);
+    }
+    for (const spec of REPOSITORIES) {
+      const target = path.join(workspace.root, spec.name);
+      if (await exists(target)) await validateCheckout(target, spec, exec);
+    }
+    await mkdir(workspace.root, { recursive: true });
+    for (const spec of REPOSITORIES) {
+      const target = path.join(workspace.root, spec.name);
+      if (await exists(target)) log(`✓ Using checkout (unchanged): ${target}`);
+      else {
+        log(`Cloning ${spec.url} → ${target}`);
+        const clone = await exec('git', ['clone', '--branch', 'main', '--', spec.url, target], { timeout: 300_000 });
+        if (!clone.ok) throw new Error(`Could not clone ${spec.name}; existing files were left in place. Check network access and ${target}, then retry setup.`);
+      }
+    }
+    await saveWorkspaceConfig({ ...config, root: workspace.root }, home);
+    log(`✓ Workspace remembered: ${workspace.root}`);
+    return workspace;
+  } catch (e) { error(`✗ ${e.message}`); return null; }
 }

@@ -1,7 +1,7 @@
 {
   "name": "robium-ai",
-  "version": "0.11.1",
-  "robiumPluginVersion": "0.5.1",
+  "version": "0.12.0",
+  "robiumPluginVersion": "0.5.2",
   "description": "CLI for robium: self-improving robotics skills for coding agents. Install the plugin, check your environment, browse the skill catalog.",
   "keywords": [
     "robotics",

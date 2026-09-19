@@ -1,5 +1,5 @@
 {
   "name": "robium",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Practical robotics skills, an architecture subagent, and fail-open learning capture for Gemini CLI."
 }
