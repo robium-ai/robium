@@ -119,4 +119,19 @@ def test_gemini_extension_layout_and_portable_hook_commands():
         or hook.get("name", "").startswith("robium-capture")
     ]
     assert len(gemini_commands) == 4
-    assert all("${extensionPath}" in command and "${/}" in command for command in gemini_commands)
+    assert all("${extensionPath}" in command for command in gemini_commands)
+    # Claude Code loads the same hooks/hooks.json and shares the SessionStart and
+    # SessionEnd events, but expands neither ${extensionPath} nor ${/}. Those two
+    # commands must avoid ${/} (a shell "bad substitution" error) and exit zero
+    # when the adapter path does not resolve.
+    shared_event_commands = [
+        hook["command"]
+        for event in ("SessionStart", "SessionEnd")
+        for definition in hooks[event]
+        for hook in definition["hooks"]
+        if hook.get("name", "").startswith("robium-gemini")
+    ]
+    assert len(shared_event_commands) == 2
+    for command in shared_event_commands:
+        assert "${/}" not in command
+        assert '[ -f "$0" ] || exit 0' in command

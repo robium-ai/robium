@@ -19,6 +19,10 @@ Applications live in the sibling `robium-ai/robium-apps` repository. The site
 and live-demo orchestrator live in `robium-ai/robium-website`. Make changes in
 the repository that owns the output; cross-reference rather than duplicate.
 
+A local `website/` or `apps/` directory here is an untracked leftover from the
+old monorepo holding stale build output. Neither is a source of truth; use the
+sibling `robium-website/` and `robium-apps/` checkouts instead.
+
 ## Maintainer collaboration
 
 - An explicit, bounded change request authorizes implementation after reading

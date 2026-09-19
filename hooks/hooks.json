@@ -35,7 +35,7 @@
       {
         "hooks": [
           { "type": "command", "command": "sh \"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/hooks/scripts/run_hook.sh\" \"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/hooks/scripts/session_start.py\"" },
-          { "name": "robium-gemini-session-start", "type": "command", "command": "node \"${extensionPath}${/}hooks${/}scripts${/}gemini_hook.mjs\" session-start", "timeout": 5000 }
+          { "name": "robium-gemini-session-start", "type": "command", "command": "sh -c '[ -f \"$0\" ] || exit 0; exec node \"$0\" session-start' \"${extensionPath}/hooks/scripts/gemini_hook.mjs\"", "timeout": 5000 }
         ]
       }
     ],
@@ -43,7 +43,7 @@
       {
         "hooks": [
           { "type": "command", "command": "sh \"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/hooks/scripts/run_hook.sh\" \"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/hooks/scripts/session_end.py\"" },
-          { "name": "robium-gemini-session-end", "type": "command", "command": "node \"${extensionPath}${/}hooks${/}scripts${/}gemini_hook.mjs\" session-end", "timeout": 5000 }
+          { "name": "robium-gemini-session-end", "type": "command", "command": "sh -c '[ -f \"$0\" ] || exit 0; exec node \"$0\" session-end' \"${extensionPath}/hooks/scripts/gemini_hook.mjs\"", "timeout": 5000 }
         ]
       }
     ]

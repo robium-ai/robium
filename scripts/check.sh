@@ -49,10 +49,24 @@ gemini_commands = [
     if hook.get("name", "").startswith(("robium-gemini", "robium-capture"))
 ]
 if len(gemini_commands) != 4 or any(
-    "${extensionPath}" not in command or "${/}" not in command
-    for command in gemini_commands
+    "${extensionPath}" not in command for command in gemini_commands
 ):
     raise SystemExit("Gemini hook commands must use portable extension variables")
+# SessionStart/SessionEnd also exist in Claude Code, which loads the same
+# hooks/hooks.json but leaves ${extensionPath} and ${/} unexpanded. Those two
+# commands must therefore avoid ${/} and no-op when the adapter is not present.
+shared_event_commands = [
+    hook["command"]
+    for event_name in ("SessionStart", "SessionEnd")
+    for definition in hooks[event_name]
+    for hook in definition["hooks"]
+    if hook.get("name", "").startswith("robium-gemini")
+]
+if len(shared_event_commands) != 2 or any(
+    "${/}" in command or "[ -f \"$0\" ] || exit 0" not in command
+    for command in shared_event_commands
+):
+    raise SystemExit("Gemini hooks on shared events must no-op outside Gemini CLI")
 cursor_manifest = documents[".cursor-plugin/plugin.json"]
 if cursor_manifest.get("skills") != "./skills/" or cursor_manifest.get("agents") != "./agents/robium-architect.md":
     raise SystemExit("Cursor manifest must package the skill catalog and architect agent")

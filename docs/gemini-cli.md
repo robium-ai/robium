@@ -59,7 +59,11 @@ carry Robium's management marker. It does not delete foreign Gemini skills.
 Gemini runs extension hooks with the user's local permissions and a sanitized
 environment. Robium uses Gemini's `BeforeAgent`, `AfterTool` (matched only to
 `run_shell_command`), `SessionStart`, and `SessionEnd` events. Commands resolve
-files with Gemini's `${extensionPath}` and `${/}` variables. The adapter uses
+files with Gemini's `${extensionPath}` and `${/}` variables. `SessionStart` and
+`SessionEnd` are the exception: Claude Code loads the same `hooks/hooks.json`
+and expands neither variable, so those two commands use a plain `/` separator
+and exit zero when the adapter path does not resolve, leaving them inert
+outside Gemini CLI. The adapter uses
 Node.js, which Gemini CLI already requires, and invokes `python3`, `python`, or
 the Windows `py -3` launcher for the existing standard-library capture logic.
 
