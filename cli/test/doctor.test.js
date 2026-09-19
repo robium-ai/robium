@@ -4,6 +4,9 @@ import os from 'node:os';
 import path from 'node:path';
 import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import { runChecks, doctor } from '../src/doctor.js';
+import { integrationVersions } from '../src/integrationStatus.js';
+
+const { plugin: pluginVersion } = await integrationVersions();
 
 // Fake exec keyed on "cmd arg0" prefixes; everything unlisted fails as missing.
 function fakeExec(table) {
@@ -18,9 +21,9 @@ function fakeExec(table) {
 
 const ALL_GOOD = {
   'claude --version': { stdout: '2.1.211 (Claude Code)\n' },
-  'claude plugin list': { stdout: '[{"id":"robium@robium","version":"0.5.0","enabled":true}]' },
+  'claude plugin list': { stdout: JSON.stringify([{ id: 'robium@robium', version: pluginVersion, enabled: true }]) },
   'codex --version': { stdout: 'codex-cli 0.146.0\n' },
-  'codex plugin list': { stdout: '{"installed":[{"pluginId":"robium@robium","version":"0.5.0","enabled":true}]}' },
+  'codex plugin list': { stdout: JSON.stringify({ installed: [{ pluginId: 'robium@robium', version: pluginVersion, enabled: true }] }) },
   'docker --version': { stdout: 'Docker version 27.0.0\n' },
   'docker info': { stdout: '27.0.0\n' },
   df: { stdout: 'Filesystem 1024-blocks Used Available Capacity Mounted\n/dev/disk 999 1 209715200 1% /\n' },
@@ -70,7 +73,7 @@ test('doctor: Gemini-only setup counts as a supported coding agent', async () =>
   delete table['codex --version'];
   delete table['codex plugin list'];
   table['gemini --version'] = { stdout: '0.30.0\n' };
-  table['gemini extensions list'] = { stdout: '[{"name":"robium","version":"0.5.0","isActive":true}]' };
+  table['gemini extensions list'] = { stdout: JSON.stringify([{ name: 'robium', version: pluginVersion, isActive: true }]) };
   const results = await runChecks({ exec: fakeExec(table), platform: 'linux', arch: 'x64', env: {}, home: '/no/such/home' });
   assert.equal(results.find((r) => r.id === 'coding-agent').status, 'pass');
   assert.equal(results.find((r) => r.id === 'gemini').status, 'pass');
@@ -86,7 +89,7 @@ test('doctor: Cursor reports an installed local plugin with activation unknown',
   await mkdir(path.join(repo, '.claude-plugin'), { recursive: true });
   await writeFile(path.join(repo, '.claude-plugin', 'plugin.json'), '{}');
   await mkdir(path.join(repo, '.cursor-plugin'), { recursive: true });
-  await writeFile(path.join(repo, '.cursor-plugin', 'plugin.json'), '{"name":"robium","version":"0.5.0"}');
+  await writeFile(path.join(repo, '.cursor-plugin', 'plugin.json'), JSON.stringify({ name: 'robium', version: pluginVersion }));
   await mkdir(path.join(repo, 'skills', 'navigation'), { recursive: true });
   await writeFile(path.join(repo, 'skills', 'navigation', 'SKILL.md'), '---\nname: navigation\ndescription: test\n---\n');
   await mkdir(path.join(home, '.cursor', 'plugins', 'local'), { recursive: true });
@@ -102,7 +105,7 @@ test('doctor: Cursor reports an installed local plugin with activation unknown',
   assert.equal(results.find((r) => r.id === 'cursor').status, 'pass');
   const plugin = results.find((r) => r.id === 'cursor-plugin');
   assert.equal(plugin.status, 'warn');
-  assert.match(plugin.detail, /v0\.5\.0/);
+  assert.ok(plugin.detail.includes(`v${pluginVersion}`));
   assert.match(plugin.detail, /activation status unavailable/);
   assert.match(plugin.hint, /Customize/);
   await rm(base, { recursive: true, force: true });
@@ -118,7 +121,7 @@ test('doctor: Claude plugin not installed → warn with install hint', async () 
 });
 
 test('doctor: plugin installed but inactive is distinct from not installed', async () => {
-  const table = { ...ALL_GOOD, 'claude plugin list': { stdout: '[{"id":"robium@robium","version":"0.5.0","enabled":false}]' } };
+  const table = { ...ALL_GOOD, 'claude plugin list': { stdout: JSON.stringify([{ id: 'robium@robium', version: pluginVersion, enabled: false }]) } };
   const results = await runChecks({ exec: fakeExec(table), platform: 'linux', arch: 'x64', env: {} });
   const plugin = results.find((r) => r.id === 'claude-plugin');
   assert.equal(plugin.status, 'warn');

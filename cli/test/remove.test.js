@@ -7,6 +7,9 @@ import {
 } from 'node:fs/promises';
 import { remove, removeManagedSkills } from '../src/remove.js';
 import { setup } from '../src/setup.js';
+import { integrationVersions } from '../src/integrationStatus.js';
+
+const { plugin: pluginVersion } = await integrationVersions();
 
 async function exists(target) {
   try { await lstat(target); return true; } catch { return false; }
@@ -22,7 +25,7 @@ async function fixture() {
   await writeFile(path.join(repo, '.claude-plugin', 'plugin.json'), '{}');
   await writeFile(path.join(repo, '.codex-plugin', 'plugin.json'), '{}');
   await mkdir(path.join(repo, '.cursor-plugin'), { recursive: true });
-  await writeFile(path.join(repo, '.cursor-plugin', 'plugin.json'), '{"name":"robium","version":"0.5.0"}');
+  await writeFile(path.join(repo, '.cursor-plugin', 'plugin.json'), JSON.stringify({ name: 'robium', version: pluginVersion }));
   for (const name of ['ros2', 'gazebo']) {
     await mkdir(path.join(repo, 'skills', name), { recursive: true });
     await writeFile(path.join(repo, 'skills', name, 'SKILL.md'), `name: ${name}\n`);
@@ -53,7 +56,7 @@ function fullExec() {
       return { ok: true, code: 0, stdout: '{"marketplaces":[{"name":"robium"}]}', stderr: '' };
     }
     if (key === 'gemini extensions list --output-format json') {
-      return { ok: true, code: 0, stdout: '[{"name":"robium","version":"0.5.0","isActive":true}]', stderr: '' };
+      return { ok: true, code: 0, stdout: JSON.stringify([{ name: 'robium', version: pluginVersion, isActive: true }]), stderr: '' };
     }
     if (args[0] === 'extensions') return { ok: true, code: 0, stdout: '', stderr: '' };
     if (args[0] === 'plugin') return { ok: true, code: 0, stdout: '', stderr: '' };
