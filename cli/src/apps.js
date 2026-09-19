@@ -10,7 +10,7 @@ import { getAppVerb, STANDARD_APP_VERBS } from './appVerbs.js';
 // ---------------------------------------------------------------------------
 // robium-app.yaml parser. Deliberately a YAML *subset* so the CLI stays
 // zero-dependency: 2-space-indented nested maps, scalar values, inline
-// arrays [a, b], empty maps {}, quoted strings, null/true/false/numbers,
+// arrays [a, b], indented scalar lists, empty maps {}, quoted strings, null/true/false/numbers,
 // and comments (full-line or trailing after whitespace). The reference-apps
 // spec (section 5) keeps files inside this subset; the future validator
 // (v1.1) enforces it.
@@ -48,13 +48,23 @@ export function parseAppYaml(text) {
     const line = lines[n];
     if (!line.trim() || line.trim().startsWith('#')) continue;
     const indent = line.length - line.trimStart().length;
+    while (stack.length > 1 && indent <= stack[stack.length - 1][0]) stack.pop();
+    const parent = stack[stack.length - 1][1];
+    if (Array.isArray(parent)) {
+      if (!line.trim().startsWith('- ')) {
+        throw new Error(`robium-app.yaml line ${n + 1}: expected a scalar list item`);
+      }
+      parent.push(parseScalar(line.trim().slice(2)));
+      continue;
+    }
     const m = line.trim().match(/^([A-Za-z0-9_-]+):(.*)$/);
     if (!m) throw new Error(`robium-app.yaml line ${n + 1}: expected "key: value", got "${line.trim()}"`);
     const [, key, rest] = m;
-    while (stack.length > 1 && indent <= stack[stack.length - 1][0]) stack.pop();
-    const parent = stack[stack.length - 1][1];
     if (rest.trim() === '' || /^\s+#/.test(rest)) {
-      const child = {};
+      let next = n + 1;
+      while (next < lines.length && (!lines[next].trim() || lines[next].trim().startsWith('#'))) next++;
+      const nextIndent = next < lines.length ? lines[next].length - lines[next].trimStart().length : -1;
+      const child = nextIndent > indent && lines[next].trim().startsWith('- ') ? [] : {};
       parent[key] = child;
       stack.push([indent, child]);
     } else {

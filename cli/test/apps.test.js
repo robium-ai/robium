@@ -76,6 +76,32 @@ test('parseAppYaml: rejects non key-value lines', () => {
   assert.throws(() => parseAppYaml('- just a list item\n'), /expected "key: value"/);
 });
 
+test('parseAppYaml: indented hardware lists preserve punctuation and following map fields', () => {
+  const a = parseAppYaml(`requirements:
+  hardware: # mBot prerequisites
+    # Skip comments and blank lines before the list.
+
+    - Makeblock mBot (mCore / ATmega328P) connected over USB
+    - Webcam (for recording)
+    - Game controller (optional; the keyboard drives without one)
+  gpu: none
+demo:
+  hosted: false
+`);
+  assert.deepEqual(a.requirements.hardware, [
+    'Makeblock mBot (mCore / ATmega328P) connected over USB',
+    'Webcam (for recording)',
+    'Game controller (optional; the keyboard drives without one)',
+  ]);
+  assert.equal(a.requirements.gpu, 'none');
+  assert.equal(a.demo.hosted, false);
+});
+
+test('parseAppYaml: scalar lists support quoted values and reject mixed map entries', () => {
+  assert.deepEqual(parseAppYaml('tags:\n  - "robot: arm"\n  - nav # note\n').tags, ['robot: arm', 'nav']);
+  assert.throws(() => parseAppYaml('tags:\n  - nav\n  unexpected: map\n'), /expected a scalar list item/);
+});
+
 function makeAppsRepo() {
   const root = mkdtempSync(path.join(tmpdir(), 'robium-apps-'));
   writeFileSync(path.join(root, 'REGISTRY.md'), '# registry\n');
