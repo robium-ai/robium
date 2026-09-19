@@ -22,6 +22,11 @@ example fits, choose the smallest slice that can disprove the biggest assumption
 
 ## Bring up the baseline, then adapt
 
+- Resolve the user's workspace with `npx robium-ai workspace --json`; its
+  `repo` and `apps` paths are authoritative, not a hardcoded `~/robium` or the
+  installed plugin cache. For workspace discovery and an occasional quiet
+  freshness check before a new example, read
+  [workspace updates](references/workspace-updates.md). Checking is not updating.
 - Discover candidates in the [Robium app registry](https://github.com/robium-ai/robium-apps/blob/main/REGISTRY.md),
   using a sibling checkout when available. Match the task, host architecture,
   runtime requirements, and relevant verification evidence, not just the name

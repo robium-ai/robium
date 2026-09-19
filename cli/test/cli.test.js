@@ -33,6 +33,29 @@ test('unknown command → usage on stderr, exit 1', () => {
   assert.match(r.stderr, /Unknown command/);
 });
 
+test('workspace help describes both repos and readonly update-check flow', () => {
+  const r = runCli('--help');
+  assert.match(r.stdout, /robium-apps/);
+  assert.match(r.stdout, /workspace \[--json\]/);
+  assert.match(r.stdout, /update --check/);
+});
+
+test('missing paths and misplaced check flags fail before setup can mutate anything', () => {
+  for (const args of [['setup', '--dir'], ['setup', '--dir='], ['setup', '--check']]) {
+    const r = runCli(...args);
+    assert.equal(r.status, 1);
+    assert.match(r.stderr, /--dir requires|update options/);
+  }
+});
+
+test('ambiguous machine-readable or quiet update requests fail before mutation', () => {
+  for (const args of [['update', '--json'], ['update', '--check', '--quiet', '--json']]) {
+    const r = runCli(...args);
+    assert.equal(r.status, 1);
+    assert.match(r.stderr, /--json requires|not both/);
+  }
+});
+
 test('skills lists the real generated catalog', () => {
   const r = runCli('skills');
   assert.equal(r.status, 0);

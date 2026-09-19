@@ -19,6 +19,8 @@ async function fixture() {
   const base = await mkdtemp(path.join(os.tmpdir(), 'robium-remove-'));
   const home = path.join(base, 'home');
   const repo = path.join(base, 'robium');
+  await mkdir(path.join(repo, '.git'), { recursive: true });
+  await mkdir(path.join(base, 'robium-apps', '.git'), { recursive: true });
   await mkdir(home, { recursive: true });
   await mkdir(path.join(repo, '.claude-plugin'), { recursive: true });
   await mkdir(path.join(repo, '.codex-plugin'), { recursive: true });
@@ -38,6 +40,11 @@ function fullExec() {
   const exec = async (command, args) => {
     const key = [command, ...args].join(' ');
     calls.push(key);
+    if (command === 'git') {
+      if (args[0] === '--version') return { ok: true, stdout: 'git test', stderr: '' };
+      if (args.includes('--show-toplevel')) return { ok: true, stdout: args[1], stderr: '' };
+      if (args.includes('remote')) return { ok: true, stdout: `origin https://github.com/robium-ai/${path.basename(args[1])} (fetch)`, stderr: '' };
+    }
     if (args[0] === '--version') {
       const present = ['claude', 'codex', 'gemini', 'cursor-agent'];
       return { ok: present.includes(command), code: present.includes(command) ? 0 : 1,

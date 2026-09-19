@@ -14,6 +14,11 @@ function agentExec(present) {
   const exec = async (cmd, args) => {
     const key = [cmd, ...args].join(' ');
     calls.push(key);
+    if (cmd === 'git') {
+      if (args[0] === '--version') return { ok: true, stdout: 'git test', stderr: '' };
+      if (args.includes('--show-toplevel')) return { ok: true, stdout: args[1], stderr: '' };
+      if (args.includes('remote')) return { ok: true, stdout: `origin https://github.com/robium-ai/${path.basename(args[1])} (fetch)`, stderr: '' };
+    }
     if (args[0] === '--version' && present.includes(cmd)) {
       return { ok: true, code: 0, stdout: '1.0.0\n', stderr: '' };
     }
@@ -46,6 +51,8 @@ async function makeFixtures() {
   const base = await mkdtemp(path.join(os.tmpdir(), 'robium-setup-'));
   const home = path.join(base, 'home');
   const repo = path.join(base, 'robium');
+  await mkdir(path.join(repo, '.git'), { recursive: true });
+  await mkdir(path.join(base, 'robium-apps', '.git'), { recursive: true });
   await mkdir(home, { recursive: true });
   await mkdir(path.join(repo, '.claude-plugin'), { recursive: true });
   await writeFile(path.join(repo, '.claude-plugin', 'plugin.json'), '{}');
