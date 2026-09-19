@@ -4,6 +4,9 @@ import os from 'node:os';
 import path from 'node:path';
 import { mkdtemp, mkdir, writeFile, readFile, readdir, readlink, rm, lstat, symlink } from 'node:fs/promises';
 import { setup, detectAgents, linkSkills } from '../src/setup.js';
+import { integrationVersions } from '../src/integrationStatus.js';
+
+const { plugin: pluginVersion } = await integrationVersions();
 
 // exec mock: agents listed in `present` answer --version; everything else fails.
 function agentExec(present) {
@@ -28,7 +31,7 @@ function agentExec(present) {
     }
     if (present.includes('gemini') && cmd === 'gemini' && args[0] === 'extensions') {
       if (args[1] === 'list') {
-        return { ok: true, code: 0, stdout: '[{"name":"robium","version":"0.5.0","isActive":true}]', stderr: '' };
+        return { ok: true, code: 0, stdout: JSON.stringify([{ name: 'robium', version: pluginVersion, isActive: true }]), stderr: '' };
       }
       return { ok: true, code: 0, stdout: '', stderr: '' };
     }
@@ -49,7 +52,7 @@ async function makeFixtures() {
   await mkdir(path.join(repo, '.codex-plugin'), { recursive: true });
   await writeFile(path.join(repo, '.codex-plugin', 'plugin.json'), '{}');
   await mkdir(path.join(repo, '.cursor-plugin'), { recursive: true });
-  await writeFile(path.join(repo, '.cursor-plugin', 'plugin.json'), '{"name":"robium","version":"0.5.0"}');
+  await writeFile(path.join(repo, '.cursor-plugin', 'plugin.json'), JSON.stringify({ name: 'robium', version: pluginVersion }));
   await mkdir(path.join(repo, 'agents'), { recursive: true });
   await writeFile(path.join(repo, 'agents', 'robium-architect.md'), '---\nname: robium-architect\ndescription: test\n---\n');
   await mkdir(path.join(repo, 'hooks'), { recursive: true });
@@ -240,7 +243,7 @@ test('setup: Gemini confirms the native extension is active', async () => {
     if (command === 'gemini' && args.join(' ') === 'extensions list --output-format json') {
       return {
         ok: true, code: 0, stderr: '',
-        stdout: '[{"name":"robium","version":"0.5.0","isActive":true}]',
+        stdout: JSON.stringify([{ name: 'robium', version: pluginVersion, isActive: true }]),
       };
     }
     return base.exec(command, args);

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import os from 'node:os';
 import path from 'node:path';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import {
   inspectGeminiIntegration,
   integrationVersions,
@@ -13,8 +13,9 @@ import {
 
 test('integrationVersions loads bundle releases without per-skill versions', async () => {
   const versions = await integrationVersions();
-  assert.equal(versions.cli, '0.11.0');
-  assert.equal(versions.plugin, '0.5.0');
+  const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
+  assert.equal(versions.cli, pkg.version);
+  assert.equal(versions.plugin, pkg.robiumPluginVersion);
   assert.deepEqual(Object.keys(versions).sort(), ['cli', 'plugin']);
 });
 

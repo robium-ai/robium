@@ -7,7 +7,7 @@
     },
     {
       "name": "architect",
-      "description": "Shape a new robotics application around its smallest useful slice, stack, and decision record."
+      "description": "Start a robotics project or first demo from a proven example, or choose the stack and smallest useful slice for a new application. Not for routine fixes in an existing app."
     },
     {
       "name": "cloud-run",

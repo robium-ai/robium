@@ -1,5 +1,9 @@
 triggers:
   positive:
+    - phrase: Help me map a simulated environment with a TurtleBot, localize on the saved map, and navigate to a goal.
+    - phrase: Help me control a simulated TurtleBot with Gemini using natural-language instructions.
+    - phrase: Help me run a pretrained ACT policy that transfers a cube between two simulated robot arms.
+    - phrase: I want to start a robotics project but this machine cannot run the closest example. Help me choose a compatible first slice.
     - phrase: we'll create a new TurtleBot3 application that does not exist yet. Before any live-demo or publishing work, help brainstorm the architecture, choose the stack, and plan the cheapest navigation-only first slice; teleoperation, camera transfer, and mapping come later.
       source: learnings/2026-08-02.md
     - phrase: we are changing this arm application from scripted control to a VLA and need to rethink the architecture
