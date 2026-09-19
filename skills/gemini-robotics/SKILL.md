@@ -1,6 +1,6 @@
 ---
 name: gemini-robotics
-description: Build low-latency robot agents with Gemini Robotics ER, including streaming perception, function calls, and guarded execution.
+description: Integrate and debug Gemini Robotics ER perception, function calls, and guarded execution. For a first natural-language robot assistant demo, start with architect's reference-app selection.
 ---
 
 # Gemini Robotics
@@ -11,6 +11,11 @@ executes it.
 
 ## Choose the endpoint from the interaction
 
+- For a new robot assistant or first simulation demo, read
+  [architect](../architect/SKILL.md) before building a model/robot integration.
+  It discovers the saved apps checkout and checks compatible examples. If a
+  baseline was already selected, continue here; existing integration fixes
+  and API explanations do not need onboarding.
 - Use `gemini-robotics-er-2-streaming-preview` for a stateful Live API session
   that receives text, JPEG frames, or audio and orchestrates robot tools with
   low latency.

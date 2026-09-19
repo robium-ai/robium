@@ -1,5 +1,8 @@
 triggers:
   positive:
+    - phrase: Help me map a simulated environment, localize a mobile robot, and navigate to a goal.
+    - phrase: Help me build a simulated robot assistant that understands what it sees and follows natural-language instructions.
+    - phrase: Help me run a pretrained policy that transfers a cube between two simulated robot arms.
     - phrase: Help me map a simulated environment with a TurtleBot, localize on the saved map, and navigate to a goal.
     - phrase: Help me control a simulated TurtleBot with Gemini using natural-language instructions.
     - phrase: Help me run a pretrained ACT policy that transfers a cube between two simulated robot arms.
@@ -8,6 +11,12 @@ triggers:
       source: learnings/2026-08-02.md
     - phrase: we are changing this arm application from scripted control to a VLA and need to rethink the architecture
   negative:
+    - phrase: In our existing robot-navigation app, Nav2 plans a path but the robot never receives velocity commands. Diagnose it.
+      expect: navigation
+    - phrase: Our existing Gemini robot assistant stalls after a navigate function call. Fix the tool response handling.
+      expect: gemini-robotics
+    - phrase: Inspect the processor files in our existing LeRobot checkpoint before evaluating it.
+      expect: lerobot
     - phrase: fix the existing gateway CORS allowlist for our production frontend
       expect: integration
     - phrase: diagnose why this existing ROS 2 node misses messages

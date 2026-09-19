@@ -7,9 +7,23 @@ description: Choose proportional evidence for robotics software before claiming 
 
 Test the claim at the cheapest layer that can falsify it.
 
+## Decide whether a test is needed
+
+- Batch coherent changes, then run the smallest relevant existing check. Do
+  not test after every edit or repeat passing checks without a relevant change,
+  failure, or unresolved uncertainty. A full suite is not the default.
+- Inspection can suffice for low-risk prose or straightforward edits. For
+  uncertain API usage, inspect installed source, help, or current official docs
+  first; use one isolated probe if uncertainty remains, not a new test suite.
+- Write a new automated test when it protects a reproduced bug, a risky durable
+  contract, or behavior worth repeatedly checking, or when the user requests it.
+  A one-off demo does not automatically need a test harness.
+- Stop when evidence supports the requested claim. Do not add platform matrices,
+  benchmarks, repeated trials, or qualification work to a simple tryout.
+
 ## Match evidence to the claim
 
-- Pure logic belongs in a fast unit test without ROS, a robot, or a simulator.
+- When automation is warranted, test pure logic without ROS or a simulator.
 - A node or launch claim needs the expected processes and interfaces to appear,
   not merely a successful build.
 - Behavior that depends on physics, sensors, timing, or closed-loop control
@@ -17,13 +31,28 @@ Test the claim at the cheapest layer that can falsify it.
 - A learned-policy pipeline smoke proves that data, training, evaluation, and
   metrics connect. A regression claim needs a known checkpoint and a stated
   performance bar.
-- Add costlier layers only when the risk or claim requires them. A demo does
-  not need a fleet-scale qualification suite, but it still needs a real smoke.
+- Add costlier layers only when the risk or claim requires them. Claim a demo
+  worked only after observing its actual behavior; a launch or manual handoff
+  alone must be labeled as behavior not yet verified.
 
 Read [ROS2-AND-SIM.md](ROS2-AND-SIM.md) for ROS launch, simulator, map, and
 headless-CI concerns. Read [POLICY-EVAL.md](POLICY-EVAL.md) for learned-policy
 smokes and regression gates. Tool-specific syntax remains in official docs and
 the owning `ros2`, simulator, or `lerobot` skill.
+
+## Keep interaction and handoff lightweight
+
+- Use browser/computer interaction only when the relevant visual or interaction
+  behavior cannot be established more cheaply, a suspected UI bug needs it,
+  or the user asks you to look. Prefer existing CLI, API, logs, and focused
+  checks for nonvisual claims; do not tour every screen after each change.
+- For low-risk visual acceptance or checks requiring the user's environment
+  or access, hand off one short manual check: exact command or URL, expected
+  result, and what remains unverified. Do not claim that the user has run it.
+- Do not defer safety-critical evidence needed before physical motion,
+  destructive actions, security-sensitive changes, or paid resource use merely
+  to save testing time. Verify the affected boundary or stop before that action;
+  testing never substitutes for authorization.
 
 ## Make the result trustworthy
 
@@ -31,8 +60,9 @@ the owning `ros2`, simulator, or `lerobot` skill.
   run, and record the fixture and environment that produced the result.
 - Assert observable behavior and interfaces, not duplicated configuration
   literals or log wording.
-- For a camera or rendered demo, fetch the image payload and assert meaningful
-  pixels, such as non-black mean and non-flat variance. HTTP success and a
+- When checking camera/render correctness or a suspected blank viewer, inspect
+  a frame for meaningful content. Non-black mean and non-flat variance are
+  cheap blank-frame guards, not proof of the correct scene. HTTP success and a
   “camera ready” status can both pass while the viewer is blank.
 - Guard measurement tools against an empty run. Exiting successfully after
   measuring zero devices or episodes is a test-harness failure.
@@ -47,10 +77,10 @@ particular runner, read [FAILURES.md](FAILURES.md).
 ## Keep remote cost proportional
 
 - Run the same pipeline locally at tiny scale before any paid remote test.
-- After changing gateway or session lifecycle code, rebuild the target-platform
-  fake deployment image and prove allocation, capability isolation, one real
-  request, cancellation or deletion, and zero-resource cleanup before a paid
-  remote smoke. A stale digest does not test the change.
+- Before deploying or spending on changed allocation, isolation, cancellation,
+  or cleanup behavior, verify the affected lifecycle boundaries in the local
+  fake deployment first. Rebuild its image when its inputs change; a stale
+  digest does not test the change. Do not rerun this for unrelated edits.
 - Keep GPU- or hardware-dependent tests explicit and schedulable; do not make a
   default CI job depend on unavailable hardware.
 - A remote success should preserve the exact image, model, data, seed,
@@ -58,7 +88,7 @@ particular runner, read [FAILURES.md](FAILURES.md).
 
 ## Done
 
-- The changed behavior has evidence at the lowest meaningful layer.
+- Report the evidence obtained and any explicitly deferred manual checks.
 - A robotics app's smoke exercises the behavior it exists to demonstrate, not
   only process health.
 - CI runs the stable, affordable evidence by default and clearly separates

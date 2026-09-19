@@ -11,6 +11,10 @@ evidence.
 
 ## Start from the actual stack
 
+- For a new robotics app or first demo, read
+  [architect](../architect/SKILL.md) before creating worlds, launchers, or
+  containers. Reuse its compatible reference-app selection if already made.
+  Existing-world edits, simulator debugging, and explanations stay here.
 - Confirm the installed `gz` release, ROS distro, `ros_gz` pairing, render
   backend, and whether the run is graphical or headless.
 - Use modern Gazebo (`gz`). Gazebo Classic and `libgazebo_ros_*` tutorials are

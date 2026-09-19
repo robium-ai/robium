@@ -10,6 +10,10 @@ model through kinematics, actuation, contact, and observation.
 
 ## Start from the model
 
+- For a new manipulation app or first policy demo, read
+  [architect](../architect/SKILL.md) before creating a scene, controller, or
+  viewer. Reuse its compatible reference-app selection if already made.
+  Existing-model edits, physics debugging, and explanations stay here.
 - Read the MJCF and the pinned asset revision before adding control code. Check
   joint ranges, actuator limits, collision geometry, sites, masses, and the
   intended work surface.

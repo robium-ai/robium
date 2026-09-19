@@ -1,10 +1,15 @@
 # Scaffold patterns
 
-Starting repo layouts for the two golden paths. Copy the closest verified app
-from the robium-apps registry when one exists; otherwise use these trees. Rename
-packages and prune anything the first working slice does not need.
+Optional repo shapes after selecting adaptation, partial reuse, or a fresh
+build. Do not scaffold for a try-only request or copy an entire app merely
+because one component fits. Follow the chosen [reuse path](reuse-paths.md),
+then prune anything the first working slice does not need.
 
-New applications keep a concise decision record at `docs/architecture-brief.md`.
+The `tests/` directories below are optional. Reuse existing checks; add automated
+coverage for meaningful risk or repeatable regressions, not to fill the tree.
+
+Keep tiny-demo decisions inline; applications with meaningful architecture
+choices can use a concise `docs/architecture-brief.md`.
 Learning capture belongs to Robium's sibling `learnings/` tree and hooks rather
 than an application-local ritual.
 
@@ -103,5 +108,5 @@ my-arm-policy/
 - A hybrid (learned policy running inside a ROS 2 system) starts from the ROS 2
   tree and adds a `my_policy` package that wraps the LeRobot inference.
 - Prune aggressively for an MVP; a single-package ROS 2 demo doesn't need four
-  packages. Keep the decision record at `docs/architecture-brief.md` for new
-  applications and genuine re-architecture work.
+  packages. Add `docs/architecture-brief.md` only when the application has
+  meaningful decisions worth retaining beyond an inline explanation.

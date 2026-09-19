@@ -10,6 +10,11 @@ evidence that would make its results trustworthy.
 
 ## Pick by bottleneck
 
+- For a new robot app or first simulation demo, use
+  [architect](../architect/SKILL.md) to check compatible reference apps before
+  selecting a fresh stack. Keep a selected example's simulator. Continue here
+  when no example fits or simulator choice is the actual unresolved question;
+  comparisons and existing simulation work do not need onboarding.
 - **Gazebo:** prefer for ROS-centric mobile robots, standard sensor simulation,
   and projects without a confirmed compatible NVIDIA GPU.
 - **Isaac Sim:** consider when photorealism, synthetic data at scale, or the

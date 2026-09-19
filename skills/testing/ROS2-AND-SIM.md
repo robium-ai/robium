@@ -1,5 +1,8 @@
 # ROS 2 and simulation test patterns
 
+Use these patterns when automated evidence is warranted, not as a checklist
+requiring a new test layer for every demo or edit.
+
 ## Choose the layer
 
 - Use ordinary pytest for logic that does not require ROS.
@@ -20,7 +23,8 @@
 - Drive one bounded action and assert its observable result.
 - Capture process exits and perform shutdown assertions so a passing behavior
   does not hide a crashing component.
-- Run through the project's normal `colcon test` path and inspect
+- Select relevant packages through the project's normal `colcon test` path,
+  rather than testing the whole workspace after each edit, and inspect
   `colcon test-result` when it fails.
 
 ## Simulation evidence

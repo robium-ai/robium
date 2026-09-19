@@ -65,7 +65,8 @@ Current sources: [Nav2](https://docs.nav2.org/) and
 
 ## Record only real branches
 
-Put the chosen direction, why it fits now, and the cheapest falsifying probe in
-`docs/architecture-brief.md`. Mention alternatives only when they were genuine
+Keep small decisions inline; use `docs/architecture-brief.md` for choices that
+need a durable record. Include the direction, why it fits, and the cheapest
+falsifying probe. Mention alternatives only when they were genuine
 contenders. Keep unresolved hardware or compatibility questions provisional
 with an explicit fallback.

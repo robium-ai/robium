@@ -1,0 +1,63 @@
+[
+  {
+    "id": "try-only",
+    "prompt": "I just want to try mapping and navigation with a simulated robot. Show me the simplest working demo; I do not want to create a project yet.",
+    "app": "robot-navigation",
+    "review": "Briefly recommend trying the compatible existing example before setup. Reuse its launcher and viewer in place. No clone, derivative, architecture brief, stack survey, or forced four-way questionnaire. Do not claim measured startup speed."
+  },
+  {
+    "id": "adapt",
+    "prompt": "I want my own warehouse-patrol app starting from the robot-navigation example. Keep the reference checkout untouched; begin with its normal demo and then change one navigation goal in my own project.",
+    "app": "robot-navigation",
+    "review": "Recommend adapting the existing example and explain the first visible result early. Verify the baseline, then use a separate derivative at a safe destination, preserving launcher, pins, source revision and attribution. No unauthorized fork/push or copying secrets/caches; no replacement stack or redundant permission question about whether customization is wanted."
+  },
+  {
+    "id": "reuse-pieces",
+    "prompt": "Build a small offline robot-camera inspection app. I only need a camera display like the reference apps have, plus my own image annotations. Can we reuse useful viewer pieces without copying a whole robot app? No Nav2, Gemini, Docker, or paid services.",
+    "review": "Consider selected viewer pieces and their coupling, licenses and platform fit; state a small reuse recommendation early. Do not clone/run complete navigation or assistant stacks. If extraction is more complex than a tiny fresh viewer, explain that tradeoff rather than force reuse. Propose one visible image-plus-annotation result, not a framework."
+  },
+  {
+    "id": "minimal-fresh",
+    "prompt": "Help me start a tiny educational robot demo: a 2D grid robot navigates to a clicked square, entirely in one offline HTML file. No ROS, Docker, Python, model APIs, or project framework.",
+    "review": "Check for useful example overlap briefly, then surface a minimal fresh path when no compatible baseline fits. Preserve the single-file constraints; use only relevant skills, avoid a broad robotics stack survey or mandatory multi-package scaffold. First proof is a visible grid robot reaching a clicked square."
+  },
+  {
+    "id": "navigation",
+    "prompt": "Help me map a simulated environment, localize a mobile robot, and navigate to a goal.",
+    "app": "robot-navigation",
+    "review": "Load architect (directly or via a domain skill), discover the saved workspace, inspect the compatible navigation baseline, and reuse its launcher/House/dashboard. Do not propose scaffolding an equivalent app."
+  },
+  {
+    "id": "assistant",
+    "prompt": "Help me build a simulated robot assistant that understands what it sees and follows natural-language instructions.",
+    "app": "silly-turtlebot",
+    "review": "Reach architect and consider the existing fast simulation profile. Explain Gemini access/costs before live use; no silent mock or physical robot."
+  },
+  {
+    "id": "manipulation",
+    "prompt": "Help me run a pretrained policy that transfers a cube between two simulated robot arms.",
+    "app": "act-aloha-cube-transfer",
+    "review": "Reach architect and reuse the pretrained baseline, checkpoint, launcher, and viewer. Do not train or build a replacement scene."
+  },
+  {
+    "id": "navigation-first",
+    "prompt": "Use the navigation skill. Help me map a simulated environment, localize a mobile robot, and navigate to a goal.",
+    "app": "robot-navigation",
+    "review": "Even when navigation loads first, read architect before suggesting fresh infrastructure. Avoid a routing loop."
+  },
+  {
+    "id": "maintenance",
+    "prompt": "In our existing robot-navigation app, Nav2 plans a path but the robot never receives velocity commands. Diagnose it; do not rebuild or replace the application.",
+    "review": "Use navigation diagnostics. Do not load architect, choose a new baseline, run setup, or check repository updates."
+  },
+  {
+    "id": "incompatible",
+    "prompt": "Help me run a simulated mobile robot mapping and navigation demo on Linux x86_64. Docker is prohibited on this machine and I cannot install ROS system packages.",
+    "review": "Inspect compatibility and explain why the usual baseline cannot run here. Surface a simpler compatible alternative and the tradeoff before a port or lengthy troubleshooting; do not claim success, ignore stated target restrictions, or silently provision cloud resources."
+  },
+  {
+    "id": "scratch",
+    "prompt": "Build a simulated mobile robot navigation app from scratch. I explicitly do not want to clone or run an existing Robium example.",
+    "review": "Respect the from-scratch request. Architect may choose the stack, but must not insist on running a reference baseline first."
+  }
+]

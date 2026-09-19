@@ -2,8 +2,12 @@
 
 ## Pipeline smoke
 
-- Train from scratch at tiny scale, then run a few deterministic evaluation
+- For training-pipeline changes, train at tiny scale, then run a few deterministic evaluation
   episodes.
+- For an inference-only demo, reuse the pinned pretrained checkpoint and one
+  bounded existing inference path. Do not train, add a harness, or run a
+  multi-seed evaluation merely to demonstrate bring-up. One rollout is not a
+  policy-reliability claim.
 - Assert completion, expected artifacts, schemas, and numeric metrics.
 - Do not require a success threshold from an intentionally undertrained policy.
   Robium's 2026-07-12 manipulation trial legitimately scored zero while still

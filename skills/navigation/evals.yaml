@@ -1,0 +1,8 @@
+triggers:
+  positive:
+    - phrase: In our existing robot-navigation app, Nav2 plans a path but the robot never receives velocity commands. Diagnose it.
+    - phrase: Explain how AMCL localization differs from SLAM in Nav2.
+  negative:
+    - phrase: Help me map a simulated environment, localize a mobile robot, and navigate to a goal.
+      expect: architect
+tasks: []

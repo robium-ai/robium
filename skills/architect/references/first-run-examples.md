@@ -6,6 +6,14 @@ commands, dependency pins, platform instructions, and measured results. Read
 the current README and launcher before running. Existing evidence for one host
 does not certify a fresh installation on another.
 
+The homepage uses outcome-based wording, not robot or policy brands. Mapping,
+localization, and a navigation goal suggest `robot-navigation`; a simulated
+assistant that sees and follows natural-language instructions suggests
+`silly-turtlebot`; pretrained two-arm cube transfer suggests
+`act-aloha-cube-transfer`. These are candidates to inspect, not permission to
+ignore platform constraints or silently choose a paid model provider. For the
+assistant, explain the Gemini requirement and possible charges before live use.
+
 | User outcome | Candidate and canonical instructions | First visible proof |
 | --- | --- | --- |
 | Map, localize, and navigate with a simulated TurtleBot | [robot-navigation](https://github.com/robium-ai/robium-apps/tree/main/robot-navigation): existing House environment and dashboard | Create and save a map, load it for localization, then reach a navigation goal. |

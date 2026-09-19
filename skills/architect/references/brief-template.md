@@ -46,7 +46,7 @@ rejected option to make the record look complete.
 ## Implementation path
 
 1. The smallest user-visible or risk-reducing slice.
-2. The smoke check that proves it.
+2. The smallest relevant check, or an explicit low-risk manual acceptance handoff.
 3. The next integration step if it passes.
 ```
 

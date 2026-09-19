@@ -1,6 +1,6 @@
 ---
 name: navigation
-description: Build and debug ROS 2 robot navigation with Nav2.
+description: Configure, extend, and debug Nav2 in an existing robot app; explain navigation concepts. New mapping/localization/navigation demos start with architect.
 ---
 
 # Navigation
@@ -10,6 +10,11 @@ wrong.
 
 ## Start from the robot
 
+- For a new app or first demo, read [architect](../architect/SKILL.md) before
+  scaffolding or installing a navigation stack. It finds the saved apps checkout
+  and selects a compatible baseline, even from outside the Robium workspace.
+  If that selection already happened, continue here. Existing-app fixes and
+  navigation explanations do not need onboarding.
 - Read the running system and its repository before proposing a new stack.
 - Identify the ROS distribution, installed Nav2 version, launch topology, and
   parameter files from the environment itself.

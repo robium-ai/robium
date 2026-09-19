@@ -1,6 +1,6 @@
 ---
 name: lerobot
-description: Build robot-learning datasets, policies, and evaluations with LeRobot.
+description: Build and debug LeRobot datasets, training, and policy evaluation. For a first pretrained robot-arm demo, start with architect's reference-app selection.
 ---
 
 # LeRobot
@@ -11,6 +11,12 @@ contract that does not match.
 
 ## Establish the contract
 
+- For a new manipulation app or first pretrained-policy demo, read
+  [architect](../architect/SKILL.md) before creating an environment or training
+  pipeline. It finds the saved apps checkout and selects a compatible baseline.
+  If selection already happened, continue here. Existing dataset, training,
+  or evaluation work does not need onboarding; an inference-only request does
+  not authorize training.
 - Inspect the installed LeRobot version and current CLI help before writing
   flags. Dataset formats, policy families, scripts, and extras change quickly.
 - Match the robot's state, action space, cameras, rates, and task to the

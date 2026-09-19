@@ -56,6 +56,14 @@ sibling `robium-website/` and `robium-apps/` checkouts instead.
 
 ## Common checks
 
+Choose checks for the affected behavior; this is a toolbox, not a mandatory
+suite for every task. Batch coherent edits before the smallest relevant check.
+Do not add tests or repeat passing suites without risk, uncertainty, or a user
+request that justifies them. Use browser/computer-use checks only for relevant
+visual/interaction uncertainty or when requested. Low-risk manual acceptance
+may be handed to the user with exact steps and an explicit unverified status;
+never defer evidence needed before safety-critical, destructive, or paid actions.
+
 ```bash
 ./scripts/bootstrap.sh
 ./scripts/check.sh

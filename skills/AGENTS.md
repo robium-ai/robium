@@ -27,8 +27,8 @@ content and `learning-loop` when working from captured evidence.
 - Existing files under `archive/` are immutable historical snapshots.
 - Preserve useful examples and scripts only when they provide reusable value;
   validate changed executable artifacts proportionally.
-- Run `uv run skills/skill-author/scripts/validate_skills.py` after any live
-  skill change.
+- Run `uv run skills/skill-author/scripts/validate_skills.py` once after each
+  coherent batch of live skill changes, not after every file or sentence.
 - Use trigger or task evals only when they protect a meaningful routing or
   behavior regression. Do not test headings or exact prose.
 - Regenerate `cli/src/catalog.json` after a skill name or description changes.
