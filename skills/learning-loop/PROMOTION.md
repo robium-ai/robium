@@ -14,6 +14,11 @@ Use the evidence ladder to keep cheap signals from becoming permanent advice.
   claim and current platform.
 - Missing proof stays `tentative`; uncertainty is not a reason to rush an edit.
 
+Observations outlive their sources: the dated learning is gitignored staging
+and is deleted once distilled, so an entry that cites one must carry its own
+quote, source, and conditions rather than pointing at a file a reviewer may no
+longer have.
+
 The observation schema and legal statuses in `learnings/observations/README.md`
 are the source of truth.
 

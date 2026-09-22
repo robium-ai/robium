@@ -163,7 +163,8 @@ Robotics guidance rots fast: APIs move, versions pair differently, commands
 change shape. robium is built to notice:
 
 - **Capture**: hooks record what broke and what fixed it during real build
-  sessions; [`learnings/`](./learnings) holds the evidence.
+  sessions into local staging; the distilled result lands in
+  [`learnings/observations/`](./learnings/observations) with its citations.
 - **Mine**: the ecosystem's proven patterns are read out of real repos, with
   citations that must still hold at the pinned commit.
 - **Absorb**: evidence-gated pull requests fold both back into the skills.

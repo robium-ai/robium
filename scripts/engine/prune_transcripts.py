@@ -9,8 +9,15 @@ Protection order:
 4. otherwise, only an unreferenced transcript older than the retention window
    is eligible.
 
+`--learnings` additionally classifies the dated learning files themselves.
+They are local staging, not tracked evidence, so a file survives until every
+`lrn-` entry it defines is cited by an observation that reached a terminal
+status. An entry no observation cites keeps its file forever: undistilled
+capture is the one thing this tool must never destroy.
+
 Dry-run is the default. The tool never follows symlinks and only deletes direct
-`.jsonl` children of `<root>/.robium/transcripts`.
+`.jsonl` children of `<root>/.robium/transcripts`, or dated `.md` children of
+`<root>/learnings`.
 """
 
 from __future__ import annotations
@@ -29,6 +36,7 @@ _ENTRY_RE = re.compile(r"<!--\s*id:\s*(lrn-[a-z0-9-]+)\s*-->")
 _TRANSCRIPT_RE = re.compile(r"([A-Za-z0-9._-]+__[A-Za-z0-9-]+\.jsonl)")
 _OBS_HEADING_RE = re.compile(r"^## .+<!--\s*id:\s*(obs-[a-z0-9-]+)\s*-->\s*$")
 _FIELD_RE = re.compile(r"^([a-z][a-z-]*):\s*(.*)$")
+_DATED_LEARNING_RE = re.compile(r"^\d{4}-\d{2}-\d{2}(-[a-z0-9-]+)?\.md$")
 
 
 @dataclass(frozen=True)
@@ -84,6 +92,25 @@ def learning_transcript_links(learnings_dir: Path) -> dict[str, set[str]]:
                 for name in _TRANSCRIPT_RE.findall(line):
                     links[name].add(current_id)
     return links
+
+
+def learning_entry_ids(learnings_dir: Path) -> dict[Path, set[str]]:
+    """Map each dated learning file to the entry IDs it defines."""
+    entries: dict[Path, set[str]] = {}
+    if not learnings_dir.is_dir():
+        return entries
+    for path in sorted(learnings_dir.glob("*.md")):
+        if path.is_symlink() or not path.is_file():
+            continue
+        if not _DATED_LEARNING_RE.match(path.name):
+            continue
+        found = set()
+        for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+            match = _ENTRY_RE.search(line)
+            if match:
+                found.add(match.group(1))
+        entries[path] = found
+    return entries
 
 
 def observation_statuses(observations_dir: Path) -> dict[str, list[str]]:
@@ -170,13 +197,40 @@ def classify(
     return decisions
 
 
-def apply_decisions(decisions: list[Decision]) -> int:
+def classify_learnings(root: Path) -> list[Decision]:
+    """Classify dated learning files by whether their entries are distilled."""
+    root = root.resolve()
+    learnings_dir = root / "learnings"
+    entries = learning_entry_ids(learnings_dir)
+    if not entries:
+        return []
+    statuses = observation_statuses(learnings_dir / "observations")
+
+    decisions = []
+    for path, ids in entries.items():
+        if not ids:
+            decisions.append(Decision(path, "KEEP", "no-entries"))
+            continue
+        undistilled = [i for i in sorted(ids) if not statuses.get(i)]
+        if undistilled:
+            decisions.append(
+                Decision(path, "KEEP", f"undistilled({len(undistilled)}/{len(ids)})")
+            )
+            continue
+        if any(not _terminal(s) for i in ids for s in statuses[i]):
+            decisions.append(Decision(path, "KEEP", "pending-observation"))
+            continue
+        decisions.append(Decision(path, "DELETE", "distilled"))
+    return decisions
+
+
+def apply_decisions(decisions: list[Decision], suffix: str = ".jsonl") -> int:
     deleted = 0
     for decision in decisions:
         if decision.action != "DELETE":
             continue
         path = decision.path
-        if path.is_symlink() or not path.is_file() or path.suffix != ".jsonl":
+        if path.is_symlink() or not path.is_file() or path.suffix != suffix:
             continue
         path.unlink()
         deleted += 1
@@ -187,6 +241,11 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", default=".", help="Robium repository root")
     parser.add_argument("--max-age-days", type=int, default=DEFAULT_MAX_AGE_DAYS)
+    parser.add_argument(
+        "--learnings",
+        action="store_true",
+        help="Also classify dated learning files whose entries are all distilled",
+    )
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--apply", action="store_true", help="Delete eligible files")
     mode.add_argument("--dry-run", action="store_true", help="Report only (default)")
@@ -194,14 +253,31 @@ def main(argv=None) -> int:
     if args.max_age_days < 0:
         parser.error("--max-age-days must be non-negative")
 
-    decisions = classify(Path(args.root), max_age_days=args.max_age_days)
+    root = Path(args.root)
+    mode_name = "apply" if args.apply else "dry-run"
+
+    # Classify everything before deleting anything: removing a distilled
+    # learning would otherwise strand its transcripts as unreferenced mid-run.
+    decisions = classify(root, max_age_days=args.max_age_days)
+    learnings = classify_learnings(root) if args.learnings else []
+
     for decision in decisions:
         print(f"{decision.action} {decision.path.name} {decision.reason}")
     deleted = apply_decisions(decisions) if args.apply else 0
     eligible = sum(d.action == "DELETE" for d in decisions)
     kept = sum(d.action == "KEEP" for d in decisions)
-    mode_name = "apply" if args.apply else "dry-run"
     print(f"Transcript cleanup ({mode_name}): {kept} kept, {eligible} eligible, {deleted} deleted")
+
+    if args.learnings:
+        for decision in learnings:
+            print(f"{decision.action} {decision.path.name} {decision.reason}")
+        deleted_l = apply_decisions(learnings, suffix=".md") if args.apply else 0
+        eligible_l = sum(d.action == "DELETE" for d in learnings)
+        kept_l = sum(d.action == "KEEP" for d in learnings)
+        print(
+            f"Learning cleanup ({mode_name}): "
+            f"{kept_l} kept, {eligible_l} eligible, {deleted_l} deleted"
+        )
     return 0
 
 

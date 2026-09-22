@@ -1,10 +1,16 @@
 # learnings/
 
-Dated notes from building with the robium plugin — Tier 1 of the learning engine
-(spec: docs/superpowers/specs/2026-08-01-learning-engine-design.md §4.4). Raw
-session transcripts (Tier −1) live gitignored in `.robium/transcripts/`; entries
-here are **derived views with pointers back** — never the only copy of anything
-a transcript holds.
+Dated notes from building with the robium plugin — Tier 1 of the learning
+engine. Raw session transcripts (Tier −1) live gitignored in
+`.robium/transcripts/`; entries here are **derived views with pointers back** —
+never the only copy of anything a transcript holds.
+
+The dated files are gitignored too. They are local staging that exists to be
+distilled: a file lives until every `lrn-` entry it defines is cited by an
+observation that reached `absorbed` or `rejected`, and is then deleted with the
+transcripts it pointed at. What survives distillation is `observations/` and
+the skill text itself, so an observation must stand on its own — quote, source,
+and the conditions that produced a value all belong inline.
 
 One file per day per app: `YYYY-MM-DD-<app>.md` — the `-<app>` suffix is
 mandatory for app-scoped work (app sessions run in parallel; a shared dated

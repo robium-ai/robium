@@ -16,8 +16,8 @@ robium has two halves that feed each other (see
   examples. **No build step, no invented DSL**: the deliverable is knowledge
   and real example files.
 - **The applications** ([robium-ai/robium-apps](https://github.com/robium-ai/robium-apps),
-  plus `learnings/` here): reference apps built *using* the skills, which
-  harden the catalog through a learnings loop.
+  plus `learnings/observations/` here): reference apps built *using* the skills,
+  which harden the catalog through a learnings loop.
 
 Most contributions land in the first half: **a new or improved skill**. That's
 what this guide walks through. App and infrastructure work follows the mode

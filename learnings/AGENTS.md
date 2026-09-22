@@ -29,6 +29,20 @@ retention maintenance.
   direct-main edit still needs a concrete diff, evidence, and proportional
   validation, but live skills do not use versions or changelogs.
 
+## Learning retention
+
+Dated learnings are gitignored local staging, not a durable corpus. Keep one
+until its entries are distilled, then delete it — the knowledge worth having
+belongs in the owning skill, in `references/` when it is conditional detail,
+a dead end, or a platform-specific value. `observations/`, the schema, and
+`SOURCES.md` stay tracked.
+
+Never hand-delete a dated learning. Run
+`uv run scripts/engine/prune_transcripts.py --dry-run --learnings`; a file is
+eligible only when every entry it defines is cited by a terminal observation.
+An entry no observation cites keeps its file indefinitely, which is the point:
+undistilled capture must outlive any cleanup.
+
 ## Transcript retention
 
 Transcripts are evidence, never prompt context. Keep a transcript while queue

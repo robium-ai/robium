@@ -45,3 +45,7 @@ dist/
 .env.*
 !.env.template
 .robium/
+
+# Dated learnings are local staging, deleted once distilled into skills.
+# The distilled layer stays tracked: observations/, the schema, and SOURCES.md.
+learnings/20[0-9][0-9]-[0-9][0-9]-[0-9][0-9]*.md

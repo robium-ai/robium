@@ -117,3 +117,73 @@ def test_symlinks_are_ignored(tmp_path):
     result = run_cleanup(tmp_path, "--apply", "--max-age-days", "0")
     assert result.returncode == 0
     assert outside.exists()
+
+
+def test_learnings_are_untouched_without_the_flag(tmp_path):
+    name = "robium__done.jsonl"
+    transcript(tmp_path, name, age_days=30)
+    seed_learning(tmp_path, name)
+    seed_observation(tmp_path, "absorbed 2026-01-02")
+    result = run_cleanup(tmp_path, "--apply")
+    assert "Learning cleanup" not in result.stdout
+    assert (tmp_path / "learnings" / "2026-01-01.md").exists()
+
+
+def test_undistilled_learning_is_never_deleted(tmp_path):
+    name = "robium__open.jsonl"
+    transcript(tmp_path, name, age_days=30)
+    seed_learning(tmp_path, name)
+    result = run_cleanup(tmp_path, "--apply", "--learnings")
+    assert "KEEP 2026-01-01.md undistilled(1/1)" in result.stdout
+    assert (tmp_path / "learnings" / "2026-01-01.md").exists()
+
+
+def test_tentative_observation_keeps_its_learning(tmp_path):
+    name = "robium__tentative.jsonl"
+    transcript(tmp_path, name, age_days=30)
+    seed_learning(tmp_path, name)
+    seed_observation(tmp_path, "tentative")
+    result = run_cleanup(tmp_path, "--apply", "--learnings")
+    assert "KEEP 2026-01-01.md pending-observation" in result.stdout
+    assert (tmp_path / "learnings" / "2026-01-01.md").exists()
+
+
+def test_partially_distilled_learning_is_kept(tmp_path):
+    name = "robium__partial.jsonl"
+    transcript(tmp_path, name, age_days=30)
+    learnings = tmp_path / "learnings"
+    learnings.mkdir(parents=True, exist_ok=True)
+    (learnings / "2026-01-01.md").write_text(
+        "- [none] wrong-guidance <!-- id: lrn-0101-01 -->\n"
+        f"  source: transcript {name}#turn-1\n"
+        "- [none] wrong-guidance <!-- id: lrn-0101-02 -->\n"
+        f"  source: transcript {name}#turn-2\n",
+        encoding="utf-8",
+    )
+    seed_observation(tmp_path, "absorbed 2026-01-02")
+    result = run_cleanup(tmp_path, "--apply", "--learnings")
+    assert "KEEP 2026-01-01.md undistilled(1/2)" in result.stdout
+    assert (learnings / "2026-01-01.md").exists()
+
+
+def test_fully_distilled_learning_is_deleted(tmp_path):
+    name = "robium__absorbed.jsonl"
+    transcript(tmp_path, name, age_days=30)
+    seed_learning(tmp_path, name)
+    seed_observation(tmp_path, "absorbed 2026-01-02")
+    result = run_cleanup(tmp_path, "--apply", "--learnings")
+    assert "DELETE 2026-01-01.md distilled" in result.stdout
+    assert "Learning cleanup (apply): 0 kept, 1 eligible, 1 deleted" in result.stdout
+    assert not (tmp_path / "learnings" / "2026-01-01.md").exists()
+
+
+def test_guidance_and_undated_files_are_never_classified(tmp_path):
+    transcript(tmp_path, "robium__guidance.jsonl", age_days=30)
+    learnings = tmp_path / "learnings"
+    learnings.mkdir(parents=True, exist_ok=True)
+    for name in ("AGENTS.md", "README.md", "SOURCES.md", "scratch.md"):
+        (learnings / name).write_text("- note <!-- id: lrn-0101-99 -->\n", encoding="utf-8")
+    result = run_cleanup(tmp_path, "--apply", "--learnings")
+    assert "Learning cleanup (apply): 0 kept, 0 eligible, 0 deleted" in result.stdout
+    for name in ("AGENTS.md", "README.md", "SOURCES.md", "scratch.md"):
+        assert (learnings / name).exists()
