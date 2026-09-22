@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import { run } from '../../src/exec.js';
-import { REPOSITORIES } from '../../src/workspace.js';
+import { REPOSITORIES, WORKSPACE_REPO } from '../../src/workspace.js';
 
 export async function fixture(t) {
   const base = await mkdtemp(path.join(os.tmpdir(), 'robium-workspace-test-'));
@@ -17,7 +17,7 @@ export async function fixture(t) {
     assert.ok(result.ok, `${args.join(' ')}: ${result.stderr}`);
     return result.stdout.trim();
   };
-  for (const spec of REPOSITORIES) {
+  for (const spec of [...REPOSITORIES, WORKSPACE_REPO]) {
     const source = path.join(base, `source-${spec.name}`);
     await mkdir(source);
     await git(source, 'init', '-b', 'main');

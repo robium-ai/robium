@@ -9,6 +9,19 @@ export const REPOSITORIES = [
   { name: 'robium-apps', url: 'https://github.com/robium-ai/robium-apps' },
 ];
 
+// The workspace root itself. It carries the cross-agent map (AGENTS.md plus
+// its CLAUDE.md import and GEMINI.md symlink) and ignores the checkouts
+// cloned into it. Not a submodule host: every child keeps its own remote,
+// branches, and history so `update` can leave user work untouched.
+export const WORKSPACE_REPO = {
+  name: 'robium-workspace',
+  url: 'https://github.com/robium-ai/robium-workspace',
+};
+
+// Where a user's own applications live. Kept out of robium-apps/ so that
+// checkout stays clean and `update` never refuses it for local changes.
+export const USER_APPS_DIR = 'my-apps';
+
 export function workspaceConfigPath(home = homedir()) {
   return path.join(home, '.config', 'robium', 'workspace.json');
 }
@@ -38,7 +51,12 @@ export function expandPath(dir, { home = homedir(), cwd = process.cwd() } = {}) 
 }
 
 export function workspacePaths(root) {
-  return { root, repo: path.join(root, 'robium'), apps: path.join(root, 'robium-apps') };
+  return {
+    root,
+    repo: path.join(root, 'robium'),
+    apps: path.join(root, 'robium-apps'),
+    userApps: path.join(root, USER_APPS_DIR),
+  };
 }
 
 // Explicit choice wins; then the current workspace, then the saved default.

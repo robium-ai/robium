@@ -63,7 +63,11 @@ TODO: state what remains simulated, expensive, narrow, or untested.
 `;
 }
 
-export function scaffoldApp({ appsDir, id, from, log = console.log }) {
+// `srcDir` holds the reference apps (normally the upstream robium-apps
+// checkout) and `dstDir` receives the new app (normally the user's own
+// my-apps repository). They are the same directory when working inside a
+// single apps repo, which is how this behaved before user libraries existed.
+export function scaffoldApp({ appsDir, srcDir = appsDir, dstDir = appsDir, id, from, log = console.log }) {
   if (!id || !/^[a-z0-9][a-z0-9-]*$/.test(id)) {
     log(`Invalid app id "${id ?? ''}": use lowercase letters, digits, and dashes.`);
     return 1;
@@ -72,10 +76,10 @@ export function scaffoldApp({ appsDir, id, from, log = console.log }) {
     log('Missing --from <existing-app-id>: scaffolding copies the closest shipped app (see REGISTRY.md "Bootstrap for").');
     return 1;
   }
-  const src = path.join(appsDir, from);
-  const dst = path.join(appsDir, id);
+  const src = path.join(srcDir, from);
+  const dst = path.join(dstDir, id);
   if (!existsSync(path.join(src, 'robium-app.yaml'))) {
-    log(`Source app "${from}" not found (no ${from}/robium-app.yaml in ${appsDir}).`);
+    log(`Source app "${from}" not found (no ${from}/robium-app.yaml in ${srcDir}).`);
     return 1;
   }
   if (existsSync(dst)) {
@@ -83,6 +87,7 @@ export function scaffoldApp({ appsDir, id, from, log = console.log }) {
     return 1;
   }
 
+  mkdirSync(dstDir, { recursive: true });
   cpSync(src, dst, {
     recursive: true,
     filter: (p) => !EXCLUDE.has(path.basename(p)),

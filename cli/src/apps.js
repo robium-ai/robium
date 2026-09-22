@@ -5,6 +5,7 @@ import os from 'node:os';
 import { runChecks } from './doctor.js';
 import { appValidate } from './appValidate.js';
 import { scaffoldApp } from './appNew.js';
+import { ensureUserApps } from './userApps.js';
 import { getAppVerb, STANDARD_APP_VERBS } from './appVerbs.js';
 import { findWorkspace, expandPath } from './workspace.js';
 
@@ -200,7 +201,8 @@ Usage:
   npx robium-ai app logs <id>                      Follow application logs
   npx robium-ai app stop <id>                      Stop the application
   npx robium-ai app validate [--json]              Validate every robium-app.yaml (CI-friendly)
-  npx robium-ai app new <id> --from <existing-id>  Scaffold by copying the closest shipped app
+  npx robium-ai app new <id> --from <existing-id>  Scaffold into my-apps/ by copying the closest shipped app
+  npx robium-ai app new <id> --from <id> --here    Scaffold into the apps repo itself (maintainers)
 
 Apps repo resolution: --dir <apps-repo>, else $ROBIUM_APPS_DIR, else an enclosing
 apps checkout, else robium-apps/ in the current or remembered workspace.`;
@@ -227,6 +229,27 @@ function requireApp(apps, id, log) {
   return app;
 }
 
+// New apps belong in the user's own library, not in the upstream reference
+// checkout: editing robium-apps/ leaves it dirty and `update` then refuses
+// it. --here overrides for maintainers working inside robium-apps itself.
+async function appNew({ appsDir, id, flags, log }) {
+  let dstDir = appsDir;
+  if (!flags.here) {
+    const workspace = findWorkspace({});
+    if (workspace) {
+      try {
+        const { dir, created } = await ensureUserApps({ root: workspace.root, log });
+        dstDir = dir;
+        if (created) log(`  Your applications live here; ${workspace.apps} stays a clean upstream checkout.`);
+      } catch (e) {
+        log(`! ${e.message}`);
+        return 1;
+      }
+    }
+  }
+  return scaffoldApp({ srcDir: appsDir, dstDir, id, from: flags.from, log });
+}
+
 export async function appCmd({ args = [], flags = {}, log = console.log, exec = execInApp, checks = runChecks } = {}) {
   const sub = args[0];
   const id = args[1];
@@ -237,7 +260,7 @@ export async function appCmd({ args = [], flags = {}, log = console.log, exec = 
   const appsDir = requireAppsDir(flags, log);
   if (!appsDir) return 1;
   if (sub === 'validate') return appValidate({ appsDir, flags, log });
-  if (sub === 'new') return scaffoldApp({ appsDir, id, from: flags.from, log });
+  if (sub === 'new') return appNew({ appsDir, id, flags, log });
   const apps = loadApps(appsDir);
 
   switch (sub) {

@@ -1,9 +1,9 @@
 import path from 'node:path';
 import { homedir } from 'node:os';
-import { lstat, realpath, stat, mkdir } from 'node:fs/promises';
+import { lstat, readdir, realpath, stat, mkdir } from 'node:fs/promises';
 import { createInterface } from 'node:readline/promises';
 import { run } from './exec.js';
-import { REPOSITORIES, findWorkspace, workspacePaths, expandPath, readWorkspaceConfig, saveWorkspaceConfig } from './workspace.js';
+import { REPOSITORIES, WORKSPACE_REPO, findWorkspace, workspacePaths, expandPath, readWorkspaceConfig, saveWorkspaceConfig } from './workspace.js';
 
 async function exists(target) {
   try { await lstat(target); return true; } catch (e) { if (e.code === 'ENOENT') return false; throw e; }
@@ -34,6 +34,40 @@ export async function validateCheckout(repo, spec, exec = run) {
   if (!matches) throw new Error(`${repo} has no official Robium remote. Add the official upstream explicitly or choose another workspace.`);
 }
 
+
+async function isEmptyDir(dir) {
+  try { return (await readdir(dir)).length === 0; } catch (e) { if (e.code === 'ENOENT') return true; throw e; }
+}
+
+// The workspace root is itself a small repository carrying the cross-agent
+// map. It holds no code and no submodules: robium/ and robium-apps/ are
+// ignored there and stay independent checkouts.
+//
+// Three cases, in order: an existing official checkout is reused untouched; an
+// empty or missing root is cloned; anything else stays a plain folder, which
+// is what every workspace created before this existed already is.
+async function ensureWorkspaceRepo({ root, exec, log }) {
+  if (await exists(path.join(root, '.git'))) {
+    try {
+      await validateCheckout(root, WORKSPACE_REPO, exec);
+    } catch {
+      throw new Error(`${root} is a repository, not a workspace parent. Choose a folder that will contain robium/ and robium-apps/.`);
+    }
+    log(`✓ Using workspace repository (unchanged): ${root}`);
+    return 'checkout';
+  }
+  if (!(await isEmptyDir(root))) return 'folder';
+  const clone = await exec('git', ['clone', '--branch', 'main', '--', WORKSPACE_REPO.url, root], { timeout: 300_000 });
+  if (!clone.ok) {
+    // Never fatal: the map is a convenience, the checkouts below are the
+    // product. A plain parent folder works exactly as it did before.
+    log(`! Could not clone ${WORKSPACE_REPO.name}; continuing with a plain workspace folder.`);
+    return 'folder';
+  }
+  log(`✓ Workspace repository cloned: ${root}`);
+  return 'checkout';
+}
+
 export async function resolveWorkspace({
   exec = run, home = homedir(), cwd = process.cwd(), dir, yes = false,
   interactive = Boolean(process.stdout.isTTY && process.stdin.isTTY), ask = defaultAsk,
@@ -53,7 +87,7 @@ export async function resolveWorkspace({
     if (!(await exec('git', ['--version'])).ok) {
       throw new Error('git not found. Install git, then re-run npx robium-ai setup. Manual setup: git clone each official repository into <workspace>/robium and <workspace>/robium-apps.');
     }
-    if (await isRobiumRepo(workspace.root) || await exists(path.join(workspace.root, '.git'))) {
+    if (await isRobiumRepo(workspace.root)) {
       throw new Error(`${workspace.root} is a repository, not a workspace parent. Choose a folder that will contain robium/ and robium-apps/.`);
     }
     for (const spec of REPOSITORIES) {
@@ -61,6 +95,7 @@ export async function resolveWorkspace({
       if (await exists(target)) await validateCheckout(target, spec, exec);
     }
     await mkdir(workspace.root, { recursive: true });
+    await ensureWorkspaceRepo({ root: workspace.root, exec, log });
     for (const spec of REPOSITORIES) {
       const target = path.join(workspace.root, spec.name);
       if (await exists(target)) log(`✓ Using checkout (unchanged): ${target}`);
