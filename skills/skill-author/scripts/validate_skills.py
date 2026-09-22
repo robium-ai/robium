@@ -201,7 +201,7 @@ def main() -> None:
     skills_root = Path(__file__).resolve().parents[2]
     skill_dirs = sorted(
         path for path in skills_root.iterdir()
-        if path.is_dir() and path.name != "_TEMPLATE"
+        if path.is_dir() and path.name != "_TEMPLATE" and not path.name.startswith(".")
     )
     errors = [error for skill_dir in skill_dirs for error in check_skill(skill_dir)]
     for error in errors:

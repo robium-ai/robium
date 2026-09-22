@@ -7,6 +7,10 @@ Forward-looking work is tracked in **GitHub Issues**, not here — see
 This file is the history the old `docs/BACKLOG.md` "Done" section held, migrated
 verbatim on 2026-07-22.
 
+Entries below cite the plan and spec documents that drove each change. Those
+documents lived under `docs/superpowers/` and were removed on 2026-09-21; they
+remain in Git history, reachable from commit `545f95a^`.
+
 ## 2026-08-27: Faster development and capture-only context
 
 Reduced constraint amplification across Robium development: repository guidance
@@ -126,7 +130,7 @@ criterion 2; #87 runs a blind A/B over three feedback-conditioned variants
 to resolve the held observation obs-nav2-003, with variant C (carrying the
 nav2 1.5.0 re-verify caveat) as the scored winner — merging completes exit
 criterion 1.
-Spec: docs/superpowers/specs/2026-08-01-learning-engine-design.md §8 layer 4, §9, Phase 3 row of §15.
+Spec: `2026-08-01-learning-engine-design` §8 layer 4, §9, Phase 3 row of §15.
 
 ## 2026-08-02 — Learning engine Phase 2b: consolidate + absorb + recall
 
@@ -141,7 +145,7 @@ eval harvest; two absorb PRs opened (external-sourced #78 and session-sourced
 #79, stacked pending this branch's merge) with evidence tables. Absorb run B
 also surfaced and fixed an apply_deltas same-file-annotate write-order bug.
 Recall demonstrated end-to-end.
-Spec: docs/superpowers/specs/2026-08-01-learning-engine-design.md §5–§8, §13.
+Spec: `2026-08-01-learning-engine-design` §5–§8, §13.
 
 ## 2026-08-02 — Learning engine Phase 2a: shared core + mining
 
@@ -155,7 +159,7 @@ crawl records. Back-mining queue regenerated after worktree loss. Pilot fix
 rounds corrected several mined-content defects caught by review (pluginlib
 discovery mechanics, wire-vs-plugin-API conflation, convergence framings) —
 the observation files carry the corrected text.
-Spec: docs/superpowers/specs/2026-08-01-learning-engine-design.md §4.5, §6a.
+Spec: `2026-08-01-learning-engine-design` §4.5, §6a.
 
 ## 2026-08-01 — Learning engine Phase 1: substrate + capture
 
@@ -163,7 +167,7 @@ Anchor IDs across 22 skills; evidence/evals sidecar formats with validator
 enforcement; learnings schema v2; capture hooks shipped in the plugin
 (corrections, bash errors, commit nudge, session summary, transcript archiver);
 secret scrubber; offline transcript miner; back-mining of 21 rescued session
-transcripts. Spec: docs/superpowers/specs/2026-08-01-learning-engine-design.md.
+transcripts. Spec: `2026-08-01-learning-engine-design`.
 
 ## 2026-07-18 — robium CLI shipped: npm package `robium-ai` 0.1.0
 
@@ -184,7 +188,7 @@ mention doctor preflight in a skill — shipped as environments 1.3.0
 Chat instruction → SmolVLA → SO-101 arm in MuJoCo; Rerun-in-Gradio viz in the
 nav-trial workspace shell; fine-tune loop on HF Jobs; oracle → base → fine-tuned
 "watch it learn" checkpoints. Design:
-`robium-applications/docs/superpowers/specs/2026-07-13-vla-trial-design.md`.
+`2026-07-13-vla-trial-design`.
 
 Hardened lerobot, huggingface, data, rerun, environments, integration, testing,
 live-demo; mujoco skill authoring still pending (robium-plugin issue #1).
@@ -196,7 +200,7 @@ gradio_rerun viewer; controllers oracle (succeeds) + trained (pipe-test ckpt,
 honest fail); orchestrator entry + homepage card; `make demo` (native MPS) and
 `make demo-image`/orchestrator (Docker CPU) both verified; `make demo-smoke`
 5/5. Spec:
-`robium-applications/docs/superpowers/specs/2026-07-15-vla-trial-demo-page-design.md`.
+`2026-07-15-vla-trial-demo-page-design`.
 
 Cloud hosting deferred → robium-website issue #1. Fresh learnings captured
 (macOS CGL thread-affinity deadlock; Gradio orphaned-run claims; per-run Rerun
@@ -212,5 +216,5 @@ logos, GitHub deep-links, live star count); reference-demos copy expansion;
 ## 2026-07-18 — test-assets skill shipped 1.0.0
 
 Step (a) of the test-data track, re-scoped 2026-07-18 after brainstorm. Spec:
-`docs/superpowers/specs/2026-07-18-test-assets-skill-design.md`. The paired
+`2026-07-18-test-assets-skill-design`. The paired
 corpus hardening run is robium-applications issue #1.

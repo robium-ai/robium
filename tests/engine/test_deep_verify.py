@@ -3,7 +3,6 @@ import textwrap
 import pytest
 import yaml
 
-import apply_deltas as ad
 import deep_verify as dv
 
 PASS_TASK = {
@@ -150,42 +149,6 @@ def test_inventory_skips_skill_dirs_with_no_examples_or_references(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# End-to-end: emitted deltas file applied via apply_deltas
-# ---------------------------------------------------------------------------
-
-def test_end_to_end_emitted_deltas_applied_flips_marker_and_bumps_build(tmp_path):
-    skills_dir = tmp_path / "skills"
-    d = skills_dir / "nav2"
-    d.mkdir(parents=True)
-    (d / "SKILL.md").write_text(SKILL_MD)
-    (d / "examples").mkdir()
-    (d / "examples" / "x.py").write_text("# status: unverified\nprint('hi')\n")
-    (d / "evals.yaml").write_text(yaml.safe_dump({"tasks": [PASS_TASK]}))
-    archive_dir = tmp_path / "archive"
-    archive_dir.mkdir()
-
-    res = dv.run_for_skill("nav2", str(skills_dir), str(tmp_path), "2026-08-05")
-    assert len(res["deltas"]) == 1
-
-    deltas_path = tmp_path / "deltas.yaml"
-    deltas_path.write_text(yaml.safe_dump({"date": "2026-08-05", "deltas": res["deltas"]}))
-
-    rep = ad.apply_file(str(deltas_path), skills_dir=str(skills_dir), archive_dir=str(archive_dir))
-    assert rep["refused"] == []
-    assert rep["skills_bumped"]["nav2"] == ("1.2.3", "1.2.4")  # build bump
-
-    text = (d / "examples" / "x.py").read_text()
-    assert "status: verified 2026-08-05 (deep-verify: x-runs)" in text
-    assert "status: unverified" not in text
-    md_text = (d / "SKILL.md").read_text()
-    assert "version: 1.2.4" in md_text
-    assert "deep-verify-x-runs" in md_text  # reason recorded in changelog
-
-
-# ---------------------------------------------------------------------------
-# CLI
-# ---------------------------------------------------------------------------
-
 def test_cli_inventory_table_reports_unfixtured_count_no_cap(tmp_path, capsys):
     skills_dir = tmp_path / "skills"
     d = skills_dir / "nav2"

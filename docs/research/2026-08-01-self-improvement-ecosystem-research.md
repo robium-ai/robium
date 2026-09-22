@@ -1,6 +1,6 @@
 # Self-Improvement Ecosystem Research — 7 Repo Deep Dives
 
-*2026-08-01. Input to the learning-engine redesign (`docs/superpowers/specs/2026-08-01-learning-engine-design.md`). Seven parallel research agents, each assigned one reference project and asked to extract what transfers to robium's skill-learning loop — and what doesn't. Each report cites the exact files/URLs its agent actually read. Also published as a claude.ai artifact (same content, styled).*
+*2026-08-01. Input to the learning-engine redesign (`2026-08-01-learning-engine-design`). Seven parallel research agents, each assigned one reference project and asked to extract what transfers to robium's skill-learning loop — and what doesn't. Each report cites the exact files/URLs its agent actually read. Also published as a claude.ai artifact (same content, styled).*
 
 ---
 
@@ -98,7 +98,7 @@ Bug-fix prompt (correctness < 0.1 with errors) or mutation prompt = task descrip
 3. **Diff-based variation with no-op fallback** — variants emit minimal diffs, never rewrites; a bad diff leaves the skill intact.
 4. **Breadth/depth model split** — N cheap agents draft variants/attempt tasks; the expensive judge runs only on variants that beat baseline.
 5. **Tiered fitness with tiebreakers** — score variants as (trigger accuracy, task completion, −token length): leanness as the runtime analogue.
-6. **Archive as population history** — add parent-version + eval-score metadata (and losing A/B variants) to `archive/` and it becomes queryable lineage, not write-only backup.
+6. **Archive as population history** — add parent-version + eval-score metadata (and losing A/B variants) to the former archive/ and it becomes queryable lineage, not write-only backup.
 
 ### Anti-patterns
 
@@ -248,7 +248,7 @@ Robium sits at the **intersection of 2.2 memory-processing and 2.3.2 skill refin
 - **ReasoningBank** (2509.25140) — distills strategy items from *both* successful and failed trajectories; MaTTS spends parallel compute to generate diverse rollouts whose **contrast** yields higher-quality memory. Closest published match to "parallel experimentation agents with eval-gated distillation." Failures are first-class.
 - **ExpeL** (2308.10144) — insight-editing op set: ADD, UPVOTE, DOWNVOTE (delete at zero), EDIT, applied by comparing success/failure pairs. A formal grammar for absorption; per-bullet vote counters mechanize ✓-promotion and give the refiner a principled deletion criterion.
 - **SkillWeaver** (2504.07079) — propose → **practice repeatedly** → synthesize into tested APIs (+31.8% WebArena); skills distilled by strong agents lift weak agents by up to 54.3%. Empirical proof for the shared-repo thesis; practice-reps before promotion matches ✓-verification.
-- **Darwin Gödel Machine** (2505.22954) — archive of all past variants as the exploration substrate; only benchmark-validated variants kept (SWE-bench 20%→50%). Stepping-stone variants seed later wins. Vindicates `archive/` as branch points, not just history.
+- **Darwin Gödel Machine** (2505.22954) — archive of all past variants as the exploration substrate; only benchmark-validated variants kept (SWE-bench 20%→50%). Stepping-stone variants seed later wins. Vindicates the former archive/ as branch points, not just history.
 - **CTIM-Rover** (2505.23422) — **negative result:** cross-task episodic memory added to AutoCodeRover *never* outperformed the memoryless baseline; retrieved memories acted as distracting noise. The cautionary bound: ungated auto-capture makes agents worse. The editorial gate is load-bearing.
 - **AgentDevel** (2601.04620) — self-evolution as **release engineering**: one canonical version line, implementation-blind critic, auditable specs, "flip-centered" gating (preventing pass→fail regressions is the primary objective). Closest philosophical match to robium; its addition is a behavioral regression check per skill edit.
 

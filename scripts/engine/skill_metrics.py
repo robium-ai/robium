@@ -119,31 +119,6 @@ def dir_stats(d: Path) -> tuple[int, int]:
     return body_lines, total
 
 
-def history_report(skills_dir: Path, archive_dir: Path) -> None:
-    print(f"{'skill':<16}{'snapshots (body lines → current)':<58}{'trend'}")
-    print("-" * 88)
-    warnings: list[str] = []
-    for cur in sorted(skills_dir.iterdir()):
-        if not cur.is_dir() or cur.name in SKIP_DIRS or not (cur / "SKILL.md").is_file():
-            continue
-        snaps = sorted([p for p in (archive_dir / cur.name).iterdir() if p.is_dir()],
-                       key=lambda p: semver_key(p.name)) if (archive_dir / cur.name).is_dir() else []
-        chain = [(p.name, *dir_stats(p)) for p in snaps] + [("current", *dir_stats(cur))]
-        lines_chain = " → ".join(f"{v}:{n}" for v, n, _ in chain)
-        deltas = [b[1] - a[1] for a, b in zip(chain, chain[1:])]
-        trend = "".join("+" if d > 0 else ("-" if d < 0 else "=") for d in deltas) or "·"
-        print(f"{cur.name:<16}{lines_chain:<58}{trend}")
-        if len(deltas) >= 2 and all(d > 0 for d in deltas):
-            warnings.append(f"[{cur.name}] grew across every retained snapshot "
-                            f"({chain[0][1]}→{chain[-1][1]} lines); inspect for accumulated prose")
-        if deltas and deltas[-1] >= 60:
-            warnings.append(f"[{cur.name}] current entrypoint added {deltas[-1]} body lines — inspect: "
-                            f"diff -ru {archive_dir / cur.name / chain[-2][0]} {cur}")
-    print(f"\n{len(warnings)} history warning(s):" if warnings else "\nno history warnings")
-    for w in warnings:
-        print(f"  - {w}")
-
-
 def normalize_line(line: str) -> str:
     return re.sub(r"\s+", " ", line.strip().lower())
 
@@ -178,9 +153,6 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--stale-days", type=int, default=90)
     ap.add_argument("--skills-dir", default="skills")
-    ap.add_argument("--archive-dir", default="archive")
-    ap.add_argument("--history", action="store_true",
-                    help="growth trend per skill from archive/ snapshots")
     ap.add_argument("--dupes", action="store_true",
                     help="identical non-trivial lines appearing in 2+ skills")
     args = ap.parse_args()
@@ -189,9 +161,6 @@ def main() -> int:
     if not skills_dir.is_dir():
         print(f"error: {skills_dir}/ not found — run from the robium repo root", file=sys.stderr)
         return 2
-    if args.history:
-        history_report(skills_dir, Path(args.archive_dir))
-        return 0
     if args.dupes:
         dupes_report(skills_dir)
         return 0
