@@ -1,10 +1,9 @@
-# Transcript and learning retention
+# Transcript retention
 
-Transcripts are evidence, never prompt context. Dated learnings are local
-staging — gitignored, and deleted once distilled.
+Transcripts are evidence, never prompt context.
 
-- Keep a transcript while a queue flag, tentative observation, or ready
-  observation points to it.
+- Keep a transcript while a queue flag or a nonterminal observation points to
+  it. An observation links a transcript by citing it in `source:`.
 - A transcript becomes eligible for deletion when every linked observation is
   either rejected, or absorbed with its corresponding change landed.
 - Unreferenced transcripts expire after the repository's retention window;
@@ -14,10 +13,7 @@ staging — gitignored, and deleted once distilled.
 - Use `--apply` only after the report identifies the intended files. Retention
   cleanup does not authorize deleting unrelated logs or application data.
 
-Add `--learnings` to classify the dated learning files in the same run. A
-learning is eligible only when every `lrn-` entry it defines is cited by an
-`absorbed` or `rejected` observation; an uncited entry keeps its file forever.
-Before letting one go, confirm what it taught survives somewhere a reader will
-reach — the skill body for guidance, a `references/` file for conditional
-detail, dead ends, and platform-specific values. A learning is not distilled
-just because an observation went terminal.
+Before letting evidence go, confirm what it taught survives somewhere a reader
+will reach — the skill body for guidance, a `references/` file for conditional
+detail, dead ends, and platform-specific values. A terminal observation does
+not by itself mean the knowledge landed.

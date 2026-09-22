@@ -1,7 +1,7 @@
 triggers:
   positive:
     - phrase: if we use gradio do we need to host it on hugging face? can we just host it on our server and demo window would show the application?
-      source: learnings/2026-07-13.md
+      source: 2026-07-13
     - phrase: inspect this robotics dataset on the Hugging Face Hub before downloading it
     - phrase: show me the available Hugging Face Jobs hardware, but do not start anything
   negative:

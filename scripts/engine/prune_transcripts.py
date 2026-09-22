@@ -3,21 +3,13 @@
 
 Protection order:
 1. a pending queue flag references the transcript/session;
-2. a dated learning links the transcript and any linked observation is
-   nonterminal, or the learning has not been consolidated into an observation;
-3. all observations linked through every learning are absorbed/rejected;
+2. an observation cites the transcript and has not reached a terminal status;
+3. every observation citing it is absorbed/rejected — eligible;
 4. otherwise, only an unreferenced transcript older than the retention window
    is eligible.
 
-`--learnings` additionally classifies the dated learning files themselves.
-They are local staging, not tracked evidence, so a file survives until every
-`lrn-` entry it defines is cited by an observation that reached a terminal
-status. An entry no observation cites keeps its file forever: undistilled
-capture is the one thing this tool must never destroy.
-
 Dry-run is the default. The tool never follows symlinks and only deletes direct
-`.jsonl` children of `<root>/.robium/transcripts`, or dated `.md` children of
-`<root>/learnings`.
+`.jsonl` children of `<root>/.robium/transcripts`.
 """
 
 from __future__ import annotations
@@ -32,11 +24,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 DEFAULT_MAX_AGE_DAYS = 14
-_ENTRY_RE = re.compile(r"<!--\s*id:\s*(lrn-[a-z0-9-]+)\s*-->")
 _TRANSCRIPT_RE = re.compile(r"([A-Za-z0-9._-]+__[A-Za-z0-9-]+\.jsonl)")
 _OBS_HEADING_RE = re.compile(r"^## .+<!--\s*id:\s*(obs-[a-z0-9-]+)\s*-->\s*$")
 _FIELD_RE = re.compile(r"^([a-z][a-z-]*):\s*(.*)$")
-_DATED_LEARNING_RE = re.compile(r"^\d{4}-\d{2}-\d{2}(-[a-z0-9-]+)?\.md$")
 
 
 @dataclass(frozen=True)
@@ -75,75 +65,24 @@ def pending_queue_refs(queue_path: Path) -> tuple[set[str], set[str]]:
     return sessions, names
 
 
-def learning_transcript_links(learnings_dir: Path) -> dict[str, set[str]]:
-    """Map archived transcript filename to dated learning IDs."""
-    links: dict[str, set[str]] = defaultdict(set)
-    if not learnings_dir.is_dir():
-        return links
-    for path in sorted(learnings_dir.glob("*.md")):
-        if path.name in {"README.md", "AGENTS.md", "CLAUDE.md", "SOURCES.md"}:
-            continue
-        current_id = None
-        for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
-            match = _ENTRY_RE.search(line)
-            if match:
-                current_id = match.group(1)
-            if current_id:
-                for name in _TRANSCRIPT_RE.findall(line):
-                    links[name].add(current_id)
-    return links
-
-
-def learning_entry_ids(learnings_dir: Path) -> dict[Path, set[str]]:
-    """Map each dated learning file to the entry IDs it defines."""
-    entries: dict[Path, set[str]] = {}
-    if not learnings_dir.is_dir():
-        return entries
-    for path in sorted(learnings_dir.glob("*.md")):
-        if path.is_symlink() or not path.is_file():
-            continue
-        if not _DATED_LEARNING_RE.match(path.name):
-            continue
-        found = set()
-        for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
-            match = _ENTRY_RE.search(line)
-            if match:
-                found.add(match.group(1))
-        entries[path] = found
-    return entries
-
-
-def observation_statuses(observations_dir: Path) -> dict[str, list[str]]:
-    """Map each learning source ID to every observation status that cites it."""
+def observation_transcript_statuses(observations_dir: Path) -> dict[str, list[str]]:
+    """Map each cited transcript filename to the statuses of entries citing it."""
     statuses: dict[str, list[str]] = defaultdict(list)
     if not observations_dir.is_dir():
         return statuses
     for path in sorted(observations_dir.glob("*.md")):
         if path.name == "README.md":
             continue
-        fields: dict[str, str] | None = None
-
-        def record(current):
-            if not current:
-                return
-            status = current.get("status", "")
-            value = current.get("sources", "").strip()
-            if not (value.startswith("[") and value.endswith("]")):
-                return
-            for source in (part.strip() for part in value[1:-1].split(",")):
-                if source.startswith("lrn-"):
-                    statuses[source].append(status)
-
+        status = ""
         for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
             if _OBS_HEADING_RE.match(line):
-                record(fields)
-                fields = {}
+                status = ""
                 continue
-            if fields is not None:
-                match = _FIELD_RE.match(line)
-                if match:
-                    fields[match.group(1)] = match.group(2).strip()
-        record(fields)
+            match = _FIELD_RE.match(line)
+            if match and match.group(1) == "status":
+                status = match.group(2).strip()
+            for name in _TRANSCRIPT_RE.findall(line):
+                statuses[name].append(status)
     return statuses
 
 
@@ -163,8 +102,7 @@ def classify(
         return []
 
     queue_sessions, queue_names = pending_queue_refs(root / ".robium" / "queue.jsonl")
-    links = learning_transcript_links(root / "learnings")
-    statuses = observation_statuses(root / "learnings" / "observations")
+    statuses = observation_transcript_statuses(root / "learnings" / "observations")
     cutoff = (time.time() if now is None else now) - max_age_days * 86400
     decisions = []
 
@@ -176,15 +114,9 @@ def classify(
             decisions.append(Decision(path, "KEEP", "pending-queue"))
             continue
 
-        learning_ids = links.get(path.name, set())
-        if learning_ids:
-            all_terminal = True
-            for learning_id in learning_ids:
-                linked_statuses = statuses.get(learning_id, [])
-                if not linked_statuses or not all(_terminal(s) for s in linked_statuses):
-                    all_terminal = False
-                    break
-            if all_terminal:
+        cited = statuses.get(path.name, [])
+        if cited:
+            if all(_terminal(s) for s in cited):
                 decisions.append(Decision(path, "DELETE", "linked-terminal"))
             else:
                 decisions.append(Decision(path, "KEEP", "pending-evidence"))
@@ -197,40 +129,13 @@ def classify(
     return decisions
 
 
-def classify_learnings(root: Path) -> list[Decision]:
-    """Classify dated learning files by whether their entries are distilled."""
-    root = root.resolve()
-    learnings_dir = root / "learnings"
-    entries = learning_entry_ids(learnings_dir)
-    if not entries:
-        return []
-    statuses = observation_statuses(learnings_dir / "observations")
-
-    decisions = []
-    for path, ids in entries.items():
-        if not ids:
-            decisions.append(Decision(path, "KEEP", "no-entries"))
-            continue
-        undistilled = [i for i in sorted(ids) if not statuses.get(i)]
-        if undistilled:
-            decisions.append(
-                Decision(path, "KEEP", f"undistilled({len(undistilled)}/{len(ids)})")
-            )
-            continue
-        if any(not _terminal(s) for i in ids for s in statuses[i]):
-            decisions.append(Decision(path, "KEEP", "pending-observation"))
-            continue
-        decisions.append(Decision(path, "DELETE", "distilled"))
-    return decisions
-
-
-def apply_decisions(decisions: list[Decision], suffix: str = ".jsonl") -> int:
+def apply_decisions(decisions: list[Decision]) -> int:
     deleted = 0
     for decision in decisions:
         if decision.action != "DELETE":
             continue
         path = decision.path
-        if path.is_symlink() or not path.is_file() or path.suffix != suffix:
+        if path.is_symlink() or not path.is_file() or path.suffix != ".jsonl":
             continue
         path.unlink()
         deleted += 1
@@ -241,11 +146,6 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", default=".", help="Robium repository root")
     parser.add_argument("--max-age-days", type=int, default=DEFAULT_MAX_AGE_DAYS)
-    parser.add_argument(
-        "--learnings",
-        action="store_true",
-        help="Also classify dated learning files whose entries are all distilled",
-    )
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--apply", action="store_true", help="Delete eligible files")
     mode.add_argument("--dry-run", action="store_true", help="Report only (default)")
@@ -256,28 +156,13 @@ def main(argv=None) -> int:
     root = Path(args.root)
     mode_name = "apply" if args.apply else "dry-run"
 
-    # Classify everything before deleting anything: removing a distilled
-    # learning would otherwise strand its transcripts as unreferenced mid-run.
     decisions = classify(root, max_age_days=args.max_age_days)
-    learnings = classify_learnings(root) if args.learnings else []
-
     for decision in decisions:
         print(f"{decision.action} {decision.path.name} {decision.reason}")
     deleted = apply_decisions(decisions) if args.apply else 0
     eligible = sum(d.action == "DELETE" for d in decisions)
     kept = sum(d.action == "KEEP" for d in decisions)
     print(f"Transcript cleanup ({mode_name}): {kept} kept, {eligible} eligible, {deleted} deleted")
-
-    if args.learnings:
-        for decision in learnings:
-            print(f"{decision.action} {decision.path.name} {decision.reason}")
-        deleted_l = apply_decisions(learnings, suffix=".md") if args.apply else 0
-        eligible_l = sum(d.action == "DELETE" for d in learnings)
-        kept_l = sum(d.action == "KEEP" for d in learnings)
-        print(
-            f"Learning cleanup ({mode_name}): "
-            f"{kept_l} kept, {eligible_l} eligible, {deleted_l} deleted"
-        )
     return 0
 
 

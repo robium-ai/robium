@@ -1,4 +1,4 @@
-# Promoting a learning
+# Promoting a finding
 
 Use the evidence ladder to keep cheap signals from becoming permanent advice.
 
@@ -14,10 +14,9 @@ Use the evidence ladder to keep cheap signals from becoming permanent advice.
   claim and current platform.
 - Missing proof stays `tentative`; uncertainty is not a reason to rush an edit.
 
-Observations outlive their sources: the dated learning is gitignored staging
-and is deleted once distilled, so an entry that cites one must carry its own
-quote, source, and conditions rather than pointing at a file a reviewer may no
-longer have.
+Observations outlive their sources: transcripts are pruned once the entries
+citing them go terminal, so an entry must carry its own quote, source, and
+conditions rather than pointing at a file a reviewer may no longer have.
 
 The observation schema and legal statuses in `learnings/observations/README.md`
 are the source of truth.
@@ -34,8 +33,8 @@ are the source of truth.
   verification conditions.
 - Edit the live skill directly with the normal repository editing tools. In the
   same reviewed change, mark the observation `absorbed YYYY-MM-DD` only after
-  the guidance and its relevant checks have landed. The old anchor/version
-  delta applier remains only for historical artifacts and experiments.
+  the guidance and its relevant checks have landed, and compact the entry to
+  its dedup stub.
 
 ## Review
 

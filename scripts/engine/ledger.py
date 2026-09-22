@@ -6,7 +6,7 @@
 
 helpful++ on ✓/attributed successes; harmful++ on wrong-guidance,
 user-corrections, misfires. Counters carry sources — every increment is
-auditable back to a dated learning entry or observation.
+auditable back to an observation.
 """
 import argparse
 import datetime

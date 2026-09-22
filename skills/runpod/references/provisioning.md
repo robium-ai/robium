@@ -227,5 +227,5 @@ Only after this checklist passes should application startup monitoring begin.
 - [Billing](https://docs.runpod.io/accounts-billing/billing)
 
 All were directly fetched on 2026-08-24. Issue-specific behavior comes from
-Robium issue #69 and its dated learning/evidence records, not from upstream
+Robium issue #69 and its recorded evidence, not from upstream
 guarantees.

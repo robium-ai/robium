@@ -82,19 +82,12 @@ def test_size_ceiling_never_deletes_tentative_observation_evidence(tmp_path, mon
     name = "proj__evidence.jsonl"
     protected = tdir / name
     protected.write_bytes(b"p" * 1024)
-    learnings = tmp_path / "learnings"
-    observations = learnings / "observations"
+    observations = tmp_path / "learnings" / "observations"
     observations.mkdir(parents=True)
-    (learnings / "2026-01-01.md").write_text(
-        f"- [none] wrong-guidance <!-- id: lrn-0101-01 -->\n"
-        f"  source: transcript {name}#turn-1\n",
-        encoding="utf-8",
-    )
     (observations / "testing.md").write_text(
         "## finding <!-- id: obs-testing-001 -->\n"
-        "status: tentative\nproof: 1\nsignal: wrong-guidance\n"
-        "sources: [lrn-0101-01]\ntarget: testing#x (update)\n"
-        "evidence: pending\n",
+        "status: tentative\nsignal: wrong-guidance\n"
+        f"source: transcript {name}#turn-1\n",
         encoding="utf-8",
     )
     monkeypatch.setattr(session_end, "MAX_ARCHIVE_MB", 0.0005)

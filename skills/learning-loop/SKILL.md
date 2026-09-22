@@ -11,6 +11,8 @@ a future decision without injecting old conversations into new work.
 ## Capture without recall
 
 - Hooks may queue corrections, failures, and transcript windows silently.
+- Findings live in one store, `learnings/observations/<skill>.md`. Capture is
+  a `tentative` entry there — status and signal are the only required fields.
 - Never insert queue items, observations, memories, or reminders into a new
   prompt. Read them only during an explicit consolidate, absorb, refine, or
   status task.
@@ -25,6 +27,8 @@ a future decision without injecting old conversations into new work.
   fix, and any dead ends that prevent repeating the mistake.
 - Absorb only observations marked `ready`; uncertain material stays tentative.
 - Deduplicate the finding before carrying it forward.
+- On absorb, compact the entry to its dedup stub: the knowledge now lives in
+  the skill, and the entry's remaining job is to stop a rediscovery.
 - Read [PROMOTION.md](PROMOTION.md) when deciding whether evidence is strong
   enough or which skill owns it.
 
@@ -37,8 +41,7 @@ a future decision without injecting old conversations into new work.
 - Follow the `skill-author` quality bar and show the concrete diff with its
   evidence. Maintainer-authorized edits may land locally; unattended or
   unrequested absorption uses a branch and human-reviewed PR.
-- Live skills are versionless and changelog-free. The legacy anchor/version
-  delta applier is not the writer for the current skill format.
+- Live skills are versionless and changelog-free.
 
 ## Test according to risk
 

@@ -245,5 +245,5 @@ Pod is finished.
 - [Billing overview](https://docs.runpod.io/accounts-billing/billing)
 
 All were directly fetched on 2026-08-24. Dated incident findings come from
-Robium issue #69 and learnings/2026-08-24-vla-pick-and-place.md rather than
+Robium issue #69 and a 2026-08-24 vla-pick-and-place run rather than
 being represented as permanent RunPod guarantees.

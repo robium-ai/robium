@@ -1,11 +1,11 @@
 triggers:
   positive:
     - phrase: can you check alternative resources in runpod that we can utilize, we do not need to use A40
-      source: learnings/2026-08-24-vla-pick-and-place.md#lrn-0824-25
+      source: 2026-08-24 vla-pick-and-place
     - phrase: runpodctl accepted my network volume flags but the Pod says networkVolume is null
-      source: learnings/2026-08-24-vla-pick-and-place.md#lrn-0824-27
+      source: 2026-08-24 vla-pick-and-place
     - phrase: the RunPod keeps saying start container begin, check the logs before terminating it
-      source: learnings/2026-08-24-vla-pick-and-place.md#lrn-0824-28
+      source: 2026-08-24 vla-pick-and-place
   negative:
     - phrase: should this Python robotics project use uv or Docker
       expect: environments

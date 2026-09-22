@@ -69,15 +69,13 @@ Official starting points:
 
 ## Model and application evidence
 
-- The original Burger/Jazzy/Harmonic run completed mapping and two saved-map
-  Nav2 goals with stamped velocity output:
-  [2026-07-10 nav-trial](../../learnings/2026-07-10.md).
-- A later Waffle Pi application preserved the TurtleBot sensor and control
-  contract across several Gazebo worlds:
-  [2026-08-14 indoor-navigation](../../learnings/2026-08-14-indoor-navigation.md).
-- The renamed Robot Navigation application completed the full chain from
-  Gazebo lidar through mapping, map save, AMCL, and a Nav2 return goal:
-  [2026-08-16 robot-navigation](../../learnings/2026-08-16-robot-navigation.md).
+- The original Burger/Jazzy/Harmonic run (nav-trial, 2026-07-10) completed
+  mapping and two saved-map Nav2 goals with stamped velocity output.
+- A later Waffle Pi application (indoor-navigation, 2026-08-14) preserved the
+  TurtleBot sensor and control contract across several Gazebo worlds.
+- The renamed Robot Navigation application (2026-08-16) completed the full
+  chain from Gazebo lidar through mapping, map save, AMCL, and a Nav2 return
+  goal.
 
 Re-check the upstream packages whenever the ROS distribution, TurtleBot model,
 simulator, or installed package version changes. Add another platform card only

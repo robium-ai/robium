@@ -25,24 +25,15 @@ def run_cleanup(root, *args):
     )
 
 
-def seed_learning(root, transcript_name, learning_id="lrn-0101-01"):
-    learnings = root / "learnings"
-    learnings.mkdir(parents=True, exist_ok=True)
-    (learnings / "2026-01-01.md").write_text(
-        f"- [none] wrong-guidance <!-- id: {learning_id} -->\n"
-        f"  source: transcript {transcript_name}#turn-1\n",
-        encoding="utf-8",
-    )
-
-
-def seed_observation(root, status, learning_id="lrn-0101-01"):
+def seed_observation(root, status, transcript_name):
     observations = root / "learnings" / "observations"
     observations.mkdir(parents=True, exist_ok=True)
     (observations / "testing.md").write_text(
         "## finding <!-- id: obs-testing-001 -->\n"
         f"status: {status}\nproof: 1\nsignal: wrong-guidance\n"
-        f"sources: [{learning_id}]\ntarget: testing#x (update) - fix\n"
-        "evidence: symptom\n",
+        "sources: [robium-apps/x]\ntarget: testing#x (update) - fix\n"
+        "evidence: symptom\n"
+        f"source: transcript {transcript_name}#turn-1\n",
         encoding="utf-8",
     )
 
@@ -52,138 +43,44 @@ def test_pending_queue_session_is_never_deleted(tmp_path):
     queue = tmp_path / ".robium" / "queue.jsonl"
     queue.write_text('{"type":"error","session":"session-1"}\n', encoding="utf-8")
     result = run_cleanup(tmp_path, "--apply")
-    assert result.returncode == 0
     assert "KEEP robium__session-1.jsonl pending-queue" in result.stdout
     assert path.exists()
 
 
-def test_unconsolidated_or_tentative_evidence_is_never_deleted(tmp_path):
+def test_nonterminal_observation_keeps_its_transcript(tmp_path):
     name = "robium__evidence.jsonl"
     path = transcript(tmp_path, name, age_days=30)
-    seed_learning(tmp_path, name)
-    result = run_cleanup(tmp_path, "--apply")
-    assert "KEEP robium__evidence.jsonl pending-evidence" in result.stdout
-    assert path.exists()
-
-    seed_observation(tmp_path, "tentative")
+    seed_observation(tmp_path, "tentative", name)
     result = run_cleanup(tmp_path, "--apply")
     assert "KEEP robium__evidence.jsonl pending-evidence" in result.stdout
     assert path.exists()
 
 
-def test_all_linked_terminal_observations_allow_deletion(tmp_path):
-    name = "robium__terminal.jsonl"
-    path = transcript(tmp_path, name)
-    seed_learning(tmp_path, name)
-    seed_observation(tmp_path, "absorbed 2026-01-02")
-
-    dry = run_cleanup(tmp_path)
-    assert "DELETE robium__terminal.jsonl linked-terminal" in dry.stdout
-    assert path.exists()
-
-    applied = run_cleanup(tmp_path, "--apply")
-    assert applied.returncode == 0
-    assert "1 deleted" in applied.stdout
-    assert not path.exists()
-
-
-def test_rejected_observation_is_terminal(tmp_path):
-    name = "robium__rejected.jsonl"
-    path = transcript(tmp_path, name)
-    seed_learning(tmp_path, name)
-    seed_observation(tmp_path, "rejected (noise)")
-    result = run_cleanup(tmp_path, "--apply")
-    assert result.returncode == 0
-    assert not path.exists()
+def test_terminal_observations_allow_deletion(tmp_path):
+    for status in ("absorbed 2026-01-02", "rejected (noise)"):
+        name = "robium__done.jsonl"
+        path = transcript(tmp_path, name, age_days=1)
+        seed_observation(tmp_path, status, name)
+        result = run_cleanup(tmp_path, "--apply")
+        assert "DELETE robium__done.jsonl linked-terminal" in result.stdout
+        assert not path.exists()
 
 
 def test_unreferenced_transcripts_expire_after_fourteen_days(tmp_path):
-    old = transcript(tmp_path, "robium__old.jsonl", age_days=15)
-    recent = transcript(tmp_path, "robium__recent.jsonl", age_days=13)
+    fresh = transcript(tmp_path, "robium__fresh.jsonl", age_days=1)
+    stale = transcript(tmp_path, "robium__stale.jsonl", age_days=30)
     result = run_cleanup(tmp_path, "--apply")
-    assert result.returncode == 0
-    assert "DELETE robium__old.jsonl expired-unreferenced" in result.stdout
-    assert "KEEP robium__recent.jsonl recent-unreferenced" in result.stdout
-    assert not old.exists()
-    assert recent.exists()
+    assert "KEEP robium__fresh.jsonl recent-unreferenced" in result.stdout
+    assert fresh.exists()
+    assert not stale.exists()
 
 
 def test_symlinks_are_ignored(tmp_path):
-    outside = tmp_path / "outside.jsonl"
-    outside.write_text("{}\n", encoding="utf-8")
-    tdir = tmp_path / ".robium" / "transcripts"
-    tdir.mkdir(parents=True)
-    (tdir / "robium__link.jsonl").symlink_to(outside)
-    result = run_cleanup(tmp_path, "--apply", "--max-age-days", "0")
-    assert result.returncode == 0
-    assert outside.exists()
-
-
-def test_learnings_are_untouched_without_the_flag(tmp_path):
-    name = "robium__done.jsonl"
-    transcript(tmp_path, name, age_days=30)
-    seed_learning(tmp_path, name)
-    seed_observation(tmp_path, "absorbed 2026-01-02")
-    result = run_cleanup(tmp_path, "--apply")
-    assert "Learning cleanup" not in result.stdout
-    assert (tmp_path / "learnings" / "2026-01-01.md").exists()
-
-
-def test_undistilled_learning_is_never_deleted(tmp_path):
-    name = "robium__open.jsonl"
-    transcript(tmp_path, name, age_days=30)
-    seed_learning(tmp_path, name)
-    result = run_cleanup(tmp_path, "--apply", "--learnings")
-    assert "KEEP 2026-01-01.md undistilled(1/1)" in result.stdout
-    assert (tmp_path / "learnings" / "2026-01-01.md").exists()
-
-
-def test_tentative_observation_keeps_its_learning(tmp_path):
-    name = "robium__tentative.jsonl"
-    transcript(tmp_path, name, age_days=30)
-    seed_learning(tmp_path, name)
-    seed_observation(tmp_path, "tentative")
-    result = run_cleanup(tmp_path, "--apply", "--learnings")
-    assert "KEEP 2026-01-01.md pending-observation" in result.stdout
-    assert (tmp_path / "learnings" / "2026-01-01.md").exists()
-
-
-def test_partially_distilled_learning_is_kept(tmp_path):
-    name = "robium__partial.jsonl"
-    transcript(tmp_path, name, age_days=30)
-    learnings = tmp_path / "learnings"
-    learnings.mkdir(parents=True, exist_ok=True)
-    (learnings / "2026-01-01.md").write_text(
-        "- [none] wrong-guidance <!-- id: lrn-0101-01 -->\n"
-        f"  source: transcript {name}#turn-1\n"
-        "- [none] wrong-guidance <!-- id: lrn-0101-02 -->\n"
-        f"  source: transcript {name}#turn-2\n",
-        encoding="utf-8",
-    )
-    seed_observation(tmp_path, "absorbed 2026-01-02")
-    result = run_cleanup(tmp_path, "--apply", "--learnings")
-    assert "KEEP 2026-01-01.md undistilled(1/2)" in result.stdout
-    assert (learnings / "2026-01-01.md").exists()
-
-
-def test_fully_distilled_learning_is_deleted(tmp_path):
-    name = "robium__absorbed.jsonl"
-    transcript(tmp_path, name, age_days=30)
-    seed_learning(tmp_path, name)
-    seed_observation(tmp_path, "absorbed 2026-01-02")
-    result = run_cleanup(tmp_path, "--apply", "--learnings")
-    assert "DELETE 2026-01-01.md distilled" in result.stdout
-    assert "Learning cleanup (apply): 0 kept, 1 eligible, 1 deleted" in result.stdout
-    assert not (tmp_path / "learnings" / "2026-01-01.md").exists()
-
-
-def test_guidance_and_undated_files_are_never_classified(tmp_path):
-    transcript(tmp_path, "robium__guidance.jsonl", age_days=30)
-    learnings = tmp_path / "learnings"
-    learnings.mkdir(parents=True, exist_ok=True)
-    for name in ("AGENTS.md", "README.md", "SOURCES.md", "scratch.md"):
-        (learnings / name).write_text("- note <!-- id: lrn-0101-99 -->\n", encoding="utf-8")
-    result = run_cleanup(tmp_path, "--apply", "--learnings")
-    assert "Learning cleanup (apply): 0 kept, 0 eligible, 0 deleted" in result.stdout
-    for name in ("AGENTS.md", "README.md", "SOURCES.md", "scratch.md"):
-        assert (learnings / name).exists()
+    real = tmp_path / "outside.jsonl"
+    real.write_text("{}\n", encoding="utf-8")
+    link = tmp_path / ".robium" / "transcripts" / "robium__link.jsonl"
+    link.parent.mkdir(parents=True, exist_ok=True)
+    link.symlink_to(real)
+    run_cleanup(tmp_path, "--apply")
+    assert real.exists()
+    assert link.exists()

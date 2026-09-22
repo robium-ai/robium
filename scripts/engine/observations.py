@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Observations tier (Tier 2) — parse + lint learnings/observations/*.md.
 
-Schema: learnings/observations/README.md (spec §4.5 + §6a.3). stdlib only.
+Schema: learnings/observations/README.md. stdlib only.
 Exit contract mirrors the skill validator: FAIL lines, summary line, exit 0/1.
 """
 import argparse
@@ -97,7 +97,12 @@ def lint_file(path, known_skills=None):
         if not e["id"].startswith(f"obs-{stem}-"):
             errs.append(f"{where}: id '{e['id']}' prefix must match filename stem '{stem}'")
         f = e["fields"]
-        for req in ("status", "proof", "signal", "sources", "target", "evidence"):
+        # Capture is cheap: a tentative entry needs only a status and a signal.
+        # Everything else is what consolidation adds on the way to `ready`.
+        tentative = f.get("status") == "tentative"
+        required = ("status", "signal") if tentative else (
+            "status", "proof", "signal", "sources", "target", "evidence")
+        for req in required:
             if not f.get(req):
                 errs.append(f"{where}: missing field '{req}'")
         if f.get("status") and not _STATUS_RE.match(f["status"]):
