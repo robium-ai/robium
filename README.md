@@ -169,8 +169,7 @@ change shape. robium is built to notice:
 - **Absorb**: evidence-gated pull requests fold both back into the skills.
   Agents draft; a human merges every unrequested change.
 - **Verify**: volatile facts are checked against current upstream docs, and
-  observed values retain the conditions that produced them. Historical
-  snapshots from the former format remain under [`archive/`](./archive).
+  observed values retain the conditions that produced them.
 
 ## Contributing
 

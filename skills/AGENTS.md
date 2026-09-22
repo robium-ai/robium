@@ -23,8 +23,7 @@ content and `learning-loop` when working from captured evidence.
 ## Change and review
 
 - Git history is the normal record of live skill changes. Do not add per-skill
-  versions, changelogs, README files, or routine archive snapshots.
-- Existing files under `archive/` are immutable historical snapshots.
+  versions, changelogs, README files, or archive snapshots.
 - Preserve useful examples and scripts only when they provide reusable value;
   validate changed executable artifacts proportionally.
 - Run `uv run skills/skill-author/scripts/validate_skills.py` once after each

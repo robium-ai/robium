@@ -12,7 +12,6 @@ framework or invented DSL.
 - `skills/`, `hooks/`, `agents/`, `.codex-plugin/`, `.claude-plugin/`: plugin.
 - `cli/`: the `robium-ai` npm package.
 - `learnings/`, `scripts/engine/`: evidence capture and skill hardening.
-- `archive/`: immutable snapshots of prior skill versions.
 - `docs/`: history, architecture notes, and changelog.
 
 Applications live in the sibling `robium-ai/robium-apps` repository. The site
