@@ -2,8 +2,8 @@ import subprocess
 import verify_citations as vc
 
 
-def _mk_repo(tmp_path):
-    repo = tmp_path / "repos" / "fixrepo"
+def _mk_repo(tmp_path, nested=False):
+    repo = tmp_path / "repos" / ("acme/fixrepo" if nested else "fixrepo")
     repo.mkdir(parents=True)
     (repo / "src").mkdir()
     (repo / "src" / "node.py").write_text(
@@ -31,6 +31,11 @@ def _entry(sha, quote="pub = node.create_publisher(String, 'topic', 10)",
 
 def test_valid_citation_passes(tmp_path):
     root, sha = _mk_repo(tmp_path)
+    assert vc.verify_entry(_entry(sha), root) is None
+
+
+def test_org_repo_clone_layout_avoids_basename_collisions(tmp_path):
+    root, sha = _mk_repo(tmp_path, nested=True)
     assert vc.verify_entry(_entry(sha), root) is None
 
 

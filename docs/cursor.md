@@ -43,13 +43,14 @@ multi-host `hooks/hooks.json` file.
 | --- | --- |
 | `beforeSubmitPrompt` | Detect short correction signals; always returns `{"continue": true}` |
 | `afterShellExecution` | Capture error-bearing shell commands |
-| `sessionStart` | Initialize the project-local `.robium/` evidence directory |
+| `sessionStart` | Initialize `.robium/`; inject one count-only daily learning reminder when substantial signals are queued |
 | `sessionEnd` | Archive an available Cursor transcript and clean session deduplication state |
 
 Hooks receive prompt text, command output, workspace paths, and—when Cursor
 provides it—a transcript path. They write only to `.robium/` in the open
-project, scrub likely secrets before queueing excerpts, emit no recalled
-context, and fail open if Node, Python, or transcript data is unavailable.
+project, scrub likely secrets before queueing excerpts, and fail open if Node,
+Python, or transcript data is unavailable. The session-start reminder contains
+counts only, never excerpts, and is skipped for background-agent sessions.
 Cursor asks users to trust a workspace before project automation runs; local
 plugin imports may also be disabled by team policy. On Enterprise, **Allow
 Local Plugin Imports** is off by default. `sessionStart` and `sessionEnd` do not

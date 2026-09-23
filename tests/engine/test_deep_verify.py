@@ -56,28 +56,26 @@ def _mk_examples_skill(tmp_path, name="nav2", tasks=None, unverified_text="# sta
 # run_for_skill
 # ---------------------------------------------------------------------------
 
-def test_run_for_skill_pass_emits_exactly_one_annotate_op(tmp_path):
+def test_run_for_skill_pass_emits_exactly_one_review_suggestion(tmp_path):
     _mk_examples_skill(tmp_path, tasks=[PASS_TASK])
     res = dv.run_for_skill("nav2", str(tmp_path / "skills"), str(tmp_path), "2026-08-05")
-    assert len(res["deltas"]) == 1
-    assert res["deltas"][0] == {
+    assert len(res["suggestions"]) == 1
+    assert res["suggestions"][0] == {
         "skill": "nav2",
-        "op": "annotate",
         "file": "examples/x.py",
         "find": "status: unverified",
         "replace": "status: verified 2026-08-05 (deep-verify: x-runs)",
-        "status_only": True,
-        "reason": "deep-verify-x-runs",
+        "task": "x-runs",
     }
     assert res["passed"] == [{"skill": "nav2", "file": "examples/x.py", "task": "x-runs"}]
     assert res["failed"] == []
     assert res["unfixtured"] == []
 
 
-def test_run_for_skill_fail_emits_no_delta_records_tail(tmp_path):
+def test_run_for_skill_fail_emits_no_suggestion_records_tail(tmp_path):
     _mk_examples_skill(tmp_path, tasks=[FAIL_TASK])
     res = dv.run_for_skill("nav2", str(tmp_path / "skills"), str(tmp_path), "2026-08-05")
-    assert res["deltas"] == []
+    assert res["suggestions"] == []
     assert res["passed"] == []
     assert len(res["failed"]) == 1
     failure = res["failed"][0]
@@ -91,7 +89,7 @@ def test_run_for_skill_fail_emits_no_delta_records_tail(tmp_path):
 def test_run_for_skill_no_fixture_listed_unfixtured(tmp_path):
     _mk_examples_skill(tmp_path, tasks=None)  # no evals.yaml at all
     res = dv.run_for_skill("nav2", str(tmp_path / "skills"), str(tmp_path), "2026-08-05")
-    assert res["deltas"] == []
+    assert res["suggestions"] == []
     assert res["passed"] == []
     assert res["failed"] == []
     assert res["unfixtured"] == [{"skill": "nav2", "file": "examples/x.py"}]
@@ -105,7 +103,7 @@ def test_run_for_skill_task_with_no_matching_example_leaves_file_unfixtured(tmp_
     (skill / "examples" / "other.py").write_text("# status: verified\n")
     res = dv.run_for_skill("nav2", str(tmp_path / "skills"), str(tmp_path), "2026-08-05")
     assert res["unfixtured"] == [{"skill": "nav2", "file": "examples/x.py"}]
-    assert res["deltas"] == []
+    assert res["suggestions"] == []
 
 
 def test_run_for_skill_unknown_skill_is_error(tmp_path):
@@ -163,7 +161,7 @@ def test_cli_inventory_table_reports_unfixtured_count_no_cap(tmp_path, capsys):
     assert rc == 0
 
 
-def test_cli_run_writes_deltas_file_and_reports(tmp_path, capsys):
+def test_cli_run_writes_optional_suggestions_file_and_reports(tmp_path, capsys):
     skills_dir = tmp_path / "skills"
     _mk_examples_skill(tmp_path, tasks=[PASS_TASK])
     out_path = tmp_path / "out.yaml"
@@ -179,8 +177,8 @@ def test_cli_run_writes_deltas_file_and_reports(tmp_path, capsys):
     assert "PASS" in out
     written = yaml.safe_load(out_path.read_text())
     assert written["date"] == "2026-08-05"
-    assert len(written["deltas"]) == 1
-    assert written["deltas"][0]["reason"] == "deep-verify-x-runs"
+    assert len(written["suggestions"]) == 1
+    assert written["suggestions"][0]["task"] == "x-runs"
 
 
 def test_cli_run_exit_zero_on_failures_scheduled_lane_semantics(tmp_path, capsys):
@@ -197,7 +195,21 @@ def test_cli_run_exit_zero_on_failures_scheduled_lane_semantics(tmp_path, capsys
     assert "FAIL" in out
     assert rc == 0  # a failing example is a finding, not an error
     written = yaml.safe_load(out_path.read_text())
-    assert written["deltas"] == []
+    assert written["suggestions"] == []
+
+
+def test_cli_run_does_not_write_an_artifact_by_default(tmp_path, capsys, monkeypatch):
+    skills_dir = tmp_path / "skills"
+    _mk_examples_skill(tmp_path, tasks=[PASS_TASK])
+    monkeypatch.chdir(tmp_path)
+    rc = dv.main([
+        "--run", "--skills", "nav2",
+        "--skills-dir", str(skills_dir),
+        "--repo-root", str(tmp_path),
+        "--date", "2026-08-05",
+    ])
+    assert rc == 0
+    assert not (tmp_path / "learnings" / "deltas").exists()
 
 
 def test_cli_run_never_applies_only_writes_out_path(tmp_path, capsys):

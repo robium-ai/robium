@@ -4,8 +4,16 @@ Use the evidence ladder to keep cheap signals from becoming permanent advice.
 
 ## Queue flag to observation
 
+- Capture lives under `.robium/` in the project where the hook ran. Local
+  observations live in the editable Robium checkout; discover it with
+  `npx robium-ai workspace --json` when it is not already the current repo.
+  They are gitignored working files; never edit a plugin cache.
 - A queue flag is only a pointer into a transcript. Discard context-free shell
   noise and expected probes.
+- Queue types are capture hints, not observation signals. Preserve
+  `user-correction`; classify `remember`, `guardrail`, `error`, and `positive`
+  from the actual evidence as one of the schema's legal signals, or discard
+  them when they do not express reusable knowledge.
 - Record a finding only when the source shows what was expected, what happened,
   and which skill or `[none]` is implicated.
 - One user correction can be strong evidence. Otherwise prefer two independent
@@ -14,9 +22,15 @@ Use the evidence ladder to keep cheap signals from becoming permanent advice.
   claim and current platform.
 - Missing proof stays `tentative`; uncertainty is not a reason to rush an edit.
 
-Observations outlive their sources: transcripts are pruned once the entries
-citing them go terminal, so an entry must carry its own quote, source, and
-conditions rather than pointing at a file a reviewer may no longer have.
+An observation must carry enough quote, source, and conditions for review.
+Anything worth keeping after absorption must move into the skill body or a
+focused reference before the observation and raw transcript are deleted.
+
+When capture and observations live in different repositories, keep the
+processed queue record and add `"observation": "obs-..."` until that
+observation is absorbed or discarded. The queue record protects the app-local
+transcript from age and size pruning. Remove that record when the observation
+is deleted; an unmarked record remains pending work.
 
 The observation schema and legal statuses in `learnings/observations/README.md`
 are the source of truth.
@@ -32,9 +46,9 @@ are the source of truth.
 - Keep exact values attached to their observed robot, platform, workload, and
   verification conditions.
 - Edit the live skill directly with the normal repository editing tools. In the
-  same reviewed change, mark the observation `absorbed YYYY-MM-DD` only after
-  the guidance and its relevant checks have landed, and compact the entry to
-  its dedup stub.
+  same learning run, validate the guidance, move any reusable supporting
+  material into the skill, and then delete the absorbed observation. If the
+  finding is rejected, delete it without changing the skill.
 
 ## Review
 

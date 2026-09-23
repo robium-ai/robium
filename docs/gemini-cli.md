@@ -67,16 +67,19 @@ outside Gemini CLI. The adapter uses
 Node.js, which Gemini CLI already requires, and invokes `python3`, `python`, or
 the Windows `py -3` launcher for the existing standard-library capture logic.
 
-Capture is local, deterministic, and capture-only: it may append scrubbed
-signals under the current project's gitignored `.robium/` directory and archive
-the transcript path supplied by Gemini. It does not inject memories or call a
-model. Session-end is best effort because Gemini does not wait for shutdown
-hooks.
+Capture is local and deterministic: it may append scrubbed signals under the
+current project's gitignored `.robium/` directory and archive the transcript
+path supplied by Gemini. SessionStart may inject one count-only learning
+reminder per local day when substantial signals are queued; it never injects
+the captured excerpts and it never calls a model. Session-end is best effort
+because Gemini does not wait for shutdown hooks.
 
-Every adapter invocation prints a valid empty JSON object and exits zero. Bad
-input, a missing Python interpreter, an unavailable transcript, or a capture
-error therefore leaves Gemini's turn and shutdown flow unblocked. Disable the
-hooks with Gemini's `/hooks` controls if capture is not desired.
+Every adapter invocation prints valid JSON and exits zero. SessionStart
+forwards reminder context when present; other successful capture paths return
+an empty object. Bad input, a missing Python interpreter, an unavailable
+transcript, or a capture error therefore leaves Gemini's turn and shutdown flow
+unblocked. Disable the hooks with Gemini's `/hooks` controls if capture is not
+desired.
 
 Current contract reference: [Gemini CLI extension reference](https://github.com/google-gemini/gemini-cli/blob/main/docs/extensions/reference.md)
 and [hooks reference](https://github.com/google-gemini/gemini-cli/blob/main/docs/hooks/reference.md).

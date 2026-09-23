@@ -124,10 +124,36 @@ def test_ready_bar_enforced(tmp_path):
     assert any("ready" in e for e in errs)
 
 
+def test_vendor_source_can_meet_external_ready_bar(tmp_path):
+    vendor = EXTERNAL.replace("official repo", "vendor-maintained repo")
+    assert obs.lint_file(_write(tmp_path, "ros2.md", vendor), {"ros2"}) == []
+
+
 def test_external_requires_source_and_quote(tmp_path):
     noquote = EXTERNAL.replace("quote: rclcpp::NodeOptions options;\n", "")
     errs = obs.lint_file(_write(tmp_path, "ros2.md", noquote), {"ros2"})
     assert any("quote" in e for e in errs)
+
+
+def test_absorbed_status_is_rejected_because_completed_entries_are_deleted(tmp_path):
+    compact = """## composition uses NodeOptions <!-- id: obs-ros2-001 -->
+status: absorbed 2026-09-23
+signal: better-method
+sources: [ros2/examples@ab12cd3]
+"""
+    errs = obs.lint_file(_write(tmp_path, "ros2.md", compact), {"ros2"})
+    assert any("bad status" in err for err in errs)
+
+
+def test_rejected_status_is_rejected_because_discarded_entries_are_deleted(tmp_path):
+    compact = """## plugin was not loaded <!-- id: obs-architect-001 -->
+status: rejected (not a trigger gap)
+signal: no-skill-fired
+sources: [session-a, session-b]
+correction: no description change could have helped because the plugin was absent
+"""
+    errs = obs.lint_file(_write(tmp_path, "architect.md", compact), {"architect"})
+    assert any("bad status" in err for err in errs)
 
 
 def test_unknown_skill_stem_rejected_but_new_skills_allowed(tmp_path):

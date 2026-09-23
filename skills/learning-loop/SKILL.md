@@ -1,6 +1,6 @@
 ---
 name: learning-loop
-description: Turn captured Robium experience into small, evidence-backed skill improvements.
+description: "Run Robium's learning cycle when asked or when its session-start reminder is approved: consolidate captured signals, absorb ready guidance, refine skills, and inspect learning status."
 ---
 
 # Learning loop
@@ -10,12 +10,23 @@ a future decision without injecting old conversations into new work.
 
 ## Capture without recall
 
-- Hooks may queue corrections, failures, and transcript windows silently.
-- Findings live in one store, `learnings/observations/<skill>.md`. Capture is
-  a `tentative` entry there — status and signal are the only required fields.
-- Never insert queue items, observations, memories, or reminders into a new
-  prompt. Read them only during an explicit consolidate, absorb, refine, or
-  status task.
+- Hooks silently queue corrections and failures under the project-local
+  `.robium/` directory.
+- `learnings/observations/<skill>.md` is disposable local working state and is
+  gitignored. Capture is a `tentative` entry there — status and signal are the
+  only required fields.
+- Hooks are host-dependent. If no queue or transcript exists, an explicit
+  request to learn from the current task may still create a tentative finding;
+  do not invent missing evidence.
+- SessionStart may emit one count-only reminder per local day, but only for a
+  correction, explicit remember/guardrail, or repeated error signature. It
+  never injects excerpts or prior conversation content.
+- Ask whether to run the learning cycle in a background subagent and continue
+  the user's current task. Start it only after approval. The subagent reviews
+  the queued evidence, makes any authorized skill edits, validates them, and
+  reports back without blocking the main session.
+- Apart from that reminder, read queued evidence only during an explicit
+  consolidate, absorb, refine, or status task.
 - Batch bookkeeping at a natural milestone. A command error or clean skill run
   is not automatically a reusable lesson.
 - Keep project-specific facts in the application that owns them.
@@ -27,8 +38,13 @@ a future decision without injecting old conversations into new work.
   fix, and any dead ends that prevent repeating the mistake.
 - Absorb only observations marked `ready`; uncertain material stays tentative.
 - Deduplicate the finding before carrying it forward.
-- On absorb, compact the entry to its dedup stub: the knowledge now lives in
-  the skill, and the entry's remaining job is to stop a rediscovery.
+- Write local observations in the editable Robium checkout, never an installed
+  plugin cache. The queue and transcript may remain in the app where the event
+  happened.
+- On absorption, put every future-use snippet, citation, caveat, and dead end
+  in the owning skill or a focused `references/` file, then delete the
+  observation. Delete rejected observations too; Git and the reviewed skill
+  diff are the durable record.
 - Read [PROMOTION.md](PROMOTION.md) when deciding whether evidence is strong
   enough or which skill owns it.
 
@@ -57,15 +73,16 @@ a future decision without injecting old conversations into new work.
 
 - Refinement starts with findings, not edits. Read [REFINING.md](REFINING.md)
   for the compact catalog review.
-- Keep a transcript while a queue flag or nonterminal observation depends on
-  it. Once linked observations are absorbed or rejected and the change has
-  landed, read [RETENTION.md](RETENTION.md) and prune it deliberately.
+- Keep a transcript while a queue flag or local observation depends on it.
+  Once the observation is absorbed or discarded, remove its processed queue
+  flag and read [RETENTION.md](RETENTION.md) to prune the raw evidence.
 - A status request may inspect queue size, ready observations, skill metrics,
   and transcript retention without changing anything.
 
 ## Done
 
 - The future decision is clearer or safer with little added context.
-- The observation points to evidence and its status reflects what landed.
+- Absorbed or rejected observations are gone; only unresolved local working
+  observations remain.
 - Relevant checks pass, and raw transcript evidence is kept only as long as it
   is still needed.

@@ -30,9 +30,13 @@ def verify_entry(entry, repos_root):
     m = _SOURCE_RE.match(fields.get("source", ""))
     if not m:
         return f"{eid}: unparseable source '{fields.get('source', '')}'"
-    clone = os.path.join(repos_root, m.group("repo"))
+    # Prefer an org/repo layout so repositories with the same basename do not
+    # collide. Keep the historical flat layout readable for existing crawls.
+    nested = os.path.join(repos_root, m.group("org"), m.group("repo"))
+    flat = os.path.join(repos_root, m.group("repo"))
+    clone = nested if os.path.isdir(nested) else flat
     if not os.path.isdir(clone):
-        return f"{eid}: clone not found at {clone}"
+        return f"{eid}: clone not found at {nested} (or legacy {flat})"
     try:
         blob = subprocess.run(
             ["git", "-C", clone, "show", f"{m.group('sha')}:{m.group('path')}"],

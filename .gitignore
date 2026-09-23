@@ -46,6 +46,10 @@ dist/
 !.env.template
 .robium/
 
-# Legacy dated learnings: leftovers from the pre-merge tier, kept local until
-# folded into an observation or a skill. Findings now live in observations/.
+# Learning observations are disposable local working state. README documents
+# the schema; absorbed guidance lives in skills and their references.
+learnings/observations/*.md
+!learnings/observations/README.md
+
+# Legacy dated learnings: local leftovers to fold into an observation or skill.
 learnings/20[0-9][0-9]-[0-9][0-9]-[0-9][0-9]*.md

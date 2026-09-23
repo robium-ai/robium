@@ -2,7 +2,7 @@
 # /// script
 # dependencies = ["pyyaml"]
 # ///
-"""Deep-verify lane — fixture-run unverified examples, emit ✓-promotions.
+"""Deep-verify lane — fixture-run unverified examples and report suggestions.
 
 A `status: unverified` marker (spec §8 layer 4: examples/references content
 shipped with an upstream-source link until a trial run verifies it) can be
@@ -12,19 +12,11 @@ fixture whose `example:` field names the file (skill-relative path, e.g.
 that does that: `inventory` finds every unverified file and says whether
 it has a fixture; `run_for_skill` actually runs the fixture (via
 `run_task_checks.run_task` — no subprocess handling is reimplemented here)
-and, on PASS, emits an `annotate` delta op that flips the marker.
+and, on PASS, suggests the exact marker replacement.
 
-This module never writes to `skills/**`. It emits a legacy-compatible YAML
-annotation suggestion so existing experiment tooling can still consume the
-result. In the current versionless workflow, review the passing evidence and
-apply the status change with the normal repository editor.
-
-Reason ids: emitted ops carry `reason: deep-verify-<task-name>`, which
-intentionally does NOT match the `obs-<stem>-NNN` pattern apply_deltas'
-`mark_absorbed` looks for — there is no learnings/observations/ entry to
-flip to `absorbed`, since a mechanical fixture-run isn't an observation.
-`mark_absorbed` simply skips reason ids it doesn't recognize, so this is
-inert by construction rather than a special case in apply_deltas.
+This module never writes to `skills/**`. Review passing evidence and apply the
+suggested status change with the normal repository editor. `--out` optionally
+writes the same suggestions as YAML; there is no delta-application pipeline.
 
 Scheduled-lane semantics: this is a periodic sweep, not a per-PR gate — a
 failing example is a *finding* to report and fix later, not a fatal error.
@@ -117,18 +109,17 @@ def inventory(skills_dir):
 
 def run_for_skill(skill, skills_dir, repo_root, date):
     """Run every unverified example's fixture (if it has one) for one
-    skill. Returns {"deltas", "passed", "failed", "unfixtured"}:
+    skill. Returns {"suggestions", "passed", "failed", "unfixtured"}:
 
-    - deltas: legacy-compatible annotation suggestions for examples whose
-      fixture passed; never applied here.
-    - passed: [{"skill", "file", "task"}] — mirrors deltas 1:1.
-    - failed: [{"skill", "file", "task", "tail"}] — no delta emitted.
+    - suggestions: exact status replacements for examples whose fixture passed.
+    - passed: [{"skill", "file", "task"}] — mirrors suggestions 1:1.
+    - failed: [{"skill", "file", "task", "tail"}] — no suggestion emitted.
     - unfixtured: [{"skill", "file"}] — no evals.yaml task's `example:`
       matches this file.
     """
     skill_dir = _require_skill(skill, skills_dir)
     fixtures = _fixture_map(skill, skills_dir)
-    deltas, passed, failed, unfixtured = [], [], [], []
+    suggestions, passed, failed, unfixtured = [], [], [], []
 
     for rel in _unverified_files(skill_dir):
         task = fixtures.get(rel)
@@ -140,14 +131,12 @@ def run_for_skill(skill, skills_dir, repo_root, date):
         res = run_task_checks.run_task(task, repo_root)
         if res["pass"] is True:
             replace = f"status: verified {date} (deep-verify: {task_name})"
-            deltas.append({
+            suggestions.append({
                 "skill": skill,
-                "op": "annotate",
                 "file": rel,
                 "find": _STATUS_UNVERIFIED,
                 "replace": replace,
-                "status_only": True,
-                "reason": f"deep-verify-{task_name}",
+                "task": task_name,
             })
             passed.append({"skill": skill, "file": rel, "task": task_name})
         else:
@@ -156,7 +145,7 @@ def run_for_skill(skill, skills_dir, repo_root, date):
                 "tail": res["tail"],
             })
 
-    return {"deltas": deltas, "passed": passed, "failed": failed,
+    return {"suggestions": suggestions, "passed": passed, "failed": failed,
             "unfixtured": unfixtured}
 
 
@@ -190,13 +179,13 @@ def main(argv=None):
     ap.add_argument("--inventory", action="store_true",
                     help="list every unverified example/reference and its fixture status")
     ap.add_argument("--run", action="store_true",
-                    help="run fixtures for --skills and emit a deltas file")
+                    help="run fixtures for --skills and report review suggestions")
     ap.add_argument("--skills", nargs="+", default=None)
     ap.add_argument("--skills-dir", default="skills")
     ap.add_argument("--repo-root", default=".")
     ap.add_argument("--date", default=None)
     ap.add_argument("--out", default=None,
-                    help="deltas file path (default learnings/deltas/<date>-deep-verify.yaml)")
+                    help="optional YAML path for review suggestions")
     args = ap.parse_args(argv)
 
     if args.inventory:
@@ -216,7 +205,7 @@ def main(argv=None):
             print(f"deep-verify: error: {exc}", file=sys.stderr)
             return 2
 
-        agg = {"deltas": [], "passed": [], "failed": [], "unfixtured": []}
+        agg = {"suggestions": [], "passed": [], "failed": [], "unfixtured": []}
         for skill in args.skills:
             res = run_for_skill(skill, args.skills_dir, args.repo_root, date)
             for key in agg:
@@ -224,14 +213,18 @@ def main(argv=None):
 
         _print_run_report(agg)
 
-        out_path = args.out or os.path.join("learnings", "deltas", f"{date}-deep-verify.yaml")
-        out_dir = os.path.dirname(out_path)
-        if out_dir:
-            os.makedirs(out_dir, exist_ok=True)
-        with open(out_path, "w", encoding="utf-8") as f:
-            yaml.safe_dump({"date": date, "deltas": agg["deltas"]}, f, sort_keys=False)
-        print(f"\nwrote review suggestions: {out_path} "
-              f"({len(agg['deltas'])} promotion(s)) — never applied")
+        if args.out:
+            out_dir = os.path.dirname(args.out)
+            if out_dir:
+                os.makedirs(out_dir, exist_ok=True)
+            with open(args.out, "w", encoding="utf-8") as f:
+                yaml.safe_dump(
+                    {"date": date, "suggestions": agg["suggestions"]},
+                    f,
+                    sort_keys=False,
+                )
+            print(f"\nwrote review suggestions: {args.out} "
+                  f"({len(agg['suggestions'])} suggestion(s)) — never applied")
 
         # Scheduled-lane semantics: a failing example is a finding for the
         # report above, not a fatal error for the CLI invocation itself.

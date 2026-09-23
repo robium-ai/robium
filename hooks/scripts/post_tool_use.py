@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""PostToolUse(Bash) hook — flag error-bearing commands.
+"""PostToolUse(Bash) hook — silently flag error-bearing commands.
 
-Capture only: learning hooks emit no nudges or prompt context, so this hook
-never writes to stdout. Dedup: one flag per (command-head, error-signature) per
-session. Fail-open.
+This hook never writes to stdout. SessionStart may later emit a count-only
+reminder when the same error signature recurs. Dedup is per signature/session.
 """
 import json
 import os
@@ -33,7 +32,9 @@ def main() -> None:
         return
     cwd = event.get("cwd") or ""
     command = (event.get("tool_input") or {}).get("command", "")
-    output = _response_text(event.get("tool_response"))
+    # Codex reports non-zero Bash results through PostToolUse. Claude Code may
+    # instead send PostToolUseFailure with an `error` field and no response.
+    output = _response_text(event.get("tool_response") or event.get("error"))
 
     if is_error_result(command, output):
         sig = error_signature(command, output)

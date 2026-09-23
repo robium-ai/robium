@@ -70,6 +70,17 @@ def test_after_tool_maps_gemini_shell_payload(tmp_path):
     assert flags[0]["command"] == "colcon build"
 
 
+def test_session_start_forwards_daily_learning_reminder(tmp_path):
+    q = tmp_path / ".robium" / "queue.jsonl"
+    q.parent.mkdir(parents=True)
+    q.write_text('{"type":"remember","session":"old"}\n', encoding="utf-8")
+    result = run_gemini("session-start", {
+        **base_event(tmp_path, "SessionStart"), "source": "resume",
+    })
+    context = json.loads(result.stdout)["hookSpecificOutput"]["additionalContext"]
+    assert "background subagent" in context
+
+
 def test_session_end_archives_gemini_transcript_and_clears_seen(tmp_path):
     transcript = tmp_path / "session.json"
     transcript.write_text('{"role":"user","content":"hello"}\n', encoding="utf-8")

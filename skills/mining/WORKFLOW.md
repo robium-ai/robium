@@ -4,7 +4,7 @@ Use the smallest run that answers the learning question.
 
 ## Survey one approved repository
 
-- Clone into a disposable or ignored `.robium/mining/<source>` directory and
+- Clone into an ignored `.robium/mining/<org>/<repo>` directory and
   record the exact HEAD commit before reading.
 - Inspect the tree, active build/run path, examples, tests, documentation, and
   license. For a large repository, a blobless clone keeps the survey cheap.
@@ -15,8 +15,8 @@ Use the smallest run that answers the learning question.
 Typical git operations use the real upstream interfaces:
 
 ```bash
-git clone --depth 1 <repo-url> .robium/mining/<source>
-git -C .robium/mining/<source> rev-parse HEAD
+git clone --depth 1 <repo-url> .robium/mining/<org>/<repo>
+git -C .robium/mining/<org>/<repo> rev-parse HEAD
 ```
 
 Use `git clone --filter=blob:none` instead for a large tree when lazy blob
@@ -32,9 +32,9 @@ fetching is acceptable.
   observation target.
 - Use `scripts/engine/placement.py` when ownership is ambiguous.
 
-Draft external observations under `learnings/observations/<skill>.md` using the
-repository's current observation schema. Include the pinned source commit,
-path, line range, and exact excerpt.
+Draft external observations under the gitignored
+`learnings/observations/<skill>.md` using the repository's current observation
+schema. Include the pinned source commit, path, line range, and exact excerpt.
 
 ## Comparative run
 
@@ -68,9 +68,14 @@ python3 scripts/engine/verify_citations.py --repos .robium/mining \
 Update `learnings/SOURCES.md` with:
 
 - crawl date and pinned commit;
-- surveyed, exploring, or distilled status;
-- the observation IDs produced;
+- exploring, distilled, dropped, or recheck status;
+- for `distilled`, the skill or reference files that retained the findings;
 - any recheck needed because upstream changed.
 
 Temporary clones and survey reports stay in `.robium/mining/` and out of the
 committed plugin.
+
+Finish by reporting: "Mining complete: saved N local observations (R ready, T
+tentative). Next step: run the learning loop to distill the ready findings into
+existing skills, or review any justified new-skill proposal." Offer to run that
+next step in a background subagent, but wait for user approval.

@@ -54,20 +54,29 @@ function invokePython(script, payload) {
       windowsHide: true,
       timeout: 4000,
     });
-    if (!result.error || result.error.code !== 'ENOENT') return;
+    if (!result.error || result.error.code !== 'ENOENT') return result;
   }
+  return undefined;
 }
 
 const action = process.argv[2];
+let output = action === 'user-prompt-submit' ? { continue: true } : {};
 try {
   const selected = handlers[action];
   const event = await readInput();
   if (selected) {
     const [scriptName, canonicalName] = selected;
-    invokePython(join(dirname(fileURLToPath(import.meta.url)), scriptName), normalizedEvent(event, canonicalName));
+    const result = invokePython(
+      join(dirname(fileURLToPath(import.meta.url)), scriptName),
+      normalizedEvent(event, canonicalName),
+    );
+    if (action === 'session-start' && result?.stdout?.trim()) {
+      const context = JSON.parse(result.stdout)?.hookSpecificOutput?.additionalContext;
+      if (typeof context === 'string' && context) output = { additional_context: context };
+    }
   }
 } catch {
   // Learning capture must never interrupt the host session.
 }
 
-process.stdout.write(action === 'user-prompt-submit' ? '{"continue":true}\n' : '{}\n');
+process.stdout.write(`${JSON.stringify(output)}\n`);

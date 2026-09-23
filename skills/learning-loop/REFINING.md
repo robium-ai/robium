@@ -8,8 +8,8 @@ Report findings before changing files. A clean pass should produce no churn.
   bad decision.
 - Remove advice that has no surviving use case rather than surrounding it with
   exceptions.
-- Preserve the evidence for a deletion in the review or observation; Git is the
-  undo path.
+- Preserve the reason for a deletion in the review or owning skill when it will
+  matter again; Git is the undo path.
 
 ## Collapse duplication
 

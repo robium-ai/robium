@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Observations tier (Tier 2) — parse + lint learnings/observations/*.md.
+"""Parse and lint local working observations under learnings/observations/.
 
 Schema: learnings/observations/README.md. stdlib only.
 Exit contract mirrors the skill validator: FAIL lines, summary line, exit 0/1.
@@ -16,7 +16,7 @@ SIGNALS = frozenset([
 _ID_RE = re.compile(r"<!-- id: (obs-[a-z0-9-]+-\d{3}) -->\s*$")
 _HEAD_RE = re.compile(r"^## (.+?)\s*<!-- id: ")
 _FIELD_RE = re.compile(r"^([a-z][a-z-]*):\s*(.*)$")
-_STATUS_RE = re.compile(r"^(tentative|ready|absorbed \d{4}-\d{2}-\d{2}|rejected \(.+\))$")
+_STATUS_RE = re.compile(r"^(tentative|ready)$")
 _SOURCE_RE = re.compile(r"^[\w.-]+/[\w.-]+@[0-9a-f]{7,40}\s+\S+#L\d+(-L\d+)?$")
 LEGACY_SKILL_ALIASES = {"nav2": "navigation"}
 
@@ -69,11 +69,13 @@ def _ready_ok(fields):
     except ValueError:
         proof = 0
     evidence = fields.get("evidence", "")
+    authority = evidence.lower()
     return (
         proof >= 2
         or fields.get("signal") == "user-correction"
         or evidence.count("✓") >= 3
-        or (fields.get("origin") == "external" and "official" in evidence.lower())
+        or (fields.get("origin") == "external"
+            and ("official" in authority or "vendor" in authority))
     )
 
 
@@ -99,9 +101,12 @@ def lint_file(path, known_skills=None):
         f = e["fields"]
         # Capture is cheap: a tentative entry needs only a status and a signal.
         # Everything else is what consolidation adds on the way to `ready`.
-        tentative = f.get("status") == "tentative"
-        required = ("status", "signal") if tentative else (
-            "status", "proof", "signal", "sources", "target", "evidence")
+        status = f.get("status", "")
+        tentative = status == "tentative"
+        if tentative:
+            required = ("status", "signal")
+        else:
+            required = ("status", "proof", "signal", "sources", "target", "evidence")
         for req in required:
             if not f.get(req):
                 errs.append(f"{where}: missing field '{req}'")
@@ -115,7 +120,7 @@ def lint_file(path, known_skills=None):
             errs.append(f"{where}: sources must be a non-empty [list]")
         if f.get("status") == "ready" and not _ready_ok(f):
             errs.append(f"{where}: status ready but no ready-bar met "
-                        "(proof>=2 | user-correction | 3x ✓ | external+official)")
+                        "(proof>=2 | user-correction | 3x ✓ | external+official/vendor)")
         if f.get("origin") == "external":
             if not f.get("source") or not _SOURCE_RE.match(f.get("source", "")):
                 errs.append(f"{where}: external entry needs source "

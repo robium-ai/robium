@@ -72,6 +72,31 @@ def test_after_shell_execution_maps_cursor_payload(tmp_path):
     assert flags[0]["command"] == "colcon build"
 
 
+def test_session_start_translates_daily_learning_reminder(tmp_path):
+    q = tmp_path / ".robium" / "queue.jsonl"
+    q.parent.mkdir(parents=True)
+    q.write_text('{"type":"remember","session":"old"}\n', encoding="utf-8")
+    result = run_cursor("session-start", {
+        **base_event(tmp_path, "sessionStart"),
+        "session_id": "cursor-session-2",
+        "is_background_agent": False,
+    })
+    assert "background subagent" in json.loads(result.stdout)["additional_context"]
+
+
+def test_background_agent_session_never_consumes_the_reminder(tmp_path):
+    q = tmp_path / ".robium" / "queue.jsonl"
+    q.parent.mkdir(parents=True)
+    q.write_text('{"type":"remember","session":"old"}\n', encoding="utf-8")
+    result = run_cursor("session-start", {
+        **base_event(tmp_path, "sessionStart"),
+        "session_id": "cursor-background",
+        "is_background_agent": True,
+    })
+    assert json.loads(result.stdout) == {}
+    assert not (tmp_path / ".robium" / "learning-reminder.json").exists()
+
+
 def test_session_end_archives_cursor_transcript(tmp_path):
     transcript = tmp_path / "session.jsonl"
     transcript.write_text('{"role":"user","content":"hello"}\n', encoding="utf-8")

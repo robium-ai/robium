@@ -148,6 +148,19 @@ def test_ptu_captures_bash_error(tmp_path):
     assert "CMake Error" in flags[0]["excerpt"]
 
 
+def test_ptu_captures_claude_failure_event(tmp_path):
+    ev = {"hook_event_name": "PostToolUseFailure", "session_id": "s2",
+          "cwd": str(tmp_path), "tool_name": "Bash",
+          "tool_input": {"command": "colcon build"},
+          "error": "CMake Error at CMakeLists.txt:14"}
+    result = run_hook("post_tool_use.py", ev)
+    assert result.returncode == 0 and result.stdout.strip() == ""
+    flags = read_queue(tmp_path)
+    assert len(flags) == 1
+    assert flags[0]["type"] == "error"
+    assert "CMake Error" in flags[0]["excerpt"]
+
+
 def test_ptu_dedupes_same_error_in_session(tmp_path):
     ev = {"hook_event_name": "PostToolUse", "session_id": "s2", "cwd": str(tmp_path),
           "tool_name": "Bash",
@@ -221,18 +234,71 @@ def test_ptu_clean_commit_not_flagged(tmp_path):
     assert read_queue(tmp_path) == []
 
 
-def test_session_start_initializes_and_is_always_silent(tmp_path):
+def test_session_start_initializes_and_ignores_one_ordinary_error(tmp_path):
     r = run_hook("session_start.py", {"hook_event_name": "SessionStart",
                  "session_id": "s3", "cwd": str(tmp_path), "source": "startup"})
     assert r.returncode == 0
     assert (tmp_path / ".robium" / "transcripts").is_dir()
     assert r.stdout.strip() == ""
-    run_hook("user_prompt_submit.py", {"hook_event_name": "UserPromptSubmit",
-             "session_id": "s3", "cwd": str(tmp_path), "prompt": "no, wrong distro"})
+    queue = tmp_path / ".robium" / "queue.jsonl"
+    queue.write_text(
+        '{"type":"error","session":"s3","signature":"only-once"}\n',
+        encoding="utf-8",
+    )
     r2 = run_hook("session_start.py", {"hook_event_name": "SessionStart",
                   "session_id": "s3", "cwd": str(tmp_path), "source": "startup"})
     assert r2.returncode == 0
     assert r2.stdout.strip() == ""
+
+
+def test_session_start_reminds_once_per_day_for_correction(tmp_path):
+    queue = tmp_path / ".robium" / "queue.jsonl"
+    queue.parent.mkdir(parents=True)
+    queue.write_text(
+        '{"type":"user-correction","session":"older"}\n',
+        encoding="utf-8",
+    )
+    event = {"hook_event_name": "SessionStart", "session_id": "s4",
+             "cwd": str(tmp_path), "source": "startup"}
+
+    first = run_hook("session_start.py", event)
+    second = run_hook("session_start.py", event)
+
+    payload = json.loads(first.stdout)
+    context = payload["hookSpecificOutput"]["additionalContext"]
+    assert "1 substantial" in context
+    assert "background subagent" in context
+    assert second.stdout.strip() == ""
+
+
+def test_session_start_repeated_error_is_substantial_but_linked_rows_are_not(tmp_path):
+    queue = tmp_path / ".robium" / "queue.jsonl"
+    queue.parent.mkdir(parents=True)
+    queue.write_text(
+        '{"type":"error","signature":"same","session":"a"}\n'
+        '{"type":"error","signature":"same","session":"b"}\n'
+        '{"type":"user-correction","session":"c","observation":"obs-x-001"}\n',
+        encoding="utf-8",
+    )
+    result = run_hook("session_start.py", {
+        "hook_event_name": "SessionStart", "session_id": "s5",
+        "cwd": str(tmp_path), "source": "resume",
+    })
+    context = json.loads(result.stdout)["hookSpecificOutput"]["additionalContext"]
+    assert "2 substantial" in context
+    assert "error: 2" in context
+    assert "user-correction" not in context
+
+
+def test_session_start_compaction_never_reminds(tmp_path):
+    queue = tmp_path / ".robium" / "queue.jsonl"
+    queue.parent.mkdir(parents=True)
+    queue.write_text('{"type":"remember","session":"a"}\n', encoding="utf-8")
+    result = run_hook("session_start.py", {
+        "hook_event_name": "SessionStart", "session_id": "s6",
+        "cwd": str(tmp_path), "source": "compact",
+    })
+    assert result.stdout.strip() == ""
 
 
 def test_ups_never_injects_observations(tmp_path):

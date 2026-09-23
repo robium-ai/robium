@@ -3,9 +3,8 @@
 
 Protection order:
 1. a pending queue flag references the transcript/session;
-2. an observation cites the transcript and has not reached a terminal status;
-3. every observation citing it is absorbed/rejected — eligible;
-4. otherwise, only an unreferenced transcript older than the retention window
+2. any local observation cites the transcript;
+3. otherwise, only an unreferenced transcript older than the retention window
    is eligible.
 
 Dry-run is the default. The tool never follows symlinks and only deletes direct
@@ -86,10 +85,6 @@ def observation_transcript_statuses(observations_dir: Path) -> dict[str, list[st
     return statuses
 
 
-def _terminal(status: str) -> bool:
-    return status.startswith("absorbed ") or status.startswith("rejected (")
-
-
 def classify(
     root: Path,
     *,
@@ -116,10 +111,7 @@ def classify(
 
         cited = statuses.get(path.name, [])
         if cited:
-            if all(_terminal(s) for s in cited):
-                decisions.append(Decision(path, "DELETE", "linked-terminal"))
-            else:
-                decisions.append(Decision(path, "KEEP", "pending-evidence"))
+            decisions.append(Decision(path, "KEEP", "pending-evidence"))
             continue
 
         if path.stat().st_mtime < cutoff:

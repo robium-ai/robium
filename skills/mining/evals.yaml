@@ -1,0 +1,11 @@
+triggers:
+  positive:
+    - phrase: mine this approved upstream robotics repository for reusable patterns
+    - phrase: compare these approved external robot repositories and capture evidence-backed findings
+    - phrase: re-crawl this previously mined source and recheck changed citations
+  negative:
+    - phrase: absorb these ready Robium observations into their owning skills
+      expect: learning-loop
+    - phrase: start a robotics app from a compatible reference example
+      expect: architect
+tasks: []

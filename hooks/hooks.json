@@ -15,6 +15,14 @@
         ]
       }
     ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "sh \"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/hooks/scripts/run_hook.sh\" \"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/hooks/scripts/post_tool_use.py\"" }
+        ]
+      }
+    ],
     "BeforeAgent": [
       {
         "matcher": "*",

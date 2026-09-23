@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""UserPromptSubmit hook: capture candidate signals without prompt injection.
+"""UserPromptSubmit hook: silently capture candidate learning signals.
 
-Silent and fail-open. It may append a scrubbed queue flag; it never recalls,
-renders, or injects observations, memory, reminders, or prior transcripts.
+It never recalls or injects prior material. The separate SessionStart hook may
+emit a once-daily count-only reminder when substantial signals have accumulated.
 """
 import os
 import sys

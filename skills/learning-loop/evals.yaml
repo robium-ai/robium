@@ -1,11 +1,13 @@
 triggers:
   positive:
     - phrase: consolidate the pending Robium learning flags at this milestone
+    - phrase: yes, run the reminded Robium learning cycle in the background
     - phrase: absorb these ready observations into the skills
     - phrase: show me the learning loop status without changing anything
+    - phrase: learn from what just happened and preserve the reusable finding
   negative:
     - phrase: mine the upstream Nav2 repository for reusable patterns
       expect: mining
-    - phrase: write a brand new Robium skill for depth cameras
+    - phrase: author a practical new Robium skill for depth cameras
       expect: skill-author
 tasks: []

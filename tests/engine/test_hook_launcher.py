@@ -23,12 +23,14 @@ def test_manifest_routes_every_hook_through_launcher():
 
     legacy = [command for command in commands if "run_hook.sh" in command]
     gemini = [command for command in commands if "gemini_hook.mjs" in command]
-    assert len(legacy) == 4
+    assert len(legacy) == 5
     assert len(gemini) == 4
     assert all(not command.startswith("python3 ") for command in commands)
-    for script in ("user_prompt_submit.py", "post_tool_use.py",
-                   "session_start.py", "session_end.py"):
+    assert sum("post_tool_use.py" in command for command in legacy) == 2
+    for script in ("user_prompt_submit.py", "session_start.py", "session_end.py"):
         assert sum(script in command for command in legacy) == 1
+    assert all("${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}" in command
+               for command in legacy)
 
 
 def test_launcher_interpreter_preference_is_python3_python_then_py3():
@@ -99,3 +101,37 @@ def test_launcher_runs_real_hook(tmp_path):
     assert result.returncode == 0
     assert result.stdout == ""
     assert (tmp_path / ".robium" / "transcripts").is_dir()
+
+
+def test_manifest_session_reminder_runs_for_codex_and_claude_roots(tmp_path):
+    shell = _shell()
+    assert shell, "A POSIX shell is required for plugin hooks"
+    hooks = json.loads(MANIFEST.read_text())["hooks"]
+    prompt_command = hooks["UserPromptSubmit"][0]["hooks"][0]["command"]
+    start_command = hooks["SessionStart"][0]["hooks"][0]["command"]
+
+    for variable in ("PLUGIN_ROOT", "CLAUDE_PLUGIN_ROOT"):
+        project = tmp_path / variable.lower()
+        project.mkdir()
+        env = os.environ.copy()
+        env.pop("PLUGIN_ROOT", None)
+        env.pop("CLAUDE_PLUGIN_ROOT", None)
+        env[variable] = str(ROOT)
+        base = {"session_id": variable.lower(), "cwd": str(project)}
+
+        prompt = subprocess.run(
+            [shell, "-c", prompt_command],
+            input=json.dumps({**base, "hook_event_name": "UserPromptSubmit",
+                              "prompt": "no, use uv not pip"}),
+            capture_output=True, text=True, timeout=10, env=env,
+        )
+        reminder = subprocess.run(
+            [shell, "-c", start_command],
+            input=json.dumps({**base, "hook_event_name": "SessionStart",
+                              "source": "resume"}),
+            capture_output=True, text=True, timeout=10, env=env,
+        )
+
+        assert prompt.returncode == 0 and prompt.stdout == ""
+        context = json.loads(reminder.stdout)["hookSpecificOutput"]["additionalContext"]
+        assert "background subagent" in context

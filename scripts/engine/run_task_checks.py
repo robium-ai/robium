@@ -11,9 +11,8 @@ combined stdout+stderr. Never run as root; never alters state outside its
 own cwd; a timeout terminates the full task process group rather than leaving
 children behind.
 
-`run_task` is the reusable primitive: the deep-verify lane (Task 5) will
-import it directly to score fixture-verified examples without going
-through this module's CLI.
+`run_task` is the reusable primitive used by the optional deep-verify sweep to
+score fixture-verified examples without going through this module's CLI.
 """
 import argparse
 import os

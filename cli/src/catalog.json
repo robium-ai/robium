@@ -51,7 +51,7 @@
     },
     {
       "name": "learning-loop",
-      "description": "Turn captured Robium experience into small, evidence-backed skill improvements."
+      "description": "Run Robium's learning cycle when asked or when its session-start reminder is approved: consolidate captured signals, absorb ready guidance, refine skills, and inspect learning status."
     },
     {
       "name": "lerobot",
@@ -63,7 +63,7 @@
     },
     {
       "name": "mining",
-      "description": "Mine approved external robotics repositories into evidence-cited Robium observations."
+      "description": "Mine, compare, or re-crawl approved external robotics repositories into local evidence-cited Robium observations for later skill absorption."
     },
     {
       "name": "mujoco",

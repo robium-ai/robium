@@ -38,6 +38,10 @@ versions = {
 if len(versions) != 1:
     raise SystemExit(f"plugin version mismatch: {sorted(versions)}")
 hooks = documents["hooks/hooks.json"]["hooks"]
+for event in ("UserPromptSubmit", "PostToolUse", "PostToolUseFailure",
+              "SessionStart", "SessionEnd"):
+    if event not in hooks:
+        raise SystemExit(f"Codex/Claude hook event missing: {event}")
 for event in ("BeforeAgent", "AfterTool", "SessionStart", "SessionEnd"):
     if event not in hooks:
         raise SystemExit(f"Gemini hook event missing: {event}")

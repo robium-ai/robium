@@ -1,16 +1,16 @@
 # learnings/observations/
 
-The single durable store of findings on their way into skills. One file per
-target skill (`<skill>.md`, stem must be a real skill directory); cross-catalog
-proposals go in `new-skills.md`. Historical files keep their original IDs when
-a skill is renamed. Lint:
+Disposable, gitignored working notes for findings on their way into skills.
+One file per target skill (`<skill>.md`, stem must be a real skill directory);
+cross-catalog proposals go in `new-skills.md`. Lint:
 `python3 scripts/engine/observations.py --check learnings/observations/*.md`.
 
 There is no separate dated-learnings tier. Raw capture lands in
 `.robium/queue.jsonl` during a build; consolidation writes it here as a
 `tentative` entry and it climbs the same ladder from there.
 
-    .robium/transcripts + queue.jsonl  →  observations/<skill>.md  →  skills/
+    .robium queue/transcripts  →  local observation  →  skill/reference
+                                                     →  delete observation
 
 ## Entry template
 
@@ -45,9 +45,8 @@ narrative fields:
 
 - **id**: `<!-- id: obs-<file-stem>-NNN -->` at the end of the `##` heading;
   three digits; unique within the file; prefix must match the filename stem.
-- **status**: `tentative` | `ready` | `absorbed YYYY-MM-DD` | `rejected (<reason>)`.
-  `absorbed`/`rejected` entries stay in place — they are the audit trail and the
-  dedup memory (dedup against everything *seen*).
+- **status**: `tentative` | `ready`. Absorbed and rejected entries are deleted,
+  so terminal statuses are invalid.
 - **tentative is the capture stage.** It needs only `status` and `signal`;
   write the one-liner while the context is fresh and let consolidation fill the
   rest. Never block a build to complete an entry.
@@ -70,8 +69,9 @@ narrative fields:
   agent does not repeat the same probe.
 - **ready bar**: `status: ready` requires proof ≥ 2, OR signal =
   user-correction, OR the three-part evidence bar (three ✓ marks in evidence),
-  OR origin external with the word "official" in evidence (the official-source
-  bar — vendor repo consistent with current docs).
+  OR origin external with "official" or "vendor" in evidence (the
+  authoritative-source bar — source-maintainer code consistent with current
+  docs).
 - **external contract**: `origin: external` requires `source:`
   (`<org>/<repo>@<short-sha> <path>#L<a>[-L<b>]`) and `quote:` (verbatim text
   from those lines). A quote that fails scripts/engine/verify_citations.py is
@@ -82,11 +82,9 @@ narrative fields:
 - **Merge-on-same-finding**: one canonical entry per finding; new occurrences
   append to sources and bump proof — never sibling entries. Contradictions
   evolve in place: "now X (previously Y)".
-- **Absorption**: edit the live skill directly, run the checks appropriate to
-  the change, then mark the observation absorbed in the same reviewed diff.
-- **Compact on absorb.** Once the skill carries the knowledge, the entry's job
-  is dedup, not instruction. Cut `target` and the narrative fields down to the
-  one-line claim that identifies the finding, and keep `id`, `status`,
-  `signal`, `sources`, and any correction note ("previously claimed X — wrong,
-  because Y"). Correction notes stay forever; they are what stops a rejected
-  claim coming back.
+- **Absorption**: edit the live skill directly and move every future-use
+  snippet, citation, condition, correction, and dead end into the skill body or
+  a focused `references/` file. Run the appropriate checks, then delete the
+  observation and its processed queue flag.
+- **Rejection**: delete the observation. If the rejection reveals a reusable
+  guardrail, put that guardrail in the owning skill before deletion.

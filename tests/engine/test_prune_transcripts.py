@@ -56,14 +56,12 @@ def test_nonterminal_observation_keeps_its_transcript(tmp_path):
     assert path.exists()
 
 
-def test_terminal_observations_allow_deletion(tmp_path):
-    for status in ("absorbed 2026-01-02", "rejected (noise)"):
-        name = "robium__done.jsonl"
-        path = transcript(tmp_path, name, age_days=1)
-        seed_observation(tmp_path, status, name)
-        result = run_cleanup(tmp_path, "--apply")
-        assert "DELETE robium__done.jsonl linked-terminal" in result.stdout
-        assert not path.exists()
+def test_removed_observation_allows_explicit_immediate_cleanup(tmp_path):
+    name = "robium__done.jsonl"
+    path = transcript(tmp_path, name, age_days=1)
+    result = run_cleanup(tmp_path, "--max-age-days", "0", "--apply")
+    assert "DELETE robium__done.jsonl expired-unreferenced" in result.stdout
+    assert not path.exists()
 
 
 def test_unreferenced_transcripts_expire_after_fourteen_days(tmp_path):
