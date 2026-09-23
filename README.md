@@ -5,199 +5,152 @@
   <img src="assets/brand/robium-lockup.png" alt="robium" width="360">
 </picture>
 
-### Physical AI skills for your agents
+### Physical AI skills for coding agents
 
-An open-source, continuously evolving collection of field-tested robotics<br>
-expertise. Install robium as a plugin to empower your favorite AI coding<br>
-agent with the robotics skills it needs.<br>
-Covers ROS 2, Nav2, Gazebo, MuJoCo, NVIDIA Isaac Sim, Isaac Lab, and LeRobot,<br>
-for Claude Code, Codex, Gemini CLI, and Cursor.
+Robium gives Claude Code, Codex, Gemini CLI, and Cursor field-tested robotics
+skills, troubleshooting guidance, and runnable reference applications. Start
+with a working robot, then ask your agent to adapt it.
 
 [![skills](https://github.com/robium-ai/robium/actions/workflows/skills.yml/badge.svg)](https://github.com/robium-ai/robium/actions/workflows/skills.yml)
 [![Website](https://img.shields.io/badge/robium.ai-website-4c8bf5)](https://robium.ai)
 [![npm](https://img.shields.io/npm/v/robium-ai?label=npm%20robium-ai&color=cb3837)](https://www.npmjs.com/package/robium-ai)
 [![License: MIT](https://img.shields.io/badge/license-MIT-3da638)](./LICENSE)
 [![Discord](https://img.shields.io/badge/Discord-Robium-5865F2?logo=discord&logoColor=white)](https://robium.ai/join/discord)
-[![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97-robium-FFD21E)](https://huggingface.co/robium)
 
 </div>
 
 ## Install
 
-**Quick**: clone the skills and reference-app repositories and install Robium for every supported
-agent detected on your machine:
+You need Node.js 18+, Git, and at least one supported coding agent.
 
 ```bash
-npx robium-ai setup                  # auto-detects your agents
-npx robium-ai setup --agent codex    # or target one
-npx robium-ai workspace              # show your remembered directories
-npx robium-ai update --check          # check official main without applying
-npx robium-ai update                 # fast-forward clean main in both repos
-npx robium-ai remove                 # remove integrations; keep the checkout
-npx robium-ai doctor                 # verify activation and installed versions
+npx robium-ai setup
+npx robium-ai doctor
 ```
 
-Choose the workspace parent and its name during setup, or pass
-`npx robium-ai setup --dir ~/projects/my-robotics`. The default is:
+Setup detects your agents and asks where to create the workspace. To install
+for one agent or choose the location up front:
+
+```bash
+npx robium-ai setup --agent codex
+npx robium-ai setup --dir ~/projects/my-robotics
+```
+
+This is an **editable install**, not a hidden package snapshot. Setup creates
+ordinary Git checkouts and connects your agent to them:
 
 ```text
-~/robium/                 # workspace parent, not a repository
+~/robium/                 # location and name are your choice
 ├── robium/               # editable skills and plugin source
-└── robium-apps/          # runnable reference examples
+└── robium-apps/          # runnable reference applications
 ```
 
-The CLI remembers it in `~/.config/robium/workspace.json`; agents can discover
-both paths with `npx robium-ai workspace --json`. Apps are cloned by default,
-but environments and model assets are only set up when an app needs them.
+Run `npx robium-ai workspace` anytime to find them. After editing or manually
+updating Robium, run `npx robium-ai setup` again and restart your agent so its
+integration refreshes.
 
-| Agent | Full Robium integration | Live skill source |
-| --- | --- | --- |
-| Claude Code | Native Claude plugin | Robium checkout; Claude caches released plugins |
-| Codex | Native OpenAI plugin | Robium checkout; Codex caches installed plugins |
-| Gemini CLI | Native extension: skills, architect subagent, capture hooks | Linked Robium checkout |
-| Cursor | Native Cursor plugin: skills, architect agent, capture hooks | Linked Robium checkout |
+## Try a working robot
 
-Codex Desktop is detected on macOS even when its bundled `codex` executable
-is not on your shell `PATH`.
+Restart your agent after setup, open it in a folder where it may work, and paste
+one of these prompts. Robium will inspect the matching reference app, check the
+prerequisites, and aim for a visible result before suggesting custom work.
 
-To install only one portable skill instead of the full Robium integration:
+### Map and navigate a simulated home
+
+<table>
+  <tr>
+    <td width="60%">
+      <a href="https://github.com/robium-ai/robium-apps/tree/main/robot-navigation"><img src="https://raw.githubusercontent.com/robium-ai/robium-apps/main/robot-navigation/assets/stills/readme-navigation.png" alt="A simulated TurtleBot mapping and navigating a home"></a>
+    </td>
+    <td width="40%" valign="middle">
+      <strong>Your first Robium project</strong><br><br>
+      Map a simulated home, localize a TurtleBot, and send it to a Nav2 goal.<br><br>
+      <code>Simulation · Docker · No GPU</code>
+    </td>
+  </tr>
+</table>
+
+> Help me map a simulated environment, localize a mobile robot, and navigate to a goal.
+
+This uses the stable `robot-navigation` example with ROS 2, Nav2, Gazebo, and a
+bundled browser viewer. Docker with Compose v2 is required. A successful first
+run creates and saves a map, localizes the robot on it, and reaches a navigation
+goal.
+
+To run the example directly instead:
 
 ```bash
-npx skills add robium-ai/robium -g --skill navigation --agent codex
-npx skills update -g
+npx robium-ai app doctor robot-navigation
+npx robium-ai app run robot-navigation
 ```
 
-**Native install**: clone the repository, then use your agent's own package
-flow where one is available:
+### Run a pretrained two-arm policy
+
+> Help me run a pretrained policy that transfers a cube between two simulated robot arms.
+
+This uses the official ACT checkpoint in `act-aloha-cube-transfer`. There is no
+training step and no dedicated GPU is required. The first run prepares the
+locked environment and downloads the pinned model; success means the viewer
+opens, real inference runs, and the default cube-transfer result is reported.
 
 ```bash
-mkdir -p ~/robium
-git clone https://github.com/robium-ai/robium ~/robium/robium
-git clone https://github.com/robium-ai/robium-apps ~/robium/robium-apps
-
-# Claude Code: plugin with skills, architect agent, and capture hooks
-claude plugin marketplace add ~/robium/robium && claude plugin install robium@robium
-
-# Codex: native plugin
-codex plugin marketplace add ~/robium/robium && codex plugin add robium@robium
-
-# Gemini CLI: editable local extension
-gemini extensions link ~/robium/robium --consent
-
-# Cursor: local native plugin linked from the checkout
-npx robium-ai setup --agent cursor --dir ~/robium
+npx robium-ai app doctor act-aloha-cube-transfer
+npx robium-ai app run act-aloha-cube-transfer
 ```
 
-Run `npx robium-ai setup --dir ~/robium` to remember a manually cloned workspace.
-Updates are on demand: clean `main` branches fast-forward from official
-upstream; personal branches, dirty files, and divergent histories are skipped
-without switching, stashing, or resetting. Work on a branch in either repo and
-optionally contribute later.
+The native path is tested on Apple Silicon. Ask your agent to check the app
+README before using another platform.
 
-Quiet checks during example discovery run at most daily and notify at most
-weekly, without repeating the same revisions. Disable them with
-`ROBIUM_UPDATE_CHECKS=0`; explicit checks remain available. After manual Git
-updates or edits, re-run `setup` to refresh integrations without pulling.
-Restart the host as instructed; cached skill activation is distinct from source
-freshness. See [CLI setup and updates](cli/README.md).
+### Build a robot assistant
 
-Host-specific install, update, removal, permission, and fail-open details are
-in [docs/gemini-cli.md](./docs/gemini-cli.md) and
-[docs/cursor.md](./docs/cursor.md).
+> Help me build a simulated robot assistant that understands what it sees and follows natural-language instructions.
 
-Your application stays in its own repository; Robium lives beside it. Use the
-reference apps as starting points and contribute reusable fixes back.
+This starts from `silly-turtlebot`: a camera-equipped TurtleBot simulation with
+guarded navigation tools. It requires Docker and your own authorized Gemini
+Robotics access. Live model calls may cost money, so Robium checks access before
+starting and will not present a mock run as a live result.
 
-## How it fits
+More applications and hosted demos are at [robium.ai](https://robium.ai) and in
+[robium-apps](https://github.com/robium-ai/robium-apps).
 
-Robium provides robotics expertise. Your project provides the context. Your AI
-coding agent handles architecture, implementation, simulation, testing, and
-deployment.
+## Make it yours
 
-Captured build learnings can improve future skill guidance. See the workflow
-at [robium.ai](https://robium.ai/#how-it-fits). External users can contribute a
-[sanitized build finding](./CONTRIBUTING.md#contributing-a-sanitized-build-finding)
-without sharing a raw agent transcript.
-
-## What's inside
-
-```
-robium/
-├── skills/          the catalog: lean, hand-crafted, validator-checked
-├── agents/          robium-architect: researches the stack, writes your brief
-├── .claude-plugin/  Claude Code package
-├── .codex-plugin/   Codex package manifest
-├── .cursor-plugin/  Cursor-native package manifest
-├── .agents/plugins/ Codex-native repository marketplace
-├── hooks/           shared hooks plus Gemini and Cursor event adapters
-├── AGENTS.md        canonical Codex-native maintainer guidance
-├── gemini-extension.json  Gemini CLI extension
-├── learnings/       field evidence from real builds, input to the learning loop
-└── cli/             npx robium-ai: setup, doctor, skill search
-```
-
-The reference applications live in
-[robium-ai/robium-apps](https://github.com/robium-ai/robium-apps) and the
-robium.ai site + live-demo infrastructure in
-[robium-ai/robium-website](https://github.com/robium-ai/robium-website).
-
-The catalog in one view: every skill is one folder under
-[`skills/`](./skills), browsable on [robium.ai](https://robium.ai):
-
-| Pillar | Skills |
-| --- | --- |
-| Architecture & proof | `architect` · `testing` · `test-assets` · `live-demo` · `cloud-run` · `runpod` |
-| Simulation | `simulation` · `gazebo` · `mujoco` · `isaac-sim` · `isaac-lab` |
-| Data & learning | `data` · `lerobot` · `huggingface` |
-| Visualization | `visualization` · `foxglove` · `rerun` · `rviz2` |
-| Robotics integration | `ros2` · `navigation` · `integration` · `environments` |
-| Catalog upkeep | `skill-author` · `learning-loop` · `mining` |
-
-**Umbrella skills** own decisions (which simulator, where data comes from, how
-to test); **tool skills** own the mechanics of one library. `architect` is the
-entry point and routes to everything else.
-
-## A catalog that maintains itself
-
-Robotics guidance rots fast: APIs move, versions pair differently, commands
-change shape. robium is built to notice:
-
-- **Capture**: hooks record what broke and what fixed it during real build
-  sessions into local staging. A once-daily session-start reminder appears only
-  when substantial signals are waiting.
-- **Mine**: the ecosystem's proven patterns are read out of real repos, with
-  citations that must still hold at the pinned commit.
-- **Absorb**: approved background learning runs fold ready evidence into the
-  skills. Observations are local working notes and are deleted after absorption;
-  durable citations and details live with the skill.
-- **Verify**: volatile facts are checked against current upstream docs, and
-  observed values retain the conditions that produced them.
-
-## Contributing
-
-The contribution unit is small on purpose: **one skill, no build system**.
-If you installed Robium with `npx robium-ai setup`, reuse its checkout—do not
-clone it again:
+Keep the shipped examples clean and create an editable derivative in your own
+`my-apps/` directory:
 
 ```bash
-cd ~/robium/robium                # or the repo path from robium workspace
-./scripts/bootstrap.sh
-git switch -c my-skill-fix
+npx robium-ai app new my-navigation --from robot-navigation
 ```
 
-Pick a robotics tool you know, edit its skill, and run the repository check:
+Then open that new app with your coding agent and describe one change. Robium
+will reuse the proven environment and test shape instead of rebuilding the
+whole stack from scratch.
+
+Useful commands:
 
 ```bash
-./scripts/check.sh
+npx robium-ai app list              # browse every reference app
+npx robium-ai skills nav            # search the skill catalog
+npx robium-ai update --check        # check upstream without changing files
+npx robium-ai update                # update clean main branches safely
 ```
 
-[CONTRIBUTING.md](./CONTRIBUTING.md) has the five-step walkthrough;
-[`good-first-skill`](https://github.com/robium-ai/robium/labels/good-first-skill)
-issues are the on-ramp. Questions:
-[Discord](https://robium.ai/join/discord) or
-[Discussions](https://github.com/robium-ai/robium/discussions).
+## What is included
+
+- Skills for ROS 2, Nav2, Gazebo, MuJoCo, Isaac Sim/Lab, LeRobot, robot data,
+  visualization, testing, and deployment.
+- An architect that selects a compatible reference app and proves the smallest
+  useful robot behavior first.
+- Capture and learning tools that turn verified build findings into better
+  guidance without requiring raw agent transcripts.
+- A zero-dependency CLI for setup, diagnosis, updates, skills, and application
+  lifecycle commands.
+
+See the [CLI guide](cli/README.md) for host-specific setup and update behavior,
+or [CONTRIBUTING.md](CONTRIBUTING.md) to improve a skill. Questions are welcome
+on [Discord](https://robium.ai/join/discord) and in
+[GitHub Discussions](https://github.com/robium-ai/robium/discussions).
 
 ## License
 
-[MIT](./LICENSE). See [CONTRIBUTING.md](./CONTRIBUTING.md) for the skill format,
-quality bar, and development workflow.
+[MIT](LICENSE)
