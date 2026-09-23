@@ -12,7 +12,7 @@ framework or invented DSL.
 - `skills/`, `hooks/`, `agents/`, `.codex-plugin/`, `.claude-plugin/`: plugin.
 - `cli/`: the `robium-ai` npm package.
 - `learnings/`, `scripts/engine/`: evidence capture and skill hardening.
-- `docs/`: history, architecture notes, and changelog.
+- `docs/`: current client/operator guidance and the shipped-work changelog.
 
 Applications live in the sibling `robium-ai/robium-apps` repository. The site
 and live-demo orchestrator live in `robium-ai/robium-website`. Make changes in

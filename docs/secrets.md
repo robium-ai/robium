@@ -6,9 +6,8 @@
 > site, and RunPod/NGC/GCP work. Contributors: just `git clone` +
 > `./scripts/bootstrap.sh` (it skips secrets) and ignore the rest of this doc.
 
-Maintainer secrets are managed centrally in **Doppler** — never committed to git,
-never copy-pasted between machines. Project `robium`, config `dev` (per-project
-namespace; add more projects like `dervish`/`personal` later).
+Maintainer secrets are managed centrally in **Doppler** — never committed to git
+or copied between machines. Project `robium`, config `dev`.
 
 `doppler.yaml` at the repo root pins the project/config; `.env.template` lists
 the expected variable **names** (no values).
@@ -26,7 +25,7 @@ To avoid hard-coding either, `scripts/run.sh` **auto-detects** the source
 ```bash
 ./scripts/run.sh <command>
 ./scripts/run.sh npm --prefix cli publish
-./scripts/run.sh make -C website deploy
+./scripts/run.sh make -C ../robium-website deploy
 ```
 
 Direct forms also work if you prefer:
@@ -93,13 +92,12 @@ works directly — no `login`, no `setup`.
    - Docker: `docker run -e DOPPLER_TOKEN=dp.st.dev.… …`
    - Cloud Run: `--set-env-vars DOPPLER_TOKEN=…` (or a mounted secret)
    - GitHub Actions: repo secret → `env: DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}`
-3. **Everything else flows from it** — even a private clone uses the GitHub token
-   stored in Doppler, so `DOPPLER_TOKEN` stays the *only* thing you provision:
+3. **Clone the public repository, then use Doppler for privileged work:**
 
    ```bash
    export DOPPLER_TOKEN=dp.st.dev.xxxxx            # the one seed (from your host's secret store)
    curl -Ls https://cli.doppler.com/install.sh | sh
-   doppler run -- git clone https://x-access-token:$GITHUB_TOKEN@github.com/robium-ai/robium.git
+   git clone https://github.com/robium-ai/robium.git
    cd robium && ./scripts/bootstrap.sh             # detects DOPPLER_TOKEN, skips interactive login
    doppler run -- <do work>                        # all keys present, fully non-interactive
    ```
@@ -146,16 +144,17 @@ Doppler CLI + `doppler login` (or a service token) — no per-tool login.
   (for RunPod pods the key goes into the pod's `containerRegistryAuth` — see the
   isaac-lab skill).
 - **GitHub** (`GITHUB_TOKEN`, fine-grained PAT, robium-ai org) — for git/gh over
-  HTTPS on any machine without SSH keys:
-  `doppler run -- gh auth login --with-token <<< "$GITHUB_TOKEN"`, or for a git
-  push: `doppler run -- sh -c 'git push https://x-access-token:$GITHUB_TOKEN@github.com/robium-ai/robium.git'`.
+  HTTPS on any machine without SSH keys, authenticate once without putting the
+  token in a remote URL:
+  `doppler run -- sh -c 'printf "%s" "$GITHUB_TOKEN" | gh auth login --with-token'`.
+  Normal `git push` and `gh` commands then use the credential helper.
 - **GCP** (`GCP_SA_KEY`, service account `robium-deployer@robium-prod`) — the key
   is JSON in one env var; materialize it to a temp file and point
   `GOOGLE_APPLICATION_CREDENTIALS` at it. To deploy the site with **zero
   `gcloud login`**:
 
   ```bash
-  cd website
+  cd ../robium-website
   doppler run -- bash -lc '
     f="$(mktemp)"; printf "%s" "$GCP_SA_KEY" > "$f"
     gcloud auth activate-service-account --key-file="$f" --quiet
