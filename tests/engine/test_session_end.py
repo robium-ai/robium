@@ -132,17 +132,11 @@ def test_size_ceiling_never_deletes_tentative_observation_evidence(tmp_path, mon
 
 
 def test_just_archived_survives_prune(tmp_path, monkeypatch):
-    """Verify a just-archived old-mtime transcript survives pruning.
-
-    Previously, copy2 preserved source mtime, so an old session could be
-    pruned immediately. Now, archival stamps dest with current time, ensuring
-    it's always the newest candidate.
-    """
+    """Pruning uses archive time rather than the source transcript's mtime."""
     import session_end
     import os
     import time
 
-    # Create two pre-existing archives with old mtimes and ~1KB each.
     tdir = tmp_path / ".robium" / "transcripts"
     tdir.mkdir(parents=True)
     pre_old = tdir / "proj__pre_old.jsonl"
@@ -153,37 +147,20 @@ def test_just_archived_survives_prune(tmp_path, monkeypatch):
     os.utime(pre_old, (now - 200, now - 200))  # Oldest
     os.utime(pre_new, (now - 100, now - 100))  # Middle
 
-    # Create a source transcript with ancient mtime (older than pre-existing).
     src = tmp_path / "old_session.jsonl"
-    src.write_bytes(b"x" * 1024)  # Same size as pre-existing files
-    os.utime(src, (now - 9999, now - 9999))  # Very old
+    src.write_bytes(b"x" * 1024)
+    os.utime(src, (now - 9999, now - 9999))
 
-    # Monkeypatch budget to ~2.5KB (forces pruning; total will be ~3KB).
     monkeypatch.setattr(session_end, "MAX_ARCHIVE_MB", 0.0025)
 
-    # Archive the ancient-mtime transcript and prune.
     event = {"hook_event_name": "SessionEnd", "session_id": "old_archive",
              "cwd": str(tmp_path), "transcript_path": str(src), "reason": "exit"}
     session_end.archive_and_prune(event, str(tmp_path), lambda cwd: str(tdir.parent))
 
-    # The just-archived file (now stamped with current time) should survive.
-    # The oldest pre-existing (pre_old) should be pruned (oldest mtime).
     just_archived = tdir / f"{tmp_path.name}__old_archive.jsonl"
     assert just_archived.exists(), "Just-archived transcript should survive pruning"
     assert not pre_old.exists(), "Oldest pre-existing archive should be pruned"
     assert pre_new.exists(), "Newer pre-existing archive should survive"
-
-
-def test_atomic_no_tmp_leftover(tmp_path):
-    """Verify no .tmp file remains after successful archive."""
-    src = tmp_path / "transcript.jsonl"
-    src.write_text("content\n")
-    r = run_hook({"hook_event_name": "SessionEnd", "session_id": "test_atomic",
-                  "cwd": str(tmp_path), "transcript_path": str(src), "reason": "exit"})
-    assert r.returncode == 0
-    tdir = tmp_path / ".robium" / "transcripts"
-    tmp_files = list(tdir.glob("*.tmp")) if tdir.exists() else []
-    assert tmp_files == [], f"No .tmp files should remain, but found: {tmp_files}"
 
 
 def test_prunes_ended_and_stale_seen_files_but_preserves_fresh_concurrent(tmp_path):

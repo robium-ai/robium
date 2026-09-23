@@ -6,7 +6,6 @@ REPO = Path(__file__).resolve().parents[2]
 
 FOO = """---
 name: foo
-version: 1.0.0
 description: >
   Costmap tuning and obstacle inflation for mobile robot navigation.
 ---
@@ -16,7 +15,6 @@ description: >
 
 BAR = """---
 name: bar
-version: 1.0.0
 description: >
   Camera calibration and image pipelines for perception stacks.
 ---
@@ -51,7 +49,7 @@ def test_analyze_ranks_right_skill_first(tmp_path):
 def test_analyze_drops_zero_scores(tmp_path):
     skills = _catalog(tmp_path)
     out = placement.analyze("quaternion slerp interpolation maths", skills)
-    assert all(s > 0 for _, s in out["skills"])
+    assert out == {"skills": [], "anchors": []}
 
 
 def test_analyze_runs_on_live_catalog():

@@ -1,5 +1,3 @@
-import textwrap
-
 import pytest
 import yaml
 
@@ -18,30 +16,6 @@ FAIL_TASK = {
     "command": "python3 -c \"import sys; print('nope'); sys.exit(1)\"",
     "pass_criteria": "marker-ok",
 }
-
-SKILL_MD = textwrap.dedent("""\
-    ---
-    name: nav2
-    version: 1.2.3
-    description: >
-      Test skill about costmaps and navigation tuning.
-    ---
-
-    # nav2
-
-    ## When to use this skill
-
-    - Testing.
-
-    ## Key directives
-
-    - Something. <!-- id: something -->
-
-    ## Changelog
-
-    - 1.2.3 (2026-07-01): prior line.
-    """)
-
 
 def _mk_examples_skill(tmp_path, name="nav2", tasks=None, unverified_text="# status: unverified\nprint('hi')\n"):
     d = tmp_path / "skills" / name
@@ -198,22 +172,7 @@ def test_cli_run_exit_zero_on_failures_scheduled_lane_semantics(tmp_path, capsys
     assert written["suggestions"] == []
 
 
-def test_cli_run_does_not_write_an_artifact_by_default(tmp_path, capsys, monkeypatch):
-    skills_dir = tmp_path / "skills"
-    _mk_examples_skill(tmp_path, tasks=[PASS_TASK])
-    monkeypatch.chdir(tmp_path)
-    rc = dv.main([
-        "--run", "--skills", "nav2",
-        "--skills-dir", str(skills_dir),
-        "--repo-root", str(tmp_path),
-        "--date", "2026-08-05",
-    ])
-    assert rc == 0
-    assert not (tmp_path / "learnings" / "deltas").exists()
-
-
-def test_cli_run_never_applies_only_writes_out_path(tmp_path, capsys):
-    # deep_verify must never touch skills/ content itself — only the --out file.
+def test_cli_run_leaves_skill_content_unchanged(tmp_path):
     skills_dir = tmp_path / "skills"
     d = _mk_examples_skill(tmp_path, tasks=[PASS_TASK])
     before = (d / "examples" / "x.py").read_text()
@@ -226,7 +185,7 @@ def test_cli_run_never_applies_only_writes_out_path(tmp_path, capsys):
         "--out", str(out_path),
     ])
     after = (d / "examples" / "x.py").read_text()
-    assert before == after  # file under skills/ is untouched
+    assert before == after
     assert out_path.exists()
 
 

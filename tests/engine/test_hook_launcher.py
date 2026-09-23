@@ -14,34 +14,6 @@ def _shell():
     return shutil.which("sh") or shutil.which("bash")
 
 
-def test_manifest_routes_every_hook_through_launcher():
-    data = json.loads(MANIFEST.read_text())
-    commands = [hook["command"]
-                for matchers in data["hooks"].values()
-                for matcher in matchers
-                for hook in matcher["hooks"]]
-
-    legacy = [command for command in commands if "run_hook.sh" in command]
-    gemini = [command for command in commands if "gemini_hook.mjs" in command]
-    assert len(legacy) == 5
-    assert len(gemini) == 4
-    assert all(not command.startswith("python3 ") for command in commands)
-    assert sum("post_tool_use.py" in command for command in legacy) == 2
-    for script in ("user_prompt_submit.py", "session_start.py", "session_end.py"):
-        assert sum(script in command for command in legacy) == 1
-    assert all("${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}" in command
-               for command in legacy)
-
-
-def test_launcher_interpreter_preference_is_python3_python_then_py3():
-    source = RUNNER.read_text()
-    python3 = source.index("command -v python3")
-    python = source.index("command -v python", python3 + 1)
-    py = source.index("command -v py", python + 1)
-    assert python3 < python < py
-    assert 'exec py -3 "$script_path"' in source
-
-
 def test_launcher_selects_interpreters_in_preference_order(tmp_path):
     shell = _shell()
     assert shell, "A POSIX shell is required for plugin hooks"

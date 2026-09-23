@@ -36,6 +36,8 @@ def test_positive_feedback_detected():
 
 def test_false_positives_filtered():
     for t in ["no problem, take your time",
+              "no worries, take your time",
+              "never mind, keep going as is",
               "can you check why the node dies?",
               "don't we need a QoS override here?",   # question → not a correction
               "please build the workspace"]:
@@ -84,13 +86,6 @@ def test_pytest_and_compiler_errors_flagged():
     # compiler: line:col: error: message
     assert classify.is_error_result("gcc foo.cpp", "foo.cpp:10:5: error: 'x' was not declared")
     assert classify.is_error_result("clang++ main.cpp", "main.cpp:42:3: fatal error: expected ';'")
-
-
-def test_dismissive_phrases_not_corrections():
-    # "no worries" at start is dismissive, not a correction
-    assert classify.classify_prompt("no worries, take your time") is None
-    # "never mind" at start is dismissive, not a correction
-    assert classify.classify_prompt("never mind, keep going as is") is None
 
 
 def test_midtext_fp_phrase_does_not_suppress():

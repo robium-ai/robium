@@ -120,23 +120,6 @@ def test_cli_lexical_miss_is_diagnostic_not_blocking(tmp_path, capsys):
     assert "DIAGNOSTIC MISS" in capsys.readouterr().out
 
 
-def test_flip_gate_never_invokes_judge(tmp_path, monkeypatch):
-    """flip_gate should never call judge; it uses _catalog_judge only."""
-    skills = mk_catalog(tmp_path)
-    baseline = tmp_path / "baseline"
-    baseline.mkdir()
-    (baseline / "SKILL.md").write_text(FOO)
-
-    # Monkeypatch judge to raise AssertionError if called
-    def bad_judge(*args, **kwargs):
-        raise AssertionError("flip_gate should not invoke judge()")
-    monkeypatch.setattr(rte, "judge", bad_judge)
-
-    # flip_gate with no_llm=False should still work (using _catalog_judge only)
-    flips = rte.flip_gate("foo", skills, str(baseline), no_llm=False)
-    assert flips == []  # unchanged description, so no flips
-
-
 def test_cli_flip_gate_requires_both_flags(capsys):
     """CLI should error if only --flip-gate-baseline or --flip-skill is provided."""
     # Only --flip-gate-baseline

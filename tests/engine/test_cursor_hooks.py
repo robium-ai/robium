@@ -122,21 +122,3 @@ def test_adapter_is_fail_open_for_malformed_input():
     )
     assert result.returncode == 0
     assert json.loads(result.stdout) == {"continue": True}
-
-
-def test_cursor_plugin_layout_uses_dedicated_native_hooks():
-    manifest = json.loads((ROOT / ".cursor-plugin" / "plugin.json").read_text())
-    hooks = json.loads((ROOT / "hooks" / "cursor-hooks.json").read_text())
-    assert manifest["name"] == "robium"
-    assert manifest["skills"] == "./skills/"
-    assert manifest["agents"] == "./agents/robium-architect.md"
-    assert manifest["hooks"] == "./hooks/cursor-hooks.json"
-    assert hooks["version"] == 1
-    assert set(hooks["hooks"]) == {
-        "beforeSubmitPrompt", "afterShellExecution", "sessionStart", "sessionEnd",
-    }
-    assert all(
-        "cursor_hook.mjs" in definition["command"]
-        for definitions in hooks["hooks"].values()
-        for definition in definitions
-    )

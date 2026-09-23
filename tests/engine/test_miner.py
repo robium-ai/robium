@@ -1,5 +1,4 @@
 import json
-from pathlib import Path
 
 import mine_transcripts as mt
 
@@ -101,16 +100,7 @@ def test_meta_messages_ignored(tmp_path):
 
 
 def test_miner_scrubs_before_truncation(tmp_path):
-    """A secret straddling the excerpt's 400-char cut must still be scrubbed.
-
-    Old ordering `scrub(text[:400])` truncates the RAW user-correction
-    text to 400 chars first. This layout is sized so the cut lands mid-way
-    through "API_KEY=supersecretvalue123" (only "API_KEY=supe" survives),
-    which cannot match the KEY=value pattern's 6-char-value minimum in a
-    way that redacts the true boundary — the fragment "API_KEY=sup" leaks
-    verbatim. New ordering `scrub(text)[:400]` scrubs the full text first
-    (matching the complete secret), then truncates the redacted output.
-    """
+    """Scrub the full correction before taking its 400-character excerpt."""
     prefix = "no, use this approach instead: "
     secret = "API_KEY=supersecretvalue123"
     text = (prefix + "x" * 356 + " " + secret + " more trailing content after secret")
@@ -131,7 +121,7 @@ def test_cli_writes_queue_and_report(tmp_path):
         _user("no, use the humble image not jazzy"),
     ])
     queue = tmp_path / "queue.jsonl"
-    report = tmp_path / "report.md"
+    report = tmp_path / "reports" / "nested" / "report.md"
     mt.main([str(p), "--queue", str(queue), "--report", str(report)])
     assert len(queue.read_text().splitlines()) == 1
     assert "user-correction" in report.read_text()
@@ -168,15 +158,3 @@ def test_rejection_pairs_with_block_list_followup(tmp_path):
     assert len(corrections) == 1
     assert "C++17" in corrections[0]["excerpt"]
     assert "weather" not in corrections[0]["excerpt"]
-
-
-def test_report_dir_created(tmp_path):
-    """CLI --report into nonexistent nested dir should succeed and create it."""
-    p = _write_transcript(tmp_path, [
-        _user("no, use the humble image not jazzy"),
-    ])
-    nested_report = tmp_path / "reports" / "deep" / "nested" / "report.md"
-    queue = tmp_path / "queue.jsonl"
-    mt.main([str(p), "--queue", str(queue), "--report", str(nested_report)])
-    assert nested_report.exists()
-    assert "user-correction" in nested_report.read_text()

@@ -131,17 +131,6 @@ def test_does_not_redact_nonsensitive_env_values():
     assert "colemak-dh-iso" in out
 
 
-def test_sensitive_redaction_still_works():
-    """Verify sensitive keys are still redacted after gating fix."""
-    # Pattern 1: direct assignment with sensitive key
-    assert "hunter2secret" not in scrub("API_KEY=hunter2secret", env={})
-
-    # Env value redaction with sensitive key
-    env = {"API_KEY": "longsecret99"}
-    out = scrub("auth failed: longsecret99", env=env)
-    assert "longsecret99" not in out
-
-
 def test_redacts_credentials_and_authorization_inflections():
     """Credential/authorization inflections (CREDENTIALS, AUTHORIZATION) must be redacted."""
     env = {"GOOGLE_APPLICATION_CREDENTIALS": "eyFakeSvcAcctBlob1234"}
@@ -152,11 +141,3 @@ def test_redacts_credentials_and_authorization_inflections():
     env = {"AUTHORIZATION": "Basic abcdef123456"}
     out = scrub("header: Basic abcdef123456", env=env)
     assert "abcdef123456" not in out
-
-
-def test_false_positive_prevention_persists():
-    """COMPASS_HEADING and KEYBOARD_LAYOUT must stay unredacted after credential fix."""
-    env = {"COMPASS_HEADING": "northnortheast", "KEYBOARD_LAYOUT": "colemak-dh-iso"}
-    out = scrub("heading: northnortheast layout: colemak-dh-iso", env=env)
-    assert "northnortheast" in out
-    assert "colemak-dh-iso" in out

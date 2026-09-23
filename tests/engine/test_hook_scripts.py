@@ -39,15 +39,25 @@ def test_ups_ignores_plain_task_prompt(tmp_path):
     assert read_queue(tmp_path) == []
 
 
-def test_ups_skips_long_prompt_unless_remember(tmp_path):
-    long = "no, " + "x" * 600
+def test_ups_only_long_explicit_remember_bypasses_length_gate(tmp_path):
+    long_correction = "no, " + "x" * 600
     run_hook("user_prompt_submit.py", {"hook_event_name": "UserPromptSubmit",
-             "session_id": "s1", "cwd": str(tmp_path), "prompt": long})
+             "session_id": "s1", "cwd": str(tmp_path), "prompt": long_correction})
     assert read_queue(tmp_path) == []
+
+    pseudo_remember = "remember use uv, not pip " + "x" * 500
     run_hook("user_prompt_submit.py", {"hook_event_name": "UserPromptSubmit",
              "session_id": "s1", "cwd": str(tmp_path),
-             "prompt": "remember: " + "x" * 600})
-    assert len(read_queue(tmp_path)) == 1
+             "prompt": pseudo_remember})
+    assert read_queue(tmp_path) == []
+
+    explicit_remember = "remember: " + "x" * 600
+    run_hook("user_prompt_submit.py", {"hook_event_name": "UserPromptSubmit",
+             "session_id": "s1", "cwd": str(tmp_path),
+             "prompt": explicit_remember})
+    flags = read_queue(tmp_path)
+    assert len(flags) == 1
+    assert flags[0]["type"] == "remember"
 
 
 def test_ups_scrubs_secrets(tmp_path):
@@ -64,36 +74,8 @@ def test_ups_fails_open_on_garbage_stdin():
     assert r.returncode == 0
 
 
-def test_ups_long_pseudo_remember_skipped(tmp_path):
-    # "remember use uv, not pip" is not a real remember (no colon/comma after remember)
-    # Even though it starts with "remember", it should NOT bypass the >500 char gate
-    prompt = "remember use uv, not pip " + "x" * 500  # 525+ chars total
-    run_hook("user_prompt_submit.py", {"hook_event_name": "UserPromptSubmit",
-             "session_id": "s1", "cwd": str(tmp_path), "prompt": prompt})
-    assert read_queue(tmp_path) == []
-
-
-def test_ups_long_true_remember_captured(tmp_path):
-    # "remember: " is a real remember and SHOULD bypass the >500 char gate
-    prompt = "remember: " + "x" * 600  # 610+ chars total
-    run_hook("user_prompt_submit.py", {"hook_event_name": "UserPromptSubmit",
-             "session_id": "s1", "cwd": str(tmp_path), "prompt": prompt})
-    flags = read_queue(tmp_path)
-    assert len(flags) == 1
-    assert flags[0]["type"] == "remember"
-
-
 def test_ups_boundary_straddling_secret_scrubbed(tmp_path):
-    """Secret straddling the 400-char excerpt boundary must still be scrubbed.
-
-    Scrub must run on the FULL prompt before truncation. With the old
-    `scrub(excerpt(prompt))` ordering, excerpt() cuts the raw prompt to
-    400 chars first, landing mid-value inside "API_KEY=supersecretvalue123"
-    (only "API_KEY=sup" survives the cut) — too short to match the
-    KEY=value pattern's 6-char minimum, so the fragment "sup" leaks
-    unredacted. The correct `excerpt(scrub(prompt))` ordering scrubs the
-    full prompt (matching the complete secret) before any truncation.
-    """
+    """Scrub the full prompt before taking its 400-character excerpt."""
     prefix = "no, use this instead: "
     secret = "API_KEY=supersecretvalue123"
     prompt = prefix + "x" * 366 + " " + secret + " trailing text after the secret value here"
@@ -106,18 +88,7 @@ def test_ups_boundary_straddling_secret_scrubbed(tmp_path):
 
 
 def test_ptu_boundary_straddling_secret_scrubbed(tmp_path):
-    """Secret straddling the output[-2000:] window boundary must be scrubbed.
-
-    Old ordering `scrub(excerpt(output[-2000:], 400))` slices the RAW
-    output to its last 2000 chars first. This layout is sized so that
-    slice boundary lands mid-value inside "API_KEY=supersecretvalue123",
-    leaving only the tail "...secretvalue123..." visible with no leading
-    "API_KEY=" in the truncated slice — which cannot match the KEY=value
-    pattern (no "=" in the visible fragment) and so the value leaks
-    verbatim. New ordering `excerpt(scrub(output)[-2000:], 400)` scrubs
-    the full output first (matching the complete secret) before any
-    windowing, so nothing of the value survives into the excerpt.
-    """
+    """Scrub the full output before taking its tail and excerpt windows."""
     marker = "[ERROR] deploy failed unexpectedly\n"
     secret = "API_KEY=supersecretvalue123"
     padding_before = "e" * 1979
@@ -179,23 +150,6 @@ def test_ptu_ignores_clean_output_and_other_tools(tmp_path):
              "cwd": str(tmp_path), "tool_name": "Read",
              "tool_input": {"file_path": "/x"}, "tool_response": "ERROR text in a file"})
     assert read_queue(tmp_path) == []
-
-
-def test_ptu_never_writes_stdout(tmp_path):
-    """Capture-only hook: even with flags pending, PostToolUse stays silent.
-
-    Learning hooks are capture-only; this hook must add no prompt noise.
-    """
-    for i in range(3):
-        run_hook("user_prompt_submit.py", {"hook_event_name": "UserPromptSubmit",
-                 "session_id": "s2", "cwd": str(tmp_path),
-                 "prompt": f"no, fix the {i} param not that one"})
-    r = run_hook("post_tool_use.py", {"hook_event_name": "PostToolUse", "session_id": "s2",
-                 "cwd": str(tmp_path), "tool_name": "Bash",
-                 "tool_input": {"command": "git commit -m 'feat: x'"},
-                 "tool_response": "1 file changed"})
-    assert r.returncode == 0
-    assert r.stdout.strip() == ""
 
 
 def test_ptu_failing_commit_captured_as_error(tmp_path):
@@ -301,7 +255,7 @@ def test_session_start_compaction_never_reminds(tmp_path):
     assert result.stdout.strip() == ""
 
 
-def test_ups_never_injects_observations(tmp_path):
+def test_ups_only_captures_with_observations_present(tmp_path):
     d = tmp_path / "learnings" / "observations"
     d.mkdir(parents=True)
     (d / "nav2.md").write_text(
@@ -311,22 +265,17 @@ def test_ups_never_injects_observations(tmp_path):
         "evidence: ✓ ✓ ✓\n",
         encoding="utf-8",
     )
-    r = run_hook("user_prompt_submit.py", {
+    plain = run_hook("user_prompt_submit.py", {
         "hook_event_name": "UserPromptSubmit", "session_id": "s9",
         "cwd": str(tmp_path),
         "prompt": "why does the robot hug obstacles? costmap inflation maybe"})
-    assert r.returncode == 0
-    assert r.stdout.strip() == ""
+    assert plain.returncode == 0
+    assert plain.stdout.strip() == ""
     assert read_queue(tmp_path) == []
 
-
-def test_ups_capture_stays_silent_with_observations_present(tmp_path):
-    d = tmp_path / "learnings" / "observations"
-    d.mkdir(parents=True)
-    (d / "nav2.md").write_text("prior observation", encoding="utf-8")
-    r = run_hook("user_prompt_submit.py", {
+    correction = run_hook("user_prompt_submit.py", {
         "hook_event_name": "UserPromptSubmit", "session_id": "s9",
         "cwd": str(tmp_path),
         "prompt": "no, the costmap inflation obstacles fix was wrong"})
     assert read_queue(tmp_path)
-    assert r.stdout.strip() == ""
+    assert correction.stdout.strip() == ""

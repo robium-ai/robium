@@ -170,6 +170,7 @@ def test_cli_task_filter(tmp_path, capsys):
     out = capsys.readouterr().out
     assert "pass-task" in out
     assert "fail-exit-task" not in out
+    assert "Task checks: 1 passed, 0 failed, 0 skipped-skills" in out
     assert rc == 0
 
 
@@ -180,15 +181,6 @@ def test_cli_exit_code_on_failure(tmp_path, capsys):
     out = capsys.readouterr().out
     assert "FAIL" in out
     assert rc == 1
-
-
-def test_cli_all_pass_exit_zero(tmp_path, capsys):
-    skills_dir = _mk_skill(tmp_path)
-    rc = rtc.main(["--skills", "lerobot", "--skills-dir", skills_dir,
-                   "--repo-root", str(tmp_path), "--task", "pass-task"])
-    out = capsys.readouterr().out
-    assert "Task checks: 1 passed, 0 failed, 0 skipped-skills" in out
-    assert rc == 0
 
 
 def test_cli_task_filter_miss_is_error_not_skip(tmp_path, capsys):
