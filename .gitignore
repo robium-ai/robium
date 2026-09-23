@@ -44,11 +44,19 @@ dist/
 .env
 .env.*
 !.env.template
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+credentials.json
+service-account*.json
 .robium/
 
-# Learning observations are disposable local working state. README documents
-# the schema; absorbed guidance lives in skills and their references.
-learnings/observations/*.md
+# Learning observations are disposable personal working state. Ignore every
+# format and nested artifact; absorbed guidance lives in skills/references.
+learnings/observations/*
 !learnings/observations/README.md
 
 # Legacy dated learnings: local leftovers to fold into an observation or skill.

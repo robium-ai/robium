@@ -17,6 +17,9 @@ evidence.
   Existing-world edits, simulator debugging, and explanations stay here.
 - Confirm the installed `gz` release, ROS distro, `ros_gz` pairing, render
   backend, and whether the run is graphical or headless.
+- When consuming an upstream simulator repository, select and pin an explicit
+  branch or ref compatible with that ROS distro; default HEAD is not
+  compatibility evidence.
 - Use modern Gazebo (`gz`). Gazebo Classic and `libgazebo_ros_*` tutorials are
   a different, end-of-life stack.
 - Keep upstream compatibility tables and SDF specifications as the authority
@@ -30,8 +33,9 @@ evidence.
 - **Sensors:** rates, fields of view, ranges, noise, frames, and timestamps
   model the intended hardware rather than tutorial defaults.
 - **Transport:** prove the Gazebo topic exists before debugging its ROS bridge.
-- **Bridge:** keep a reviewable YAML bridge configuration for a real app;
-  ad-hoc bridge commands are suitable only for diagnosis.
+- **Bridge:** prefer reviewable YAML for a static bridge set. Use Python or XML
+  launch-based `parameter_bridge` nodes when substitutions, grouping, or
+  vendor conventions require them; reserve ad-hoc commands for diagnosis.
 - **ROS:** confirm `/clock`, commands, odometry, transforms, and sensor messages
   arrive with the expected direction and QoS.
 

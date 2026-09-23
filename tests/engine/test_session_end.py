@@ -21,6 +21,40 @@ def test_archives_transcript(tmp_path):
     assert dest.exists() and dest.read_text() == src.read_text()
 
 
+def test_archived_transcript_scrubs_nested_tool_output(tmp_path):
+    src = tmp_path / "sensitive-transcript.jsonl"
+    secret = "hf_abcdefghijklmnopqrstuvwxyz"
+    capability = "0123456789abcdef0123456789abcdef"
+    record = {
+        "type": "tool_output",
+        "AUTH_TOKEN": "direct-secret-value",
+        "payload": {
+            "text": json.dumps({
+                "HF_TOKEN": secret,
+                "VLA_CAPABILITY": capability,
+                "cwd": "/Users/example/repos/robium",
+                "owner": "person@example.com",
+                "result": "useful evidence",
+            })
+        },
+    }
+    src.write_text(json.dumps(record) + "\n", encoding="utf-8")
+
+    r = run_hook({"hook_event_name": "SessionEnd", "session_id": "sensitive",
+                  "cwd": str(tmp_path), "transcript_path": str(src), "reason": "exit"})
+
+    assert r.returncode == 0
+    dest = tmp_path / ".robium" / "transcripts" / f"{tmp_path.name}__sensitive.jsonl"
+    archived = dest.read_text(encoding="utf-8")
+    assert secret not in archived
+    assert capability not in archived
+    assert "direct-secret-value" not in archived
+    assert "person@example.com" not in archived
+    assert "/Users/example" not in archived
+    assert "useful evidence" in archived
+    assert json.loads(archived)
+
+
 def test_rearchive_overwrites(tmp_path):
     src = tmp_path / "t.jsonl"
     src.write_text("v1\n")

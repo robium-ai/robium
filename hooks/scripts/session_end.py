@@ -2,6 +2,7 @@
 """SessionEnd hook — archive the agent transcript before host retention prunes
 it (spec §4.0: transcripts are Tier −1, the engine's raw record)."""
 import importlib.util
+import json
 import os
 import shutil
 import sys
@@ -9,6 +10,8 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from scrub import scrub
 
 MAX_ARCHIVE_MB = 500
 SEEN_MAX_AGE_DAYS = 7
@@ -76,6 +79,34 @@ def prune_archive(cwd: str) -> None:
         os.remove(f)
 
 
+def _scrub_value(value):
+    if isinstance(value, str):
+        return scrub(value)
+    if isinstance(value, list):
+        return [_scrub_value(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _scrub_value(item) for key, item in value.items()}
+    return value
+
+
+def copy_scrubbed_jsonl(src: str, dest: str) -> None:
+    """Copy a transcript incrementally while removing secrets and personal IDs."""
+    with open(src, encoding="utf-8", errors="replace") as source, \
+            open(dest, "w", encoding="utf-8") as target:
+        for line in source:
+            outer = scrub(line)
+            try:
+                record = json.loads(outer)
+            except json.JSONDecodeError:
+                target.write(outer)
+                continue
+            scrubbed = _scrub_value(record)
+            if scrubbed == record:
+                target.write(outer)
+            else:
+                target.write(json.dumps(scrubbed, ensure_ascii=False) + "\n")
+
+
 def archive_and_prune(event: dict, cwd: str, robium_dir_fn) -> None:
     """Archive transcript atomically and prune by archived-at recency."""
     src = event.get("transcript_path") or ""
@@ -91,8 +122,9 @@ def archive_and_prune(event: dict, cwd: str, robium_dir_fn) -> None:
     if os.path.exists(tmp):
         os.remove(tmp)
 
-    # Atomic write: copy to tmp, then replace dest.
-    shutil.copy2(src, tmp)
+    # Atomic write: scrub into tmp, preserve source permissions, then replace.
+    copy_scrubbed_jsonl(src, tmp)
+    shutil.copymode(src, tmp)
     os.replace(tmp, dest)
 
     # Stamp dest with current time so pruning orders by archived-at recency,

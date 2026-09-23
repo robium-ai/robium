@@ -38,10 +38,10 @@ The `@` syntax is bidirectional; `[` (ROS→GZ dropped, i.e. GZ→ROS only) or
 `]` (ROS→GZ only) replace the middle `@` for a unidirectional bridge, e.g.
 `/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock` for the one-way `/clock`
 bridge Gazebo itself recommends (see below). This skill's key directives
-reserve ad-hoc CLI bridges for quick tests; a real project's bridge set
-belongs in a YAML config file (below).
+reserve ad-hoc CLI bridges for quick tests; prefer a YAML config file for a
+static, reviewable bridge set.
 
-## YAML config file (the recommended approach)
+## YAML config file (recommended for static bridge sets)
 
 Pass a YAML file via the `config_file` ROS parameter:
 
@@ -72,12 +72,12 @@ aren't given separately. `direction` defaults to `BIDIRECTIONAL`; sensor
 data and `/clock` should be `GZ_TO_ROS`, and command topics like `/cmd_vel`
 should be `ROS_TO_GZ`; see `examples/ros-gz-bridge-config.yaml`.
 
-YAML config does not support launch-time substitutions (e.g. a
-parametrized world/robot name); use the XML or Python launch-file forms
-(`<ros_gz_bridge>` tags, or a `parameter_bridge` `Node` with
-`bridges.<name>.<setting>` parameters) instead when that's needed; both are
-documented in the same README ("Example 6"/"Example 7") and can be combined
-with a YAML `config_file` on the same bridge instance.
+YAML config does not support launch-time substitutions (e.g. a parametrized
+world or robot name). Use the XML or Python launch-file forms
+(`<ros_gz_bridge>` tags or explicit `parameter_bridge` nodes) when
+substitutions, topic grouping, or vendor conventions make them a better fit.
+Both are documented in the same README ("Example 6"/"Example 7") and can be
+combined with a YAML `config_file` on the same bridge instance.
 
 ## Message type table (subset relevant to this skill)
 

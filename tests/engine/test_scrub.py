@@ -8,8 +8,33 @@ def test_scrubs_key_value_assignments():
 
 def test_scrubs_known_token_shapes():
     for tok in ["sk-abcdefghijklmnop1234", "ghp_" + "a" * 24, "AKIA" + "A" * 16,
+                "hf_" + "a" * 24,
                 "xoxb-1234567890-abcdef"]:
         assert tok not in scrub(f"using {tok} here")
+
+
+def test_scrubs_sensitive_mapping_values_and_personal_identifiers():
+    text = (
+        '{"HF_TOKEN": "hf_abcdefghijklmnopqrstuvwxyz", '
+        '"VLA_CAPABILITY": "0123456789abcdef", '
+        '"MODE": "development", '
+        '"owner": "person@example.com", '
+        '"cwd": "/Users/example/repos/robium"}'
+    )
+
+    out = scrub(text, env={})
+
+    assert "hf_abcdefghijklmnopqrstuvwxyz" not in out
+    assert "0123456789abcdef" not in out
+    assert '"MODE": "development"' in out
+    assert "person@example.com" not in out
+    assert "/Users/example" not in out
+    assert "[HOME]/repos/robium" in out
+
+
+def test_scrubs_local_account_name_without_erasing_common_service_users():
+    assert "alice_dev" not in scrub("owner alice_dev in /tmp", env={"USER": "alice_dev"})
+    assert "root" in scrub("owner root in /tmp", env={"USER": "root"})
 
 
 def test_scrubs_bearer_and_cli_password_args():
