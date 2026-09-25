@@ -191,7 +191,7 @@ export async function setup({
   }
 
   if (targets.includes('gemini')) {
-    const rc = await installGemini({ exec, log, error, extensionPath: repo });
+    const rc = await installGemini({ exec, log, error, extensionPath: repo, home });
     if (rc !== 0) {
       failed = true;
     } else {

@@ -195,6 +195,7 @@ Usage:
   npx robium-ai app describe <id> [--json]         Show one app's metadata
   npx robium-ai app help <id>                      Show lifecycle commands and local equivalents
   npx robium-ai app doctor <id>                    Diagnose the environment and app prerequisites
+  npx robium-ai app check <id>                     Run the application's bounded self-check
   npx robium-ai app build <id>                     Build application artifacts
   npx robium-ai app run <id> [--mode NAME]         Run the primary experience or a mode
   npx robium-ai app status <id>                    Show whether the app is running
@@ -308,6 +309,7 @@ export async function appCmd({ args = [], flags = {}, log = console.log, exec = 
       }
       return exec(resolved.command, app.dir);
     }
+    case 'check':
     case 'build':
     case 'run':
     case 'status':

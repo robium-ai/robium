@@ -21,7 +21,7 @@ Codex loads the source skills through a temporary native
 The latter validates the skills, not Codex's installed plugin cache or global
 installation. Neither substitutes for a fresh Ubuntu installation/bring-up.
 
-`cases.json` preserves the three homepage prompts plus a domain-first entry,
+`cases.json` preserves the homepage prompts plus a domain-first entry,
 maintenance, incompatible prerequisites, and an explicit from-scratch request.
 It also probes try-only, whole-app adaptation, selective component reuse, and
 a minimal fresh app. Review whether the starting path is surfaced before deep

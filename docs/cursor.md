@@ -9,11 +9,11 @@ Robium is a native Cursor Plugin. Cursor loads the complete skill catalog, the
 Choose a workspace parent containing both editable repositories:
 
 ```bash
-npx robium-ai setup --agent cursor --dir ~/robium
+npx robium-ai setup --agent cursor --dir ~/robium-workspace
 ```
 
 Setup follows Cursor's documented local-development layout by linking the
-checkout (`~/robium/robium` here) to `~/.cursor/plugins/local/robium`. Reload Cursor with
+checkout (`~/robium-workspace/robium` here) to `~/.cursor/plugins/local/robium`. Reload Cursor with
 **Developer: Reload Window**, open **Customize**, and confirm that Robium's
 skills, agent, and hooks are listed. Cursor does not currently expose a
 supported command-line API for checking local-plugin activation, so

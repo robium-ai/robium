@@ -22,6 +22,7 @@ verbs:
   build: ./app build
   run: ./app run
   doctor: ./app doctor
+  check: ./app check
   status: ./app status
   logs: ./app logs
   stop: ./app stop
@@ -57,6 +58,7 @@ test('parseAppYaml: full reference-shape file', () => {
   assert.deepEqual(a.tags, ['navigation', 'ros2', 'nav2']);
   assert.equal(a.runtime.kind, 'docker');
   assert.equal(a.verbs.doctor, './app doctor');
+  assert.equal(a.verbs.check, './app check');
   assert.equal(a.modes.slam.command, './app slam');
   assert.equal(a.modes.nav.summary, 'navigation on the saved map');
   assert.deepEqual(a.requirements.hardware, []);
@@ -135,6 +137,7 @@ test('resolveCommand: verb, mode, and error paths', () => {
   const app = parseAppYaml(SAMPLE);
   assert.deepEqual(resolveCommand(app, { verb: 'run' }), { command: './app run' });
   assert.deepEqual(resolveCommand(app, { verb: 'doctor' }), { command: './app doctor' });
+  assert.deepEqual(resolveCommand(app, { verb: 'check' }), { command: './app check' });
   assert.deepEqual(resolveCommand(app, { mode: 'slam' }), { command: './app slam' });
   assert.match(resolveCommand(app, { mode: 'zzz' }).error, /known: slam, nav/);
   const bare = parseAppYaml('id: y\nruntime:\n  entrypoint: ./app run\n');
@@ -175,6 +178,17 @@ test('app run: execs resolved command in app dir; mode flag; unknown id', async 
   const bad = capture();
   assert.equal(await appCmd({ args: ['run', 'ghost'], flags: { dir: root }, log: bad.log, exec }), 1);
   assert.ok(bad.lines.some((l) => l.includes('Unknown app "ghost"')));
+});
+
+test('app check: execs the bounded self-check in the app directory', async () => {
+  const root = makeAppsRepo();
+  const calls = [];
+  const exec = async (command, dir) => { calls.push({ command, dir }); return 0; };
+  const { log } = capture();
+
+  assert.equal(await appCmd({ args: ['check', 'robot-navigation'], flags: { dir: root }, log, exec }), 0);
+  assert.deepEqual(calls.map((c) => c.command), ['./app check']);
+  assert.ok(calls[0].dir.endsWith('nav-app'));
 });
 
 test('app doctor: environment facts + app doctor verb; graceful when verb missing', async () => {

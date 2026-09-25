@@ -27,6 +27,7 @@ npx robium-ai install
 # Remove managed integrations but preserve the Robium checkout
 npx robium-ai remove
 npx robium-ai remove --agent cursor
+npx robium-ai remove --all          # also remove ~/.config/robium
 
 # Check your machine and Robium integration state
 npx robium-ai doctor          # human-readable
@@ -63,7 +64,7 @@ reference-apps spec: `docs/superpowers/specs/2026-08-05-reference-applications-d
 ## How setup works
 
 **Git is the source of truth.** Setup asks for a workspace parent (default
-`~/robium`; Enter accepts). Choose any name/location with
+`~/robium-workspace`; Enter accepts). Choose any name/location with
 `npx robium-ai setup --dir ~/projects/my-robotics`. It clones both official
 repositories on `main`, without building apps or downloading model assets:
 
@@ -149,6 +150,9 @@ Gemini CLI uses `gemini extensions uninstall robium` and also cleans up legacy
 Robium-managed skill links. Cursor removes only the Robium-managed local plugin
 link or marked copy plus legacy managed skill links. Unrelated plugins, skills,
 and files are preserved. Repeated removal is a successful no-op.
+Robium configuration is also preserved so setup can reuse the checkout. Pass
+`--all` to remove the entire `~/.config/robium` directory without deleting the
+checkout or anything in `my-apps/`.
 
 ### Install one skill
 
@@ -167,11 +171,11 @@ keeps a real Git checkout that can be used directly for contributions.
 
 Plain ESM Node (≥18), zero runtime dependencies, no build step.
 
-When `setup` created `~/robium`, contributors can work in its checkout rather
+When `setup` created `~/robium-workspace`, contributors can work in its checkout rather
 than cloning again:
 
 ```bash
-cd ~/robium/robium               # or the repo path from robium workspace
+cd ~/robium-workspace/robium     # or the repo path from robium workspace
 ./scripts/bootstrap.sh
 git switch -c my-skill-fix
 # edit, then verify

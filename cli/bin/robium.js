@@ -20,21 +20,26 @@ Usage:
                                          refresh detected agent integrations
   npx robium-ai update --check           Check official main without applying
                                          (--quiet: throttled, non-blocking notices)
-  npx robium-ai remove [options]         Remove managed agent integrations;
+  npx robium-ai remove [--all]           Remove managed agent integrations;
+                                         --all also removes ~/.config/robium;
                                          preserve the Robium checkout
   npx robium-ai doctor [--json]          Check environment and integration state
   npx robium-ai skills [query]           Browse the skill catalog
   npx robium-ai app <subcommand>         Work with reference applications
-                                         (list | describe | help | doctor |
+                                         (list | describe | help | doctor | check |
                                           build | run | status | logs | stop |
                                           validate | new)
 
 Setup options:
   --agent <name>   Target one agent instead of auto-detecting
-  --dir <path>     Workspace parent for setup/update (default ~/robium);
+  --dir <path>     Workspace parent for setup/update (default ~/robium-workspace);
                     app commands use the apps repository itself
   --copy           Copy integration files instead of symlinking
   -y, --yes        No prompts; accept defaults
+
+Remove options:
+  --agent <name>   Remove one agent integration
+  --all            Remove all integrations and ~/.config/robium
 
 Options:
   -h, --help       Show this help
@@ -50,6 +55,7 @@ export function parseArgs(argv) {
     else if (a === '--check') args.flags.check = true;
     else if (a === '--quiet') args.flags.quiet = true;
     else if (a === '--copy') args.flags.copy = true;
+    else if (a === '--all') args.flags.all = true;
     else if (a === '-y' || a === '--yes') args.flags.yes = true;
     else if (a.startsWith('--agent=')) args.flags.agent = a.slice('--agent='.length);
     else if (a === '--agent') args.flags.agent = argv[++i];
@@ -86,6 +92,14 @@ export async function main(argv) {
     console.error('--check and --quiet are update options; use robium-ai update --check.');
     return 1;
   }
+  if (flags.all && cmd !== 'remove') {
+    console.error('--all is a remove option; use robium-ai remove --all.');
+    return 1;
+  }
+  if (flags.all && flags.agent) {
+    console.error('--all cannot be combined with --agent; it removes every detected integration.');
+    return 1;
+  }
   if (flags.help || !cmd) {
     console.log(USAGE);
     return flags.help || !cmd ? 0 : 1;
@@ -114,7 +128,7 @@ export async function main(argv) {
       return setup({ agent: flags.agent, dir: flags.dir, yes: true, copy: flags.copy });
     }
     case 'remove':
-      return remove({ agent: flags.agent });
+      return remove({ agent: flags.agent, all: flags.all });
     case 'doctor':
       return doctor({ json: flags.json });
     case 'skills':

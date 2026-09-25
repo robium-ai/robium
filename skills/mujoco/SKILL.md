@@ -1,6 +1,6 @@
 ---
 name: mujoco
-description: Build and debug lightweight robot manipulation simulations with MuJoCo.
+description: Build and debug MuJoCo robot simulations. First interactive robot tryouts start with architect's reference-app selection.
 ---
 
 # MuJoCo
@@ -10,10 +10,11 @@ model through kinematics, actuation, contact, and observation.
 
 ## Start from the model
 
-- For a new manipulation app or first policy demo, read
+- For a first interactive tryout, new app, or first policy demo, read
   [architect](../architect/SKILL.md) before creating a scene, controller, or
-  viewer. Reuse its compatible reference-app selection if already made.
-  Existing-model edits, physics debugging, and explanations stay here.
+  viewer or downloading a model collection. Reuse its compatible reference-app
+  selection if already made. Existing-model edits, physics debugging, and
+  explanations stay here.
 - Read the MJCF and the pinned asset revision before adding control code. Check
   joint ranges, actuator limits, collision geometry, sites, masses, and the
   intended work surface.

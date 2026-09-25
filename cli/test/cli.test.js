@@ -41,11 +41,17 @@ test('workspace help describes both repos and readonly update-check flow', () =>
 });
 
 test('missing paths and misplaced check flags fail before setup can mutate anything', () => {
-  for (const args of [['setup', '--dir'], ['setup', '--dir='], ['setup', '--check']]) {
+  for (const args of [['setup', '--dir'], ['setup', '--dir='], ['setup', '--check'], ['setup', '--all']]) {
     const r = runCli(...args);
     assert.equal(r.status, 1);
-    assert.match(r.stderr, /--dir requires|update options/);
+    assert.match(r.stderr, /--dir requires|update options|remove option/);
   }
+});
+
+test('remove --all cannot be narrowed to one agent', () => {
+  const r = runCli('remove', '--all', '--agent', 'cursor');
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /cannot be combined/);
 });
 
 test('ambiguous machine-readable or quiet update requests fail before mutation', () => {

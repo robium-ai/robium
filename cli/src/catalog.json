@@ -7,7 +7,7 @@
     },
     {
       "name": "architect",
-      "description": "Start robotics apps or demos from compatible examples for mapping/navigation, robot assistants, or pretrained manipulation. Choose a stack if none fits; not existing-app maintenance."
+      "description": "Start robotics apps or demos from compatible examples for interactive simulation, pretrained visual control, mapping/navigation, robot assistants, or manipulation. Choose a stack if none fits; not existing-app maintenance."
     },
     {
       "name": "cloud-run",
@@ -67,7 +67,7 @@
     },
     {
       "name": "mujoco",
-      "description": "Build and debug lightweight robot manipulation simulations with MuJoCo."
+      "description": "Build and debug MuJoCo robot simulations. First interactive robot tryouts start with architect's reference-app selection."
     },
     {
       "name": "navigation",

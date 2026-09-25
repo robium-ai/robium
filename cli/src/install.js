@@ -1,6 +1,8 @@
+import path from 'node:path';
 import { run } from './exec.js';
 import { findCodexRobiumPlugin, findRobiumPlugin } from './plugins.js';
 import { parseGeminiExtensions, parseGeminiExtensionText } from './integrationStatus.js';
+import { inspectGeminiExtensionLink, removeGeminiExtensionLink } from './geminiExtension.js';
 
 const MARKETPLACE_REF = 'robium-ai/robium';
 const MARKETPLACE_NAME = 'robium';
@@ -142,6 +144,7 @@ export async function installGemini({
   log = console.log,
   error = console.error,
   extensionPath,
+  home,
 } = {}) {
   const ver = await exec('gemini', ['--version']);
   if (!ver.ok) {
@@ -150,14 +153,29 @@ export async function installGemini({
   }
   log(`✓ Gemini CLI detected (${ver.stdout.trim()})`);
 
-  const linked = await exec('gemini', [
-    'extensions', 'link', extensionPath, '--consent',
-  ]);
-  if (!linked.ok) {
-    error(`✗ Could not link the Robium Gemini extension:\n${(linked.stderr || linked.stdout).trim()}`);
-    return 1;
+  const existing = await inspectGeminiExtensionLink({ home });
+  const requested = path.resolve(extensionPath);
+  if (existing.state === 'linked' && existing.source !== requested) {
+    await removeGeminiExtensionLink({ home });
+    log(`✓ Removed stale Gemini extension link: ${existing.target} → ${existing.source}`);
   }
-  log(`✓ Gemini extension linked: ${extensionPath}`);
+
+  if (existing.state === 'linked' && existing.source === requested) {
+    log(`✓ Gemini extension already linked: ${extensionPath}`);
+  } else {
+    const linked = await exec('gemini', [
+      'extensions', 'link', extensionPath, '--consent',
+    ]);
+    if (!linked.ok) {
+      const detail = (linked.stderr || linked.stdout).trim();
+      const conflict = existing.state === 'conflict'
+        ? `\n${existing.target} exists as a real directory, so Robium left it untouched. Move or remove it, then retry.`
+        : '';
+      error(`✗ Could not link the Robium Gemini extension:\n${detail}${conflict}`);
+      return 1;
+    }
+    log(`✓ Gemini extension linked: ${extensionPath}`);
+  }
 
   const listed = await exec('gemini', ['extensions', 'list', '--output-format', 'json']);
   let extension = listed.ok
@@ -268,7 +286,7 @@ export async function uninstallCodex({
   return result;
 }
 
-export async function uninstallGemini({ exec = run } = {}) {
+export async function uninstallGemini({ exec = run, home } = {}) {
   const result = removalResult();
   const listed = await exec('gemini', ['extensions', 'list', '--output-format', 'json']);
   let extension = listed.ok
@@ -277,13 +295,22 @@ export async function uninstallGemini({ exec = run } = {}) {
   if (!extension) {
     const textList = await exec('gemini', ['extensions', 'list']);
     if (!textList.ok) {
+      const stale = await removeGeminiExtensionLink({ home });
+      if (stale.removed) {
+        result.removed.push(`stale Gemini extension link ${stale.target}`);
+        return result;
+      }
       result.errors.push('Gemini extension state could not be inspected');
       return result;
     }
     extension = parseGeminiExtensionText(textList.stdout);
   }
   if (!extension) {
-    result.skipped.push('Gemini extension (not installed)');
+    const stale = await removeGeminiExtensionLink({ home });
+    if (stale.removed) result.removed.push(`stale Gemini extension link ${stale.target}`);
+    else result.skipped.push(stale.state === 'conflict'
+      ? `${stale.target} (not a Robium-managed link)`
+      : 'Gemini extension (not installed)');
     return result;
   }
   const removed = await exec('gemini', ['extensions', 'uninstall', 'robium']);

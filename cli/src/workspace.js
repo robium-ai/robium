@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { homedir } from 'node:os';
 import { readFileSync, existsSync } from 'node:fs';
-import { mkdir, writeFile, rename } from 'node:fs/promises';
+import { mkdir, writeFile, rename, rm } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 
 export const REPOSITORIES = [
@@ -23,7 +23,11 @@ export const WORKSPACE_REPO = {
 export const USER_APPS_DIR = 'my-apps';
 
 export function workspaceConfigPath(home = homedir()) {
-  return path.join(home, '.config', 'robium', 'workspace.json');
+  return path.join(workspaceConfigDir(home), 'workspace.json');
+}
+
+export function workspaceConfigDir(home = homedir()) {
+  return path.join(home, '.config', 'robium');
 }
 
 export function readWorkspaceConfig(home = homedir()) {
@@ -43,6 +47,13 @@ export async function saveWorkspaceConfig(config, home = homedir()) {
   const temp = `${file}.${randomUUID()}.tmp`;
   await writeFile(temp, `${JSON.stringify(config, null, 2)}\n`, { mode: 0o600 });
   await rename(temp, file);
+}
+
+export async function removeWorkspaceConfig(home = homedir()) {
+  const dir = workspaceConfigDir(home);
+  const existed = existsSync(dir);
+  await rm(dir, { recursive: true, force: true });
+  return existed;
 }
 
 export function expandPath(dir, { home = homedir(), cwd = process.cwd() } = {}) {

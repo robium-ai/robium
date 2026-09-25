@@ -1,6 +1,6 @@
 ---
 name: architect
-description: Start robotics apps or demos from compatible examples for mapping/navigation, robot assistants, or pretrained manipulation. Choose a stack if none fits; not existing-app maintenance.
+description: Start robotics apps or demos from compatible examples for interactive simulation, pretrained visual control, mapping/navigation, robot assistants, or manipulation. Choose a stack if none fits; not existing-app maintenance.
 ---
 
 # Architect
@@ -8,12 +8,13 @@ description: Start robotics apps or demos from compatible examples for mapping/n
 Reach a visible robot result with the least new work, then customize. Inspect
 existing examples before researching or designing a new stack.
 
-Without an established app, an outcome-only request such as mapping a simulated
-environment or running a pretrained policy is a first-run request even without
-"new project", a robot brand, or "architect" in the prompt. Use this skill
-inline, not the optional heavy-research architect subagent. If a domain skill
-brought you here, select the baseline once and return to that skill for its
-mechanics; do not loop through architecture again for the same task.
+Without an established app, an outcome-only request such as trying interactive
+simulator examples, mapping an environment, or running a pretrained policy is
+a first-run request even without "new project", a robot brand, or "architect"
+in the prompt. Use this skill inline, not the optional heavy-research architect
+subagent. If a domain skill brought you here, select the baseline once and
+return to that skill for its mechanics; do not loop through architecture again
+for the same task.
 
 ## Start from the outcome
 
@@ -58,8 +59,9 @@ only for adaptation, component reuse, or a fresh scaffold.
   using a sibling checkout when available. Match the task, host architecture,
   runtime requirements, and relevant verification evidence, not just the name
   or a `stable` label. Read the selected app's README and launcher; distinguish
-  tested conditions from assumptions. For the homepage's three first-run tasks,
-  use [first-run examples](references/first-run-examples.md).
+  tested conditions from assumptions. For the homepage's first-run tasks,
+  use [first-run examples](references/first-run-examples.md), then read that
+  candidate's exact README and manifest without scanning the whole apps checkout.
 - For a clear compatible match, explain the choice and proceed within the
   user's request: "This matches Robium's navigation example. I'll get it
   running first, then we can adapt it." Ask only when different candidates or

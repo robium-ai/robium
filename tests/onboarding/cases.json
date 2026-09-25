@@ -1,5 +1,23 @@
 [
   {
+    "id": "robot-playground",
+    "prompt": "Show me a few robots in MuJoCo I can control and interact with.",
+    "app": "robot-zoo",
+    "review": "Reach architect, resolve the saved workspace, and inspect the existing Robot Zoo README and manifest. Check for a compatible graphical desktop, then use the existing app unchanged with app check followed by app run. Do not scaffold a replacement, require Docker/GPU/API keys, or offer a stack survey. Present the working two-window result before suggesting customization."
+  },
+  {
+    "id": "autonomous-driving",
+    "prompt": "Run a pretrained reinforcement-learning policy for autonomous driving in Gymnasium's CarRacing simulation.",
+    "app": "car-racing-ppo",
+    "review": "Reach architect, resolve the saved workspace, and inspect the canonical CarRacing PPO README and manifest. Check for Apple Silicon macOS and a graphical desktop, explain the external download and unspecified checkpoint license, then use app doctor, app check, and the existing seed-1 run unchanged. Do not train, require a GPU, redistribute weights, claim Linux qualification, or present the toy benchmark as real-road autonomy."
+  },
+  {
+    "id": "talking-stackchan",
+    "prompt": "Show me a simulated Stack-chan robot with local speech-to-text, text-to-speech, and face tracking.",
+    "app": "stackchan-er2-sim",
+    "review": "Reach architect, resolve the saved workspace, and inspect the existing Stack-chan simulator README and manifest. Check for qualified Apple Silicon macOS and first-build network access, then use app doctor followed by the default local app run. Do not require Gemini or an API key, clone the upstream simulator, or present estimated dynamics as calibrated hardware behavior. Explain that microphone and camera permissions are optional and requested only when used."
+  },
+  {
     "id": "try-only",
     "prompt": "I just want to try mapping and navigation with a simulated robot. Show me the simplest working demo; I do not want to create a project yet.",
     "app": "robot-navigation",
@@ -23,19 +41,19 @@
   },
   {
     "id": "navigation",
-    "prompt": "Help me map a simulated environment, localize a mobile robot, and navigate to a goal.",
+    "prompt": "Map a simulated house with ROS 2, Gazebo, and SLAM, then navigate the robot to a goal.",
     "app": "robot-navigation",
     "review": "Load architect (directly or via a domain skill), discover the saved workspace, inspect the compatible navigation baseline, and reuse its launcher/House/dashboard. Do not propose scaffolding an equivalent app."
   },
   {
     "id": "assistant",
-    "prompt": "Help me build a simulated robot assistant that understands what it sees and follows natural-language instructions.",
+    "prompt": "Start with the closest existing Robium example for a simulated robot assistant that understands what it sees and follows natural-language instructions.",
     "app": "silly-turtlebot",
     "review": "Reach architect and consider the existing fast simulation profile. Explain Gemini access/costs before live use; no silent mock or physical robot."
   },
   {
     "id": "manipulation",
-    "prompt": "Help me run a pretrained policy that transfers a cube between two simulated robot arms.",
+    "prompt": "Start with the closest existing Robium example and run a pretrained policy that transfers a cube between two simulated robot arms.",
     "app": "act-aloha-cube-transfer",
     "review": "Reach architect and reuse the pretrained baseline, checkpoint, launcher, and viewer. Do not train or build a replacement scene."
   },

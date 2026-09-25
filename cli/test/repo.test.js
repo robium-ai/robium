@@ -35,7 +35,7 @@ test('prompt expands tilde; --yes uses default; explicit dir wins saved and curr
   const otherHome = path.join(fx.base, 'other-home');
   const defaults = await resolveWorkspace({ ...fx.options, dir: undefined, home: otherHome, interactive: true,
     ask: async () => { throw new Error('must not ask'); } });
-  assert.equal(defaults.root, path.join(otherHome, 'robium'));
+  assert.equal(defaults.root, path.join(otherHome, 'robium-workspace'));
 });
 
 test('foreign and interrupted destinations are preserved; no config is saved on failure', async t => {

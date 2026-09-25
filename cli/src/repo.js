@@ -80,7 +80,7 @@ export async function resolveWorkspace({
       throw new Error(`Saved workspace ${workspace.root} is missing. If you moved it, run setup --dir <new-parent>; no replacement was cloned.`);
     }
     if (!workspace) {
-      let root = path.join(home, 'robium');
+      let root = path.join(home, 'robium-workspace');
       if (!yes && interactive) root = (await ask(`Where should the Robium workspace live? [${root}]: `)).trim() || root;
       workspace = workspacePaths(expandPath(root, { home, cwd }));
     }

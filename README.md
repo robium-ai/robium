@@ -40,7 +40,7 @@ This is an **editable install**, not a hidden package snapshot. Setup creates
 ordinary Git checkouts and connects your agent to them:
 
 ```text
-~/robium/                 # location and name are your choice
+~/robium-workspace/       # default; location and name are your choice
 ├── robium/               # editable skills and plugin source
 └── robium-apps/          # runnable reference applications
 ```
@@ -57,18 +57,7 @@ prerequisites, and aim for a visible result before suggesting custom work.
 
 ### Map and navigate a simulated home
 
-<table>
-  <tr>
-    <td width="60%">
-      <a href="https://github.com/robium-ai/robium-apps/tree/main/robot-navigation"><img src="https://raw.githubusercontent.com/robium-ai/robium-apps/main/robot-navigation/assets/stills/readme-navigation.png" alt="A simulated TurtleBot mapping and navigating a home"></a>
-    </td>
-    <td width="40%" valign="middle">
-      <strong>Your first Robium project</strong><br><br>
-      Map a simulated home, localize a TurtleBot, and send it to a Nav2 goal.<br><br>
-      <code>Simulation · Docker · No GPU</code>
-    </td>
-  </tr>
-</table>
+<a href="https://github.com/robium-ai/robium-apps/tree/main/robot-navigation"><img src="https://raw.githubusercontent.com/robium-ai/robium-apps/main/robot-navigation/assets/stills/readme-navigation.png" alt="A simulated TurtleBot mapping and navigating a home" width="700"></a>
 
 > Help me map a simulated environment, localize a mobile robot, and navigate to a goal.
 

@@ -8,6 +8,7 @@ import {
 import { remove, removeManagedSkills } from '../src/remove.js';
 import { setup } from '../src/setup.js';
 import { integrationVersions } from '../src/integrationStatus.js';
+import { saveWorkspaceConfig, workspaceConfigDir, workspaceConfigPath } from '../src/workspace.js';
 
 const { plugin: pluginVersion } = await integrationVersions();
 
@@ -141,6 +142,20 @@ test('remove is a successful no-op when nothing is installed', async () => {
   const code = await remove({ exec, home: fx.home, log: (line) => { output += line; }, error: () => {} });
   assert.equal(code, 0);
   assert.match(output, /Nothing to remove/);
+  await rm(fx.base, { recursive: true, force: true });
+});
+
+test('remove --all deletes Robium config but preserves the checkout', async () => {
+  const fx = await fixture();
+  await saveWorkspaceConfig({ root: fx.base }, fx.home);
+  await writeFile(path.join(workspaceConfigDir(fx.home), 'other-state.json'), '{}\n');
+  const exec = async () => ({ ok: false, code: 1, stdout: '', stderr: 'missing' });
+  assert.equal(await remove({
+    exec, home: fx.home, all: true, log: () => {}, error: () => {},
+  }), 0);
+  assert.equal(await exists(workspaceConfigPath(fx.home)), false);
+  assert.equal(await exists(workspaceConfigDir(fx.home)), false);
+  assert.ok(await exists(fx.repo));
   await rm(fx.base, { recursive: true, force: true });
 });
 

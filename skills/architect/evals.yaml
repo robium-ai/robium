@@ -1,8 +1,9 @@
 triggers:
   positive:
-    - phrase: Help me map a simulated environment, localize a mobile robot, and navigate to a goal.
-    - phrase: Help me build a simulated robot assistant that understands what it sees and follows natural-language instructions.
-    - phrase: Help me run a pretrained policy that transfers a cube between two simulated robot arms.
+    - phrase: Show me a few robots in MuJoCo I can control and interact with.
+    - phrase: Run a pretrained reinforcement-learning policy for autonomous driving in Gymnasium's CarRacing simulation.
+    - phrase: Show me a simulated Stack-chan robot with local speech-to-text, text-to-speech, and face tracking.
+    - phrase: Map a simulated house with ROS 2, Gazebo, and SLAM, then navigate the robot to a goal.
     - phrase: Help me map a simulated environment with a TurtleBot, localize on the saved map, and navigate to a goal.
     - phrase: Help me control a simulated TurtleBot with Gemini using natural-language instructions.
     - phrase: Help me run a pretrained ACT policy that transfers a cube between two simulated robot arms.

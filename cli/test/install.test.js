@@ -1,5 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import os from 'node:os';
+import path from 'node:path';
+import { lstat, mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import {
   installClaude, installCodex, installGemini,
   uninstallClaude, uninstallCodex, uninstallGemini,
@@ -127,7 +130,9 @@ test('installCodex: uses an explicitly resolved desktop command', async () => {
   assert.ok(!calls.some((call) => call.startsWith('codex ')));
 });
 
-test('installGemini links the checkout with consent and verifies activation', async () => {
+test('installGemini links the checkout with consent and verifies activation', async t => {
+  const home = await mkdtemp(path.join(os.tmpdir(), 'robium-gemini-install-'));
+  t.after(() => rm(home, { recursive: true, force: true }));
   const { exec, calls } = recordingExec({
     'gemini --version': { stdout: '0.30.0\n' },
     'gemini extensions link': {},
@@ -136,7 +141,7 @@ test('installGemini links the checkout with consent and verifies activation', as
     },
   });
   assert.equal(await installGemini({
-    exec, extensionPath: '/src/robium', log: () => {}, error: () => {},
+    exec, home, extensionPath: '/src/robium', log: () => {}, error: () => {},
   }), 0);
   assert.deepEqual(calls, [
     'gemini --version',
@@ -145,7 +150,9 @@ test('installGemini links the checkout with consent and verifies activation', as
   ]);
 });
 
-test('installGemini refuses to claim success when extension activation is missing', async () => {
+test('installGemini refuses to claim success when extension activation is missing', async t => {
+  const home = await mkdtemp(path.join(os.tmpdir(), 'robium-gemini-install-'));
+  t.after(() => rm(home, { recursive: true, force: true }));
   const { exec } = recordingExec({
     'gemini --version': { stdout: '0.30.0\n' },
     'gemini extensions link': {},
@@ -153,12 +160,14 @@ test('installGemini refuses to claim success when extension activation is missin
   });
   let message = '';
   assert.equal(await installGemini({
-    exec, extensionPath: '/src/robium', log: () => {}, error: (line) => { message += line; },
+    exec, home, extensionPath: '/src/robium', log: () => {}, error: (line) => { message += line; },
   }), 1);
   assert.match(message, /did not report.*active/);
 });
 
-test('installGemini falls back to concise output when JSON listing is truncated', async () => {
+test('installGemini falls back to concise output when JSON listing is truncated', async t => {
+  const home = await mkdtemp(path.join(os.tmpdir(), 'robium-gemini-install-'));
+  t.after(() => rm(home, { recursive: true, force: true }));
   const calls = [];
   const exec = async (command, args) => {
     const key = [command, ...args].join(' ');
@@ -169,9 +178,51 @@ test('installGemini falls back to concise output when JSON listing is truncated'
     return { ok: true, stdout: '✓ robium (0.4.0)\n Enabled (User): true\n', stderr: '', code: 0 };
   };
   assert.equal(await installGemini({
-    exec, extensionPath: '/src/robium', log: () => {}, error: () => {},
+    exec, home, extensionPath: '/src/robium', log: () => {}, error: () => {},
   }), 0);
   assert.ok(calls.includes('gemini extensions list'));
+});
+
+test('installGemini replaces a stale broken Robium extension link', async t => {
+  const home = await mkdtemp(path.join(os.tmpdir(), 'robium-gemini-install-'));
+  t.after(() => rm(home, { recursive: true, force: true }));
+  const target = path.join(home, '.gemini', 'extensions', 'robium');
+  await mkdir(path.dirname(target), { recursive: true });
+  await symlink('/missing/old-workspace/robium', target);
+  const { exec, calls } = recordingExec({
+    'gemini --version': { stdout: '0.40.1\n' },
+    'gemini extensions link': {},
+    'gemini extensions list': {
+      stdout: '[{"name":"robium","version":"0.5.2","isActive":true}]',
+    },
+  });
+  let output = '';
+  assert.equal(await installGemini({
+    exec, home, extensionPath: '/new/workspace/robium',
+    log: line => { output += `${line}\n`; }, error: () => {},
+  }), 0);
+  assert.match(output, /Removed stale Gemini extension link/);
+  assert.ok(calls.includes('gemini extensions link /new/workspace/robium --consent'));
+  assert.equal(await lstat(target).then(() => true, () => false), false);
+});
+
+test('installGemini preserves a real directory at the extension path', async t => {
+  const home = await mkdtemp(path.join(os.tmpdir(), 'robium-gemini-conflict-'));
+  t.after(() => rm(home, { recursive: true, force: true }));
+  const target = path.join(home, '.gemini', 'extensions', 'robium');
+  await mkdir(target, { recursive: true });
+  await writeFile(path.join(target, 'mine.txt'), 'keep\n');
+  const { exec } = recordingExec({
+    'gemini --version': { stdout: '0.40.1\n' },
+    'gemini extensions link': { ok: false, stderr: 'directory already exists' },
+  });
+  let message = '';
+  assert.equal(await installGemini({
+    exec, home, extensionPath: '/new/workspace/robium', log: () => {},
+    error: line => { message += line; },
+  }), 1);
+  assert.match(message, /real directory.*left it untouched/);
+  assert.equal(await lstat(path.join(target, 'mine.txt')).then(() => true, () => false), true);
 });
 
 test('uninstallClaude removes only the Robium plugin and marketplace', async () => {
@@ -235,4 +286,33 @@ test('uninstallGemini removes only the named Robium extension', async () => {
     'gemini extensions list --output-format json',
     'gemini extensions uninstall robium',
   ]);
+});
+
+test('uninstallGemini removes a stale link that Gemini cannot list', async t => {
+  const home = await mkdtemp(path.join(os.tmpdir(), 'robium-gemini-remove-'));
+  t.after(() => rm(home, { recursive: true, force: true }));
+  const target = path.join(home, '.gemini', 'extensions', 'robium');
+  await mkdir(path.dirname(target), { recursive: true });
+  await symlink('/missing/old-workspace/robium', target);
+  const { exec, calls } = recordingExec({
+    'gemini extensions list': { stdout: '[]' },
+  });
+  const result = await uninstallGemini({ exec, home });
+  assert.equal(result.errors.length, 0);
+  assert.deepEqual(result.removed, [`stale Gemini extension link ${target}`]);
+  assert.equal(await lstat(target).then(() => true, () => false), false);
+  assert.ok(!calls.includes('gemini extensions uninstall robium'));
+});
+
+test('uninstallGemini repairs a stale link when both list formats fail', async t => {
+  const home = await mkdtemp(path.join(os.tmpdir(), 'robium-gemini-broken-list-'));
+  t.after(() => rm(home, { recursive: true, force: true }));
+  const target = path.join(home, '.gemini', 'extensions', 'robium');
+  await mkdir(path.dirname(target), { recursive: true });
+  await symlink('/missing/old-workspace/robium', target);
+  const { exec } = recordingExec({});
+  const result = await uninstallGemini({ exec, home });
+  assert.equal(result.errors.length, 0);
+  assert.deepEqual(result.removed, [`stale Gemini extension link ${target}`]);
+  assert.equal(await lstat(target).then(() => true, () => false), false);
 });

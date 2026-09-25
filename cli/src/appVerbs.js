@@ -1,6 +1,7 @@
 export const STANDARD_APP_VERBS = [
   ['help', 'Show commands and examples'],
   ['doctor', 'Diagnose prerequisites and conflicts'],
+  ['check', 'Run the application self-check'],
   ['build', 'Build application artifacts'],
   ['run', 'Run the primary application experience'],
   ['status', 'Show whether the application is running'],

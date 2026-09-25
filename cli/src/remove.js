@@ -9,6 +9,8 @@ import { isManagedSkill } from './managedSkills.js';
 export { removeManagedSkills } from './removeManagedSkills.js';
 import { removeManagedSkills } from './removeManagedSkills.js';
 import { cursorPluginPath, isManagedCursorPlugin, removeCursorPlugin } from './cursorPlugin.js';
+import { inspectGeminiExtensionLink, removeGeminiExtensionLink } from './geminiExtension.js';
+import { removeWorkspaceConfig, workspaceConfigDir } from './workspace.js';
 
 async function exists(target) {
   try { await lstat(target); return true; } catch { return false; }
@@ -37,7 +39,12 @@ export async function remove({
   error = console.error,
   home = homedir(),
   platform = process.platform,
+  all = false,
 } = {}) {
+  if (all && agent) {
+    error('--all cannot be combined with --agent; it removes every detected integration.');
+    return 1;
+  }
   if (agent && !AGENTS.includes(agent)) {
     error(`Unknown agent "${agent}". Supported: ${AGENTS.join(', ')}.`);
     return 1;
@@ -58,9 +65,12 @@ export async function remove({
     if (!targets.includes('cursor') && await isManagedCursorPlugin(cursorPluginPath(home))) {
       targets.push('cursor');
     }
+    if (!targets.includes('gemini') && (await inspectGeminiExtensionLink({ home })).state === 'linked') {
+      targets.push('gemini');
+    }
   }
 
-  if (!targets.length) {
+  if (!targets.length && !all) {
     log('Nothing to remove: no supported agent or managed Robium skills found.');
     return 0;
   }
@@ -74,8 +84,12 @@ export async function remove({
       result = await uninstallCodex({ exec, command: support.codex?.command ?? 'codex' });
     } else if (target === 'gemini') {
       result = support.gemini
-        ? await uninstallGemini({ exec })
+        ? await uninstallGemini({ exec, home })
         : { removed: [], skipped: ['Gemini extension (host not installed)'], errors: [] };
+      if (!support.gemini) {
+        const stale = await removeGeminiExtensionLink({ home });
+        if (stale.removed) result.removed.push(`stale Gemini extension link ${stale.target}`);
+      }
       const legacy = await removeManagedSkills({
         targetDir: path.join(home, '.gemini', 'skills'),
       });
@@ -99,10 +113,23 @@ export async function remove({
   for (const item of total.skipped) log(`  skipped: ${item}`);
   for (const item of total.errors) error(`✗ ${item}`);
 
+  let configRemoved = false;
+  if (all && !total.errors.length) {
+    configRemoved = await removeWorkspaceConfig(home);
+    log(configRemoved
+      ? `✓ Removed Robium configuration: ${workspaceConfigDir(home)}`
+      : `✓ Robium configuration already absent: ${workspaceConfigDir(home)}`);
+  }
+
   if (!total.removed.length && !total.errors.length) {
     log('Nothing managed by Robium was installed for the selected agent(s).');
   } else if (!total.errors.length) {
     log(`Done. Removed ${total.removed.length} managed artifact(s). The Robium checkout was preserved.`);
+  }
+  if (!all && !total.errors.length) {
+    log('Robium configuration was preserved. Use `npx robium-ai remove --all` to remove it without deleting the checkout.');
+  } else if (configRemoved) {
+    log('The Robium checkout was preserved.');
   }
   return total.errors.length ? 1 : 0;
 }
