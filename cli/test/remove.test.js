@@ -159,6 +159,22 @@ test('remove --all deletes Robium config but preserves the checkout', async () =
   await rm(fx.base, { recursive: true, force: true });
 });
 
+test('remove --all removes stale Gemini link metadata without Gemini installed', async () => {
+  const fx = await fixture();
+  const target = path.join(fx.home, '.gemini', 'extensions', 'robium');
+  await mkdir(target, { recursive: true });
+  await writeFile(path.join(target, '.gemini-extension-install.json'), JSON.stringify({
+    source: '/missing/old-workspace/robium',
+    type: 'link',
+  }));
+  const exec = async () => ({ ok: false, code: 1, stdout: '', stderr: 'missing' });
+  assert.equal(await remove({
+    exec, home: fx.home, all: true, log: () => {}, error: () => {},
+  }), 0);
+  assert.equal(await exists(target), false);
+  await rm(fx.base, { recursive: true, force: true });
+});
+
 test('remove fails safely when native plugin state cannot be inspected', async () => {
   const fx = await fixture();
   const calls = [];
