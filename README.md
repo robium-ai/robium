@@ -59,7 +59,7 @@ prerequisites, and aim for a visible result before suggesting custom work.
 
 <a href="https://github.com/robium-ai/robium-apps/tree/main/robot-navigation"><img src="https://raw.githubusercontent.com/robium-ai/robium-apps/main/robot-navigation/assets/stills/readme-navigation.png" alt="A simulated TurtleBot mapping and navigating a home" width="700"></a>
 
-> Help me map a simulated environment, localize a mobile robot, and navigate to a goal.
+> Map a simulated house with ROS 2, Gazebo, and SLAM, then navigate the robot to a goal.
 
 This uses the stable `robot-navigation` example with ROS 2, Nav2, Gazebo, and a
 bundled browser viewer. Docker with Compose v2 is required. A successful first
