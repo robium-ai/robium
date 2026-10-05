@@ -12,6 +12,7 @@ skills, troubleshooting guidance, and runnable reference applications. Start
 with a working robot, then ask your agent to adapt it.
 
 [![skills](https://github.com/robium-ai/robium/actions/workflows/skills.yml/badge.svg)](https://github.com/robium-ai/robium/actions/workflows/skills.yml)
+[![skills.sh](https://skills.sh/b/robium-ai/robium)](https://skills.sh/robium-ai/robium)
 [![Website](https://img.shields.io/badge/robium.ai-website-4c8bf5)](https://robium.ai)
 [![npm](https://img.shields.io/npm/v/robium-ai?label=npm%20robium-ai&color=cb3837)](https://www.npmjs.com/package/robium-ai)
 [![License: MIT](https://img.shields.io/badge/license-MIT-3da638)](./LICENSE)
@@ -48,6 +49,25 @@ ordinary Git checkouts and connects your agent to them:
 Run `npx robium-ai workspace` anytime to find them. After editing or manually
 updating Robium, run `npx robium-ai setup` again and restart your agent so its
 integration refreshes.
+
+### Install skills only
+
+To add Robium's skills to an existing project with the
+[skills CLI](https://skills.sh/), run:
+
+```bash
+npx skills add robium-ai/robium
+```
+
+Choose skills interactively, or select them by name:
+
+```bash
+npx skills add robium-ai/robium --skill ros2 gazebo mujoco
+```
+
+This installs the skill instructions and their supporting files. For the
+complete Robium workspace, reference applications, and plugin integration,
+use `npx robium-ai setup` above.
 
 ## Try a working robot
 
