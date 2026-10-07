@@ -20,6 +20,12 @@ with a working robot, then ask your agent to adapt it.
 
 </div>
 
+## Introducing Robium
+
+https://github.com/user-attachments/assets/90eed7a7-d240-4e64-bd2a-6a7d6290be46
+
+[Watch on YouTube](https://www.youtube.com/watch?v=y1a3PakIQsQ)
+
 ## Install
 
 You need Node.js 18+, Git, and at least one supported coding agent.
